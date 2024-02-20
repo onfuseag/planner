@@ -4,4 +4,4 @@ Planning tool for projects in erpnext
 
 #### License
 
-mit
+mit# planner
