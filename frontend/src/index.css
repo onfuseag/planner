@@ -1,2 +1,77 @@
 @import './assets/Inter/inter.css';
 @import 'frappe-ui/src/style.css';
+
+body {
+    background-color: #F3F3F3;
+}
+
+.employee img {
+    display: inline-block;
+    position: relative;
+    margin-right: 0.75rem;
+    border-radius: 100%;
+    width: 2rem;
+    height: 2rem;
+}
+
+.employee p {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    line-height: 1rem;
+    text-align: left;
+}
+
+.task-card>p {
+    font-size: 13px;
+}
+
+.task-card :nth-child(2) {
+    font-weight: 600;
+}
+
+.vis-item {
+    padding: 0.25rem;
+    border-radius: 0.5rem !important;
+    background-color: #E2E2E2 !important;
+    user-select: none;
+    border: none !important;
+    cursor: move;
+    position: relative;
+}
+.vis-editable.vis-selected, .vis-item .vis-drag-center {
+    cursor: move !important;
+}
+.vis-item .vis-delete {
+    display: none !important;
+}
+.employee>div {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+.vis-current-time {
+    background-color: #cc2929 !important;
+}
+.vis-labelset>.vis-group-level-0 {
+    display: flex;
+    overflow: hidden;
+    border-right-width: 1px;
+    align-items: center;
+    border-bottom-width: 1px;
+    max-width: 10rem;
+    text-align: center;
+}
+
+.vis-timeline {
+    border: 1px solid #ededed !important;
+    border-radius: 0.5rem;
+}
+
+.vis-labelset .vis-label,
+.vis-foreground .vis-group {
+    border-bottom: 1px solid #ededed !important;
+}
+
+.vis-time-axis .vis-text {
+    font-size: 13px;
+}
