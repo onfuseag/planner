@@ -109,8 +109,7 @@ const employees = ref([
                 duration: "6 Tage",
                 address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
                 startDate: "2024-03-11",
-                endDate: "2024-04-01",
-                color: "#96D2A8"
+                endDate: "2024-04-01"
             },
         ],
     },
