@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-const Montageansicht = () => import("@/pages/Montageansicht.vue");
+const Planner = () => import("@/pages/Planner.vue");
 const SignIn = () => import("@/pages/SignIn.vue");
 const Dashboard = () => import("@/pages/Dashboard.vue");
 
@@ -20,9 +20,9 @@ const routes = [
     }
   },
   {
-    path: "/montageansicht",
-    name: "Montageansicht",
-    component: Montageansicht,
+    path: "/planner/:dashboardName/:department",
+    name: "Planner",
+    component: Planner,
     meta: {
       requiresAuth: true
     }

@@ -1,12 +1,15 @@
 <template>
     <Layout :breadcrumbs="breadcrumbs">
         <div class="mx-auto px-4 lg:px-8 max-w-[1800px]">
-            <div class="flex justify-start items-center gap-x-2 mb-6">
+            <div class="flex justify-between items-center gap-x-2 mb-3">
                 <!-- <Button :variant="'solid'" theme="gray" size="md" label="Button" @click="goToPrevWeek">
                     Prev
                 </Button> -->
                 <div class="bg-white py-1 px-3 rounded">
                     KW{{ weekNumber }}
+                </div>
+                <div class="bg-white py-1 px-3 rounded">
+                    {{ department }}
                 </div>
                 <!-- <Button :variant="'solid'" theme="gray" size="md" label="Button" @click="goToNextWeek">
                     Next
@@ -60,6 +63,13 @@ import Layout from "@/pages/shared/Layout.vue";
 import { computed, ref, onMounted, watchEffect } from "vue";
 import TaskForm from "@/components/Task/TaskForm.vue";
 import { Timeline, DataSet } from 'vis-timeline/standalone';
+import { useRoute } from 'vue-router';
+
+const route = useRoute(); // Access to the current route
+
+// Get which dashboard we are supposed to load
+const dashboardName = route.params.dashboardName;
+const department = route.params.department;
 
 let breadcrumbs = [
     {
@@ -69,10 +79,16 @@ let breadcrumbs = [
         },
     },
     {
-        label: 'Montageansicht',
+        label: 'Planner',
         route: {
-            name: 'Montageansicht',
+            name: 'Planner',
         },
+    },
+    {
+        label: dashboardName,
+        route: {
+            name: 'Planner'
+        }
     },
 ];
 let currentDate = ref(new Date());
@@ -94,6 +110,7 @@ const employees = ref([
                 address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
                 startDate: "2024-03-11",
                 endDate: "2024-04-01",
+                color: "#96D2A8"
             },
         ],
     },
@@ -140,7 +157,7 @@ const employees = ref([
         tasks: [
             {
                 id: '1-ff',
-                title: "P-ANL-20222024-01-Montage",
+                title: "P-ANL-20222024-03-Montage",
                 duration: "6 Tage",
                 address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
                 startDate: "2024-02-28",
