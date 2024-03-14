@@ -32,11 +32,19 @@ body {
 .vis-item {
     padding: 0.25rem;
     border-radius: 0.5rem !important;
-    background-color: #E2E2E2 !important;
     user-select: none;
-    border: none !important;
     cursor: move;
     position: relative;
+    border: none !important;
+}
+.vis-item.vis-selected {
+    border: solid 2px #E03636 !important
+}
+.vis-item[task-type="1"] {
+    background-color: #E2E2E2 !important;
+}
+.vis-item[task-type="0"] {
+    background-color: #CAE5D4 !important;
 }
 .vis-editable.vis-selected, .vis-item .vis-drag-center {
     cursor: move !important;
@@ -50,7 +58,11 @@ body {
     align-items: center;
 }
 .vis-current-time {
-    background-color: #cc2929 !important;
+    background-color: #171717 !important;
+    width: 1px;
+}
+.vis-labelset .vis-label, .vis-foreground .vis-group {
+    min-height: 67px;
 }
 .vis-labelset>.vis-group-level-0 {
     display: flex;
@@ -74,4 +86,7 @@ body {
 
 .vis-time-axis .vis-text {
     font-size: 13px;
+}
+.rounded-full {
+    border-radius: 9999px !important;
 }

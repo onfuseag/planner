@@ -4,9 +4,9 @@
             <div class="mb-3">
                 <label class="block text-xs text-gray-600 mb-2">Assigned to</label>
                 <div class="flex justify-start items-center">
-                    <Avatar :shape="'circle'" :image="avatar" label="EY" size="md" v-for="(avatar, index) in avatars"
+                    <Avatar :shape="'circle'" :image="avatar" label="EY" size="2xl" v-for="(avatar, index) in avatars"
                         :key="index" />
-                    <Button :variant="'subtle'" theme="gray" size="sm" label="Button" :loading="false" :loadingText="null"
+                    <Button :variant="'subtle'" theme="gray" size="xl" label="Button" :loading="false" :loadingText="null"
                         :disabled="false" :link="null" icon="user-plus" class="rounded-full" type="button"
                         @click="addAssigneePopup = true">
                     </Button>
