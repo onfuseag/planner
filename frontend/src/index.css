@@ -45,6 +45,7 @@ body {
 }
 .vis-item[task-type="0"] {
     background-color: #CAE5D4 !important;
+    cursor: auto;
 }
 .vis-editable.vis-selected, .vis-item .vis-drag-center {
     cursor: move !important;
