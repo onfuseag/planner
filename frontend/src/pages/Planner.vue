@@ -108,8 +108,19 @@ const employees = ref([
                 title: "P-ANL-20222024-03-Montage",
                 duration: "6 Tage",
                 address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-                startDate: "2024-03-11",
-                endDate: "2024-04-01"
+                startDate: "2024-03-14",
+                endDate: "2024-03-17",
+                type: 1, // Enum 1 = work 
+            },
+            {
+                id: '1-affgggg',
+                title: "rholungsurlaub",
+                duration: "6 Tage",
+                address: "Holiday",
+                startDate: "2024-03-14",
+                endDate: "2024-03-15",
+                type: 0, // Enum 0 = holiday
+                editable: false // this is mandatory to make holiday task not moveable
             },
         ],
     },
@@ -129,16 +140,18 @@ const employees = ref([
                 title: "P-ANL-20222024-01-Montage",
                 duration: "6 Tage",
                 address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-                startDate: "2024-02-28",
-                endDate: "2024-03-01",
+                startDate: "2024-03-15",
+                endDate: "2024-03-18",
+                type: 1 // Enum 1 = work 
             },
             {
                 id: '1-ft6667b',
                 title: "P-ANL-20222024-01-Montage",
                 duration: "6 Tage",
                 address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-                startDate: "2024-02-26",
-                endDate: "2024-02-29",
+                startDate: "2024-03-17",
+                endDate: "2024-03-18",
+                type: 1 // Enum 1 = work 
             },
         ],
     },
@@ -161,6 +174,7 @@ const employees = ref([
                 address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
                 startDate: "2024-02-28",
                 endDate: "2024-02-29",
+                type: 1 // Enum 1 = work 
             },
         ],
     },
@@ -182,6 +196,7 @@ const employees = ref([
                 address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
                 startDate: "2024-02-24",
                 endDate: "2024-02-26",
+                type: 1 // Enum 1 = work 
             },
         ],
     },
@@ -197,6 +212,7 @@ const employees = ref([
                 address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
                 startDate: "2024-02-23",
                 endDate: "2024-02-26",
+                type: 1 // Enum 1 = work 
             },
         ],
     },
@@ -208,6 +224,7 @@ const backLog = ref([
         title: "P-ANL-20222024-01-Montage",
         duration: "6 Tage",
         address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
+        type: 1 // Enum 1 = work 
     },
 ]);
 
@@ -275,9 +292,11 @@ const initTimeLine = () => {
                 content: {
                     title: task.title,
                     address: task.address,
+                    type: task.type
                 },
                 start: task.startDate,
-                end: task.endDate
+                end: task.endDate,
+                editable : task.editable
             });
         });
     });
@@ -301,9 +320,12 @@ const initTimeLine = () => {
             item: true,
             range: true
         },
+        margin: {
+            axis: 5,  
+        },
         template: function (item, element, data) {
             element.classList.add('task-card');
-
+            element.parentNode.parentNode.setAttribute('task-type', item.content.type);
             return '<p class="text-xs">' + item.content.title + '</p>' + '<p class="text-xs">' + item.content.address + '</p>';
         },
         groupTemplate: function (group, element) {
@@ -326,7 +348,7 @@ const initTimeLine = () => {
     timeline.value = new Timeline(container, items, groups, options);
 
     timeline.value.on('select', function (properties) {
-        isTaskFormActive.value = true;
+        isTaskFormActive.value = true;git 
     });
 
     timeline.value.on('rangechanged', function (properties) {
