@@ -259,6 +259,10 @@ const dragBackLog = (event, task) => {
 
 const backToBackLog = () => {
     isTaskFormActive.value = false;
+    let selectedItem = timeline.value?.querySelector('.vis-item.vis-range.vis-selected');
+    if (selectedItem) {
+        selectedItem.classList.remove('vis-selected');
+    }
 };
 
 const getWeekNumber = (d) => {
