@@ -92,19 +92,19 @@ let weekNumber = ref(0);
 
 const timeline = ref();
 
-const testemployees = ref(createResource({
+const employees = createResource({
   url: 'planner.api.get_planner_tasks', 
   params : {
     department: department
   },
   limit: 1000, 
   auto: true
-}))
+});
 
-console.log(testemployees)
+console.log(employees)
 
 
-const employees = ref([
+const testemployees = ref([
 {
 			"name": "HR-EMP-00001",
 			"user_id": "c.diethelm@diethelm-aufzuege.swiss",
