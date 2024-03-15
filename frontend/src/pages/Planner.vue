@@ -357,7 +357,11 @@ const initTimeLine = () => {
     timeline.value = new Timeline(container, items, groups, options);
 
     timeline.value.on('select', function (properties) {
-        isTaskFormActive.value = true;
+        if(properties.items.length > 0) {
+            isTaskFormActive.value = true;
+        } else {
+            isTaskFormActive.value = false;
+        }
     });
 
     timeline.value.on('rangechanged', function (properties) {
