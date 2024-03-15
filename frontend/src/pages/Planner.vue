@@ -36,7 +36,7 @@
                                         <p class="text-xs">{{ task.duration }}</p>
                                     </div>
                                     <div class="flex justify-start items-center">
-                                        <p class="text-sm font-semibold">{{ task.address }}</p>
+                                        <p class="text-sm font-semibold">{{ task.project_name }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -64,6 +64,7 @@ import { computed, ref, onMounted, watchEffect } from "vue";
 import TaskForm from "@/components/Task/TaskForm.vue";
 import { Timeline, DataSet } from 'vis-timeline/standalone';
 import { useRoute } from 'vue-router';
+import { createResource } from 'frappe-ui'
 
 const route = useRoute(); // Access to the current route
 
@@ -97,133 +98,72 @@ let weekNumber = ref(0);
 
 const timeline = ref();
 
+const testemployees = ref(createResource({
+  url: 'planner.api.get_planner_tasks', 
+  params : {
+    department: department
+  },
+  limit: 1000, 
+  auto: true
+}))
+
+console.log(testemployees)
+
+
 const employees = ref([
-    {
-        id: 1,
-        name: "Muhammad Darwis Arifin",
-        avatar: "https://i.pravatar.cc/400?img=70",
-        tasks: [
-            {
-                id: '1-a',
-                title: "P-ANL-20222024-03-Montage",
-                duration: "6 Tage",
-                address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-                startDate: "2024-03-14",
-                endDate: "2024-03-17",
-                type: 1, // Enum 1 = work 
-            },
-            {
-                id: '1-affgggg',
-                title: "rholungsurlaub",
-                duration: "6 Tage",
-                address: "Holiday",
-                startDate: "2024-03-14",
-                endDate: "2024-03-15",
-                type: 0, // Enum 0 = holiday
-                editable: false // this is mandatory to make holiday task not moveable
-            },
-        ],
-    },
-    {
-        id: 2,
-        name: "Christoph Diethelm",
-        avatar: "https://i.pravatar.cc/400?img=69",
-        tasks: [],
-    },
-    {
-        id: 3,
-        name: "John Doe",
-        avatar: "https://i.pravatar.cc/400?img=68",
-        tasks: [
-            {
-                id: '1-b',
-                title: "P-ANL-20222024-01-Montage",
-                duration: "6 Tage",
-                address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-                startDate: "2024-03-15",
-                endDate: "2024-03-18",
-                type: 1 // Enum 1 = work 
-            },
-            {
-                id: '1-ft6667b',
-                title: "P-ANL-20222024-01-Montage",
-                duration: "6 Tage",
-                address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-                startDate: "2024-03-17",
-                endDate: "2024-03-18",
-                type: 1 // Enum 1 = work 
-            },
-        ],
-    },
-    {
-        id: 4,
-        name: "Marco Simeone",
-        avatar: "https://i.pravatar.cc/400?img=64",
-        tasks: [
-        ],
-    },
-    {
-        id: 5,
-        name: "Joao Schmid",
-        avatar: "https://i.pravatar.cc/400?img=61",
-        tasks: [
-            {
-                id: '1-ff',
-                title: "P-ANL-20222024-03-Montage",
-                duration: "6 Tage",
-                address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-                startDate: "2024-02-28",
-                endDate: "2024-02-29",
-                type: 1 // Enum 1 = work 
-            },
-        ],
-    },
-    {
-        id: 6,
-        name: "Lucas Aeneas",
-        avatar: "https://i.pravatar.cc/400?img=56",
-        tasks: [],
-    },
-    {
-        id: 7,
-        name: "Arjen Robben",
-        avatar: "https://i.pravatar.cc/400?img=55",
-        tasks: [
-            {
-                id: '1-6666f',
-                title: "P-ANL-20222024-01-Montage",
-                duration: "6 Tage",
-                address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-                startDate: "2024-02-24",
-                endDate: "2024-02-26",
-                type: 1 // Enum 1 = work 
-            },
-        ],
-    },
-    {
-        id: 8,
-        name: "Anthony",
-        avatar: "https://i.pravatar.cc/400?img=54",
-        tasks: [
-            {
-                id: '1-66eeeeeeeeee66f',
-                title: "P-ANL-20222024-01-Montage",
-                duration: "6 Tage",
-                address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-                startDate: "2024-02-23",
-                endDate: "2024-02-26",
-                type: 1 // Enum 1 = work 
-            },
-        ],
-    },
+{
+			"name": "HR-EMP-00001",
+			"user_id": "c.diethelm@diethelm-aufzuege.swiss",
+			"image": "http://localhost:8000/private/files/1691229276836.jpeg",
+			"employee_name": "Christoph Diethelm",
+			"tasks": [
+				{
+					"project_name": "Testproj with Address",
+					"name": "TASK-2024-00002",
+					"title": "PROJ-0001 - test",
+					"startDate": "2024-03-12",
+					"endDate": "2024-03-16",
+					"type": 1
+				},
+				{
+					"type": 0,
+					"endDate": "2024-03-21",
+					"startDate": "2024-03-20",
+					"title": "On Leave",
+					"project_name": "Leave Without Pay", 
+                    "editable": "false"
+				},
+				{
+					"type": 0,
+					"endDate": "2024-03-20",
+					"startDate": "2024-03-19",
+					"title": "On Leave",
+					"project_name": "Leave Without Pay"
+				},
+				{
+					"type": 0,
+					"endDate": "2024-03-19",
+					"startDate": "2024-03-18",
+					"title": "On Leave",
+					"project_name": "Leave Without Pay"
+				}
+			]
+		},
+		{
+			"name": "HR-EMP-00002",
+			"user_id": "a.vuka@diethelm-aufzuege.swiss",
+			"image": null,
+			"employee_name": "Ante Vuka",
+			"tasks": []
+		}
 ]);
 
 const backLog = ref([
     {
-        id: '1ddffffff-a',
+        name: '1ddffffff-a',
         title: "P-ANL-20222024-01-Montage",
         duration: "6 Tage",
-        address: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
+        project_name: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
         type: 1 // Enum 1 = work 
     },
 ]);
@@ -278,10 +218,10 @@ const initTimeLine = () => {
     var groups = new DataSet()
     for (var i = 0; i < employees.value.length; i++) {
         groups.add({
-            id: employees.value[i].id,
+            id: employees.value[i].name,
             content: {
-                name: employees.value[i].name,
-                avatar: employees.value[i].avatar
+                name: employees.value[i].employee_name,
+                image: employees.value[i].image
             }
         })
     }
@@ -291,16 +231,16 @@ const initTimeLine = () => {
     employees.value.forEach(employee => {
         employee.tasks.forEach(task => {
             items.add({
-                id: task.id,
-                group: employee.id,
+                id: task.name,
+                group: employee.name,
                 content: {
                     title: task.title,
-                    address: task.address,
+                    project_name: task.project_name,
                     type: task.type
                 },
                 start: task.startDate,
                 end: task.endDate,
-                editable : task.editable
+                editable : task.type == 1
             });
         });
     });
@@ -335,12 +275,12 @@ const initTimeLine = () => {
         template: function (item, element, data) {
             element.classList.add('task-card');
             element.parentNode.parentNode.setAttribute('task-type', item.content.type);
-            return '<p class="text-xs">' + item.content.title + '</p>' + '<p class="text-xs">' + item.content.address + '</p>';
+            return '<p class="text-xs">' + item.content.title + '</p>' + '<p class="text-xs">' + item.content.project_name + '</p>';
         },
         groupTemplate: function (group, element) {
             element.classList.add('employee');
             return '<div class="employee">' +
-                '<img class="employee-avatar" src="' + group.content.avatar + '" alt="Avatar">' +
+                '<img class="employee-avatar" src="' + group.content.image + '" alt="Avatar">' +
                 '<p class="employee-name">' + group.content.name + '</p>' + '</div>';
         },
         snap: function (date, scale, step) {
