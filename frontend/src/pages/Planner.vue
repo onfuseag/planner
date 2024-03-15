@@ -316,7 +316,12 @@ const initTimeLine = () => {
         start: startOfWeek,
         end: endOfWeek,
         zoomable: false,
-        editable: true,
+        editable: {
+            add: false, // Disable adding items on double click
+            updateTime: true, // Items can be moved horizontally
+            updateGroup: true, // Items can be moved from one group to another
+            remove: false, // Items can be deleted by selecting and pressing the delete key
+        },
         orientation: 'top',
         horizontalScroll: true,
         showWeekScale: true,
