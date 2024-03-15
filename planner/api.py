@@ -73,7 +73,6 @@ def get_planner_tasks(department):
                 user_task['from_date'] = attendance.attendance_date
                 user_task['title'] = attendance.status
                 user_task['project_name'] = attendance.leave_type
-                user_task['editable'] = False
 
                 user_tasks.append(user_task)
 

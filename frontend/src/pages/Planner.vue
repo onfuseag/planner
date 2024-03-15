@@ -80,12 +80,6 @@ let breadcrumbs = [
         },
     },
     {
-        label: 'Planner',
-        route: {
-            name: 'Planner',
-        },
-    },
-    {
         label: dashboardName,
         route: {
             name: 'Planner'
@@ -131,7 +125,6 @@ const employees = ref([
 					"startDate": "2024-03-20",
 					"title": "On Leave",
 					"project_name": "Leave Without Pay", 
-                    "editable": "false"
 				},
 				{
 					"type": 0,
