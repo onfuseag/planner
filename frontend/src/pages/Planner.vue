@@ -65,8 +65,12 @@ import TaskForm from "@/components/Task/TaskForm.vue";
 import { Timeline, DataSet } from 'vis-timeline/standalone';
 import { useRoute } from 'vue-router';
 import { createResource } from 'frappe-ui'
+import { EmployeesStore } from "@/stores/EmployeesStore";
+import { storeToRefs } from "pinia";
 
 const route = useRoute(); // Access to the current route
+const { dataEmployees } = storeToRefs(EmployeesStore());
+const { getEmployees } = EmployeesStore();
 
 // Get which dashboard we are supposed to load
 const dashboardName = route.params.dashboardName;
@@ -86,71 +90,12 @@ let breadcrumbs = [
         }
     },
 ];
+
 let currentDate = ref(new Date());
 let isTaskFormActive = ref(false);
 let weekNumber = ref(0);
 
 const timeline = ref();
-
-const employees = createResource({
-  url: 'planner.api.get_planner_tasks', 
-  params : {
-    department: department
-  },
-  limit: 1000, 
-  auto: true
-});
-
-console.log(employees)
-
-
-const testemployees = ref([
-{
-			"name": "HR-EMP-00001",
-			"user_id": "c.diethelm@diethelm-aufzuege.swiss",
-			"image": "http://localhost:8000/private/files/1691229276836.jpeg",
-			"employee_name": "Christoph Diethelm",
-			"tasks": [
-				{
-					"project_name": "Testproj with Address",
-					"name": "TASK-2024-00002",
-					"title": "PROJ-0001 - test",
-					"startDate": "2024-03-12",
-					"endDate": "2024-03-16",
-					"type": 1
-				},
-				{
-					"type": 0,
-					"endDate": "2024-03-21",
-					"startDate": "2024-03-20",
-					"title": "On Leave",
-					"project_name": "Leave Without Pay", 
-				},
-				{
-					"type": 0,
-					"endDate": "2024-03-20",
-					"startDate": "2024-03-19",
-					"title": "On Leave",
-					"project_name": "Leave Without Pay"
-				},
-				{
-					"type": 0,
-					"endDate": "2024-03-19",
-					"startDate": "2024-03-18",
-					"title": "On Leave",
-					"project_name": "Leave Without Pay"
-				}
-			]
-		},
-		{
-			"name": "HR-EMP-00002",
-			"user_id": "a.vuka@diethelm-aufzuege.swiss",
-			"image": null,
-			"employee_name": "Ante Vuka",
-			"tasks": []
-		}
-]);
-
 const backLog = ref([
     {
         name: '1ddffffff-a',
@@ -209,19 +154,19 @@ const getWeekNumber = (d) => {
 
 const initTimeLine = () => {
     var groups = new DataSet()
-    for (var i = 0; i < employees.value.length; i++) {
+    for (var i = 0; i < dataEmployees.value.length; i++) {
         groups.add({
-            id: employees.value[i].name,
+            id: dataEmployees.value[i].name,
             content: {
-                name: employees.value[i].employee_name,
-                image: employees.value[i].image
+                name: dataEmployees.value[i].employee_name,
+                image: dataEmployees.value[i].image
             }
         })
     }
 
     var items = new DataSet();
 
-    employees.value.forEach(employee => {
+    dataEmployees.value.forEach(employee => {
         employee.tasks.forEach(task => {
             items.add({
                 id: task.name,
@@ -290,7 +235,11 @@ const initTimeLine = () => {
     timeline.value = new Timeline(container, items, groups, options);
 
     timeline.value.on('select', function (properties) {
-        isTaskFormActive.value = true;
+        if(properties.items.length > 0) {
+            isTaskFormActive.value = true;
+        } else {
+            isTaskFormActive.value = false;
+        }
     });
 
     timeline.value.on('rangechanged', function (properties) {
@@ -299,7 +248,8 @@ const initTimeLine = () => {
     });
 }
 
-onMounted(() => {
+onMounted(async() => {
+    await getEmployees();
     initTimeLine();
     weekNumber.value = getWeekNumber(new Date(currentDate.value));
 });
