@@ -43,7 +43,7 @@
                         </template>
                         <template v-else>
                             <div class="mb-3 flex justify-between items-center">
-                                <p class="text-lg">Task 40031</p>
+                                <p class="text-lg">Edit Task</p>
                                 <Button :variant="'solid'" theme="gray" size="sm" label="Button" :loadingText="null"
                                     :disabled="false" :link="null" icon="arrow-left" :loading="false"
                                     @click="backToBackLog">
@@ -65,12 +65,14 @@ import TaskForm from "@/components/Task/TaskForm.vue";
 import { Timeline, DataSet } from 'vis-timeline/standalone';
 import { useRoute } from 'vue-router';
 import { createResource } from 'frappe-ui'
-import { EmployeesStore } from "@/stores/EmployeesStore";
-import { storeToRefs } from "pinia";
+import { getURL } from '../getURL.js' 
+
+//const { employees } = EmployeesStore();
+
 
 const route = useRoute(); // Access to the current route
-const { dataEmployees } = storeToRefs(EmployeesStore());
-const { getEmployees } = EmployeesStore();
+
+var employees = {}
 
 // Get which dashboard we are supposed to load
 const dashboardName = route.params.dashboardName;
@@ -154,19 +156,19 @@ const getWeekNumber = (d) => {
 
 const initTimeLine = () => {
     var groups = new DataSet()
-    for (var i = 0; i < dataEmployees.value.length; i++) {
+    for (var i = 0; i < employees.length; i++) {
         groups.add({
-            id: dataEmployees.value[i].name,
+            id: employees[i].name,
             content: {
-                name: dataEmployees.value[i].employee_name,
-                image: dataEmployees.value[i].image
+                name: employees[i].employee_name,
+                image: employees[i].image
             }
         })
     }
 
     var items = new DataSet();
 
-    dataEmployees.value.forEach(employee => {
+    employees.forEach(employee => {
         employee.tasks.forEach(task => {
             items.add({
                 id: task.name,
@@ -218,7 +220,7 @@ const initTimeLine = () => {
         groupTemplate: function (group, element) {
             element.classList.add('employee');
             return '<div class="employee">' +
-                '<img class="employee-avatar" src="' + group.content.image + '" alt="Avatar">' +
+                '<img class="employee-avatar" src="' + getURL() + group.content.image + '" alt="Avatar">' +
                 '<p class="employee-name">' + group.content.name + '</p>' + '</div>';
         },
         snap: function (date, scale, step) {
@@ -248,9 +250,21 @@ const initTimeLine = () => {
     });
 }
 
-onMounted(async() => {
-    await getEmployees();
-    initTimeLine();
+onMounted(() => {
+
+    const resource = createResource({
+        url: 'planner.api.get_planner_tasks', 
+        params : {
+            department: department
+        }, 
+        auto: true,
+        onSuccess: (data) => {
+            employees = resource.data
+            initTimeLine()
+        }
+    });
+
+    
     weekNumber.value = getWeekNumber(new Date(currentDate.value));
 });
 

@@ -132,21 +132,25 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+    import { ref } from "vue";
 
-const addAssigneePopup = ref(false);
-let avatars = [
-    "https://i.pravatar.cc/400?img=69",
-    "https://i.pravatar.cc/400?img=70",
-    "https://i.pravatar.cc/400?img=68"
-];
-let people = ref([]);
-let name = ref();
-let status = ref();
-let priority = ref();
-let expectedStartDate = ref();
-let expectedEndDate = ref();
-let expectedTime = ref();
-let actualTime = ref();
+    const addAssigneePopup = ref(false);
+    let avatars = [
+        "https://i.pravatar.cc/400?img=69",
+        "https://i.pravatar.cc/400?img=70",
+        "https://i.pravatar.cc/400?img=68"
+    ];
+    let people = ref([]);
+    let name = ref();
+    let status = ref();
+    let priority = ref();
+    let expectedStartDate = ref();
+    let expectedEndDate = ref();
+    let expectedTime = ref();
+    let actualTime = ref();
+
+    onMounted(() => {
+        
+    }
 
 </script>

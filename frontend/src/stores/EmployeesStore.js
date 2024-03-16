@@ -1,30 +1,26 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import { ref, computed, reactive } from 'vue'
+import { createResource } from 'frappe-ui'
 
-export const EmployeesStore = defineStore('EmployeesStore', () => {
+export const EmployeesStore = defineStore('employees-tasks', () => {
 
-    const dataEmployees = ref();
+    
+    const employeesTasks = createResource({
+        url: 'planner.api.get_planner_tasks', 
+        params : {
+            department: "Operations"
+        }, 
+        auto: true
+    });
+    console.log(response)
+    dataEmployees.value = response.data;
+        
+   
 
-    const getEmployees = async () => {
-        try {
-            // just change the API URL to your own
-            const response = await axios.get('https://api.npoint.io/0db4abe440e814678410');
-            dataEmployees.value = response.data;
-        } catch (error) {
-            console.error(error);
-        }
-    };
+    const employees = computed(() => employeesTasks.data || [])
 
-    // const addEmployess = async (id) => {
-    //     try {
-    //         const response = await axios.post(`/api/`);
-    //         return response;
-    //     } catch (error) {
-    //         console.error(error);
-    //     }
-    // };
 
-    return { dataEmployees, getEmployees }
+    return { employees }
 
 });
