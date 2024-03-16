@@ -55,25 +55,25 @@ def get_planner_tasks(department):
 
             
             # Get the employee holidays
-            attendancedata = frappe.db.get_all(
-                "Attendance", 
+            holidaydata = frappe.db.get_all(
+                "Leave Application", 
                 filters={
                     "docstatus": 1,
                     "employee": employee.name, 
-                    "status" : "On Leave"
+                    "status" : "Approved"
                 }, 
-                fields=['name', 'status', 'leave_type', 'attendance_date']
+                fields=['name', 'from_date','to_date', 'total_leave_days', 'leave_type']
             )
             
-            for attendance in attendancedata: 
+            for holiday in holidaydata: 
 
                 user_task = {}
 
                 user_task['type'] = 0 # This should be a holiday task
-                user_task['endDate'] = get_one_day_later(attendance.attendance_date)
-                user_task['startDate'] = attendance.attendance_date
-                user_task['title'] = attendance.status
-                user_task['project_name'] = attendance.leave_type
+                user_task['endDate'] = get_one_day_later(holiday.to_date)
+                user_task['startDate'] = holiday.from_date
+                user_task['title'] = holiday.leave_type
+                user_task['project_name'] = ""
 
                 user_tasks.append(user_task)
 

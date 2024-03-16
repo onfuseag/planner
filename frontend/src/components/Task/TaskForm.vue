@@ -125,14 +125,33 @@
                 label="Expected End Date" v-model="expectedEndDate" class="mb-3" />
             <FormControl :type="'number'" size="sm" variant="subtle" placeholder="Expected Time" :disabled="false"
                 label="Expected Time (in hours)" v-model="expectedTime" class="mb-3" />
-            <FormControl :type="'number'" size="sm" variant="subtle" placeholder="Actual Time in Hours" :disabled="false"
+            <FormControl :type="'number'" size="sm" variant="subtle" placeholder="Actual Time in Hours" :disabled="true"
                 label="Actual Time in Hours (via Timesheet)" v-model="actualTime" class="mb-3" />
+            
         </div>
     </form>
 </template>
 
 <script setup>
     import { ref } from "vue";
+    import { createResource } from "frappe-ui";
+
+    const data = createResource({
+        url : 'frappe.desk.form.load.getdoc', 
+        params : {
+            doctype: "Task"
+            name: "TASK-2024-00002" // static for now, since i cannot pass a variable
+        }, 
+        
+        auto: true, 
+        onSuccess: (data) => {
+            console.log(data)
+        }
+    })
+
+    // The doctype is accessible through data.doc
+    // Example json response from ERP sent to oyu already
+    // 
 
     const addAssigneePopup = ref(false);
     let avatars = [
@@ -149,8 +168,7 @@
     let expectedTime = ref();
     let actualTime = ref();
 
-    onMounted(() => {
-        
-    }
+    
+
 
 </script>

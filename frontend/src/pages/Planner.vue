@@ -95,6 +95,7 @@ let breadcrumbs = [
 
 let currentDate = ref(new Date());
 let isTaskFormActive = ref(false);
+let activeTask = ref("");
 let weekNumber = ref(0);
 
 const timeline = ref();
@@ -108,8 +109,9 @@ const backLog = ref([
     },
 ]);
 
-const openTaskDetail = () => {
+const openTaskDetail = (task) => {
     isTaskFormActive.value = true;
+    activeTask = task
 };
 
 const dragEndBackLog = () => {}
