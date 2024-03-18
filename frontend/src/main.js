@@ -17,6 +17,8 @@ import { setConfig, frappeRequest, resourcesPlugin,
     Dropdown,
     Dialog,
     Autocomplete,
+    ErrorMessage,
+    TextInput
 } from 'frappe-ui'
 
 const pinia = createPinia();
@@ -38,4 +40,6 @@ app.component('Select', Select)
 app.component('Dropdown', Dropdown)
 app.component('Dialog', Dialog)
 app.component('Autocomplete', Autocomplete)
+app.component('ErrorMessage', ErrorMessage)
+app.component('TextInput', TextInput)
 app.mount("#app");
