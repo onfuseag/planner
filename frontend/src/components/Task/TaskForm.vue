@@ -137,7 +137,7 @@
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Actual Time in Hours</label>
                     <TextInput :type="'number'" size="sm" variant="subtle" placeholder="Actual Time in Hours"
-                        :disabled="false" v-model="actual_time"
+                        :disabled="true" v-model="actual_time"
                         :class="[errors.actual_time ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />
                     <ErrorMessage v-if="errors.actual_time" :message="Error(errors.actual_time)" class="mt-1" />
                 </div>
@@ -153,6 +153,7 @@ import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/yup';
 import { object, string, number, date, array } from 'yup';
 import { watchDebounced } from '@vueuse/core';
+import { getURL } from '../../getURL.js' 
 
 const axios = inject("axios");
 let dataTask = ref();
@@ -198,7 +199,11 @@ watchDebounced(
 const addAssigneePopup = ref(false);
 let avatars = ref();
 const dataAvatars = computed(() => {
-    return avatars.value ? Object.values(avatars.value).map(user => user.image) : [];
+    return avatars.value ? Object.values(avatars.value).map(user => {
+        if (user.image){
+            return getURL() + user.image
+        }
+    }) : [];
 });
 
 onMounted(async () => {
