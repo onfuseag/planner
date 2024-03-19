@@ -70,7 +70,18 @@
                 </div>
 
                 <div class="mb-3">
+                    <FormControl
+                        type="text"
+                        label="Label">
+                        <template #suffix>
+                        <FeatherIcon
+                            class="w-4"
+                            name="search"
+                        />
+                        </template>
+                    </FormControl>
                     <label class="block text-xs text-gray-600 mb-2">Project</label>
+                    
                     <div
                         class="flex justify-between items-center text-gray-800 bg-gray-100 rounded py-2 h-7 cursor-pointer px-2">
                         <span class="text-sm">P-ANL-20022024-01</span>
@@ -95,11 +106,11 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Status</label>
-                    <Select :options="['Open', 'Close']" v-model="status" />
+                    <Select :options="['Open', 'Working', 'Pending Review', 'Overdue', 'Template', 'Completed', 'Cancelled']" v-model="status" />
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Priority</label>
-                    <Select :options="['Low', 'High']" v-model="priority" />
+                    <Select :options="['Low','Medium','High']" v-model="priority" />
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Parent Task</label>
@@ -128,7 +139,7 @@
 
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Expected Time</label>
-                    <TextInput :type="'number'" size="sm" variant="subtle" placeholder="Expected Time" :disabled="false"
+                    <TextInput :type="'number'" size="sm" variant="subtle" placeholder="Expected Time" :disabled="true"
                         v-model="expected_time"
                         :class="[errors.expected_time ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />
                     <ErrorMessage v-if="errors.expected_time" :message="Error(errors.expected_time)" class="mt-1" />
@@ -206,21 +217,39 @@ const dataAvatars = computed(() => {
     }) : [];
 });
 
+
 onMounted(async () => {
-    await axios.get('https://api.npoint.io/58a149c55bdb0d713af1')
+    const response = createResource({
+        url: 'frappe.desk.form.load.getdoc', 
+        params : {
+            doctype: "Task", 
+            name: "TASK-2024-00002"
+        }, 
+        auto: true,
+        onSuccess: (data) => {
+            dataTask.value = response.data?.docs[0];
+            avatars.value = response.data?.docinfo?.user_info;
+
+            console.log(data)
+
+            subject.value = dataTask.value.subject;
+            status.value = dataTask.value.status;
+            priority.value = dataTask.value.priority;
+            exp_start_date.value = dataTask.value.exp_start_date;
+            exp_end_date.value = dataTask.value.exp_end_date;
+            expected_time.value = dataTask.value.expected_time;
+            actual_time.value = dataTask.value.actual_time;
+        }
+    });
+
+    /*await axios.get('https://api.npoint.io/58a149c55bdb0d713af1')
         .then(response => {
             dataTask.value = response.data?.docs[0];
             avatars.value = response.data?.docinfo?.user_info;
         })
         .catch(error => console.error('Error:', error));
-
-    subject.value = dataTask.value.subject;
-    status.value = dataTask.value.status;
-    priority.value = dataTask.value.priority;
-    exp_start_date.value = dataTask.value.exp_start_date;
-    exp_end_date.value = dataTask.value.exp_end_date;
-    expected_time.value = dataTask.value.expected_time;
-    actual_time.value = dataTask.value.actual_time;
+*/
+    
 
 });
 

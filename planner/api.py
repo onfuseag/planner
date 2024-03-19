@@ -82,6 +82,7 @@ def get_planner_tasks(department):
 
     return users
 
+
 # This method will get a string and return a string one day later to it in the format YYYY-MM-DD
 def get_one_day_later(strdate):
     date = frappe.utils.getdate(strdate)
