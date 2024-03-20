@@ -7,7 +7,7 @@
                 <div class="flex justify-start items-center">
                     <Avatar :shape="'circle'" :image="avatar" label="EY" size="2xl"
                         v-for="(avatar, index) in dataAvatars" :key="index" v-if="dataAvatars.length > 0" />
-                    <Button :variant="'subtle'" theme="gray" size="xl" label="Button" :loading="false"
+                    <Button :variant="'subtle'" theme="gray" size="lg" label="Button" :loading="false"
                         :loadingText="null" :disabled="false" :link="null" icon="user-plus" class="rounded-full"
                         type="button" @click="addAssigneePopup = true">
                     </Button>
@@ -72,7 +72,7 @@
                 <div class="mb-3">
                     <FormControl
                         type="text"
-                        label="Label">
+                        label="K">
                         <template #suffix>
                         <FeatherIcon
                             class="w-4"
@@ -106,7 +106,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Status</label>
-                    <Select :options="['Open', 'Working', 'Pending Review', 'Overdue', 'Template', 'Completed', 'Cancelled']" v-model="status" />
+                    <Select :options="['Open', 'Working', 'Pending Review', 'Overdue', 'Completed', 'Cancelled']" v-model="status" />
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Priority</label>
@@ -158,7 +158,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject, computed } from "vue";
+
+import { ref, onMounted, inject, computed, defineProps } from "vue";
 import { createResource } from "frappe-ui";
 import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/yup';
@@ -166,8 +167,13 @@ import { object, string, number, date, array } from 'yup';
 import { watchDebounced } from '@vueuse/core';
 import { getURL } from '../../getURL.js' 
 
-const axios = inject("axios");
+// Props to be taken
+const props = defineProps({
+  task: String
+});
+
 let dataTask = ref();
+
 const schema = toTypedSchema(
     object({
         subject: string().required(),
@@ -219,37 +225,34 @@ const dataAvatars = computed(() => {
 
 
 onMounted(async () => {
+
+
     const response = createResource({
         url: 'frappe.desk.form.load.getdoc', 
         params : {
             doctype: "Task", 
-            name: "TASK-2024-00002"
+            name: props.task
         }, 
-        auto: true,
+        auto: false,
         onSuccess: (data) => {
-            dataTask.value = response.data?.docs[0];
-            avatars.value = response.data?.docinfo?.user_info;
+            if (response.data) {
+                dataTask.value = response.data.docs[0];
+                avatars.value = response.data.docinfo?.user_info;
 
-            console.log(data)
+                console.log(data)
 
-            subject.value = dataTask.value.subject;
-            status.value = dataTask.value.status;
-            priority.value = dataTask.value.priority;
-            exp_start_date.value = dataTask.value.exp_start_date;
-            exp_end_date.value = dataTask.value.exp_end_date;
-            expected_time.value = dataTask.value.expected_time;
-            actual_time.value = dataTask.value.actual_time;
+                subject.value = dataTask.value.subject;
+                status.value = dataTask.value.status;
+                priority.value = dataTask.value.priority;
+                exp_start_date.value = dataTask.value.exp_start_date;
+                exp_end_date.value = dataTask.value.exp_end_date;
+                expected_time.value = dataTask.value.expected_time;
+                actual_time.value = dataTask.value.actual_time;
+            }
+            
         }
     });
 
-    /*await axios.get('https://api.npoint.io/58a149c55bdb0d713af1')
-        .then(response => {
-            dataTask.value = response.data?.docs[0];
-            avatars.value = response.data?.docinfo?.user_info;
-        })
-        .catch(error => console.error('Error:', error));
-*/
-    
 
 });
 

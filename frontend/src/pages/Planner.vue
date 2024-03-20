@@ -28,7 +28,7 @@
                         <template v-if="!isTaskFormActive">
                             <p class="text-lg mb-3">Backlog</p>
                             <div class="grid grid-rows gap-3 mb-3">
-                                <div class="flex flex-col bg-gray-300 p-3 rounded gap-2 cursor-grab select-none"
+                                <div class="flex flex-col bg-gray-200 p-3 rounded gap-2 cursor-grab select-none"
                                     v-for="task in backLog" :key="task.id" @click="openTaskDetail" draggable="true"
                                     @dragstart="dragBackLog($event, task)">
                                     <div class="flex justify-between items-center">
@@ -49,7 +49,7 @@
                                     @click="backToBackLog">
                                 </Button>
                             </div>
-                            <TaskForm />
+                            <TaskForm task="test"/>
                         </template>
                     </div>
                 </div>
@@ -67,7 +67,14 @@ import { useRoute } from 'vue-router';
 import { createResource } from 'frappe-ui'
 import { getURL } from '../getURL.js' 
 
-//const { employees } = EmployeesStore();
+
+// Props to be taken
+const props = defineProps({
+  task: {
+    type: String, 
+    required: true
+  }
+});
 
 
 const route = useRoute(); // Access to the current route
@@ -110,8 +117,11 @@ const backLog = ref([
 ]);
 
 const openTaskDetail = (task) => {
-    isTaskFormActive.value = true;
     activeTask = task
+    localStorage.setItem('activeTask', task);
+    isTaskFormActive.value = true;
+    console.log(task)
+    console.log("Item: " + localStorage.getItem('activeTask'))
 };
 
 const dragEndBackLog = () => {}
@@ -159,11 +169,12 @@ const getWeekNumber = (d) => {
 const initTimeLine = () => {
     var groups = new DataSet()
     for (var i = 0; i < employees.length; i++) {
+
         groups.add({
             id: employees[i].name,
             content: {
                 name: employees[i].employee_name,
-                image: employees[i].image
+                image: employees[i].image === null ? null : getURL() + employees[i].image
             }
         })
     }
@@ -222,7 +233,7 @@ const initTimeLine = () => {
         groupTemplate: function (group, element) {
             element.classList.add('employee');
             return '<div class="employee">' +
-                '<img class="employee-avatar" src="' + getURL() + group.content.image + '" alt="Avatar">' +
+                '<img class="employee-avatar" src="' + group.content.image + '" alt="Avatar">' +
                 '<p class="employee-name">' + group.content.name + '</p>' + '</div>';
         },
         snap: function (date, scale, step) {

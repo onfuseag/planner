@@ -38,13 +38,15 @@ body {
     border: none !important;
 }
 .vis-item.vis-selected {
-    border: solid 2px #E03636 !important
+    border: solid 2px #E03636 !important;
+    background-color: #B7B7B7 !important;
 }
 .vis-item[task-type="1"] {
-    background-color: #E2E2E2 !important;
+    background-color: #EEEEEE;
 }
 .vis-item[task-type="0"] {
-    background-color: #CAE5D4 !important;
+    background-color: #008127 !important;
+    color: #FFFFFF !important;
     cursor: auto;
 }
 .vis-editable.vis-selected, .vis-item .vis-drag-center {
