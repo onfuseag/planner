@@ -35,7 +35,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory('/planner'),
+  history: createWebHistory('/frontend'),
   routes,
   scrollBehavior(to, from, savedPosition) {
     return {

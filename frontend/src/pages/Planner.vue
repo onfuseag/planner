@@ -49,7 +49,7 @@
                                     @click="backToBackLog">
                                 </Button>
                             </div>
-                            <TaskForm task="test"/>
+                            <TaskForm v-bind:task="activeTask" />
                         </template>
                     </div>
                 </div>
@@ -118,10 +118,7 @@ const backLog = ref([
 
 const openTaskDetail = (task) => {
     activeTask = task
-    localStorage.setItem('activeTask', task);
     isTaskFormActive.value = true;
-    console.log(task)
-    console.log("Item: " + localStorage.getItem('activeTask'))
 };
 
 const dragEndBackLog = () => {}

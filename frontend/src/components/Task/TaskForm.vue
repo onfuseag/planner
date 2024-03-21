@@ -47,7 +47,7 @@
                                 value: 'jane-wayne',
                                 image: 'https://randomuser.me/api/portraits/women/51.jpg',
                             },
-                        ]" v-model="people" placeholder="Select people" :multiple="true" />
+                        ]" v-model="people" placeholder="Select people" :multiple="false" />
                         </template>
                         <template #actions>
                             <Button variant="solid">
@@ -224,22 +224,25 @@ const dataAvatars = computed(() => {
 });
 
 
-onMounted(async () => {
+onMounted(() => {
 
-
+    console.log(props.task)
     const response = createResource({
         url: 'frappe.desk.form.load.getdoc', 
         params : {
             doctype: "Task", 
             name: props.task
         }, 
-        auto: false,
+        auto: true,
         onSuccess: (data) => {
+            console.log(response.data)
+            console.log(data)
             if (response.data) {
                 dataTask.value = response.data.docs[0];
                 avatars.value = response.data.docinfo?.user_info;
 
                 console.log(data)
+                console.log(dataTask.value.subject)
 
                 subject.value = dataTask.value.subject;
                 status.value = dataTask.value.status;
@@ -248,7 +251,11 @@ onMounted(async () => {
                 exp_end_date.value = dataTask.value.exp_end_date;
                 expected_time.value = dataTask.value.expected_time;
                 actual_time.value = dataTask.value.actual_time;
+
+                console.log("end")
             }
+
+            console.log("end2")
             
         }
     });
