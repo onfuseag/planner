@@ -120,19 +120,34 @@ const openTaskDetail = (taskName) => {
 };
 
 const dragEndBackLog = (val) => {
+    console.log("drop")
     console.log(val)
 }
 
 const dragBackLog = (event, task) => {
 
     event.dataTransfer.effectAllowed = 'move';
+
+    var tasktitle = "" 
+
+    if (task.project) {
+        tasktitle = task.project + ' - ' + task.subject
+    } else {
+        tasktitle = task.subject
+    }
+
     let item = {
-        id: new Date(),
+        id: task.name,
         type: 'range',
-        content: task
+        content: {
+            name: task.name,
+            title: tasktitle, 
+            project_name: task.project_name, 
+            type: task.type
+        }
     };
 
-    console.log(task)
+    console.log("Task: ", task)
 
     event.target.id = new Date(item.id).toISOString();
 
@@ -177,7 +192,7 @@ const initTimeLine = () => {
     for (var i = 0; i < employees.length; i++) {
 
         groups.add({
-            id: employees[i].name,
+            id: employees[i].user_id,
             content: {
                 name: employees[i].employee_name,
                 image: employees[i].image === null ? null : getURL() + employees[i].image
@@ -191,7 +206,7 @@ const initTimeLine = () => {
         employee.tasks.forEach(task => {
             items.add({
                 id: task.name,
-                group: employee.name,
+                group: employee.user_id,
                 content: {
                     title: task.title,
                     project_name: task.project_name,
@@ -215,12 +230,7 @@ const initTimeLine = () => {
         start: startOfWeek,
         end: endOfWeek,
         zoomable: false,
-        editable: {
-            add: false, // Disable adding items on double click
-            updateTime: true, // Items can be moved horizontally
-            updateGroup: true, // Items can be moved from one group to another
-            remove: false, // Items can be deleted by selecting and pressing the delete key
-        },
+        editable: true,
         orientation: 'top',
         horizontalScroll: true,
         showWeekScale: true,
@@ -253,9 +263,48 @@ const initTimeLine = () => {
                 }
             })
         },
-        onDropObjectOnItem: function(objectData, item, callback) {
-            console.log("drop")
-            console.log("ondrop", objectData, item, callback)
+        onAdd: function (item, callback) {
+            console.log("onAdd", item, callback)
+            var assignees = [item.group]
+
+            createResource({
+                url: 'frappe.desk.form.assign_to.add', 
+                params: {
+                    doctype: "Task", 
+                    name: item.content.name, 
+                    description: item.content.subject, 
+                    assign_to: assignees, 
+                    bulk_assign: false
+                }, 
+                auto: true,
+                onSuccess: () =>  {
+                    callback(item); // send back adjusted item
+                    // We now need to update the item to accept the new dates
+
+                    var start_date = new Date(item.start)
+                    start_date.setDate(start_date.getDate() + 1) // Add one because the format option counts wrong
+
+                    var end_date = new Date(item.start)
+                    end_date.setDate(end_date.getDate() + 2) // Add two for visibility
+
+                    createResource({
+                        url: 'planner.api.planner_change_date_task', 
+                        params: {
+                            task : item.content.name, 
+                            exp_start_date: formatDate(start_date), 
+                            exp_end_date: formatDate(end_date)
+                        }, 
+                        auto: true,
+                        onSuccess: () =>  {
+                            console.log("Success")
+                        }
+                    })
+                }, 
+                onError: () =>  {
+                    callback(null); // cancel updating the item
+                }
+            })
+            
         },
         template: function (item, element, data) {
             element.classList.add('task-card');

@@ -42,13 +42,17 @@ def get_planner_tasks(department):
 
             for task in tasks:
                 user_task = {}
+                tasktitle = ""
 
                 # If there is a project attached, we should get the project name
                 if task.project: 
                     user_task["project_name"] = frappe.db.get_value("Project", task.project, "project_name")
+                    tasktitle = f'{task.project} - {task.subject}'
+                else: 
+                    tasktitle = task.subject
 
                 user_task['name'] = task.name
-                user_task['title'] = f'{task.project} - {task.subject}'
+                user_task['title'] = tasktitle
                 user_task['startDate'] = task.exp_start_date
                 user_task['endDate'] = get_one_day_later(task.exp_end_date)
                 user_task['type'] = 1 # This should be a work task
