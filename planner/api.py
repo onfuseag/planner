@@ -7,6 +7,8 @@ from frappe.utils import getdate, add_to_date
 @frappe.whitelist()
 def get_planner_tasks(department):
 
+
+    # Employees and tasks assigned to the
     users = []
     
     employees = frappe.db.get_all(
@@ -82,6 +84,40 @@ def get_planner_tasks(department):
 
     return users
 
+@frappe.whitelist()
+def planner_change_date_task(task, exp_start_date, exp_end_date): 
+
+    # Update the values
+    frappe.db.set_value('Task', task, {
+        "exp_start_date" : exp_start_date, 
+        "exp_end_date" : exp_end_date
+    })
+
+
+@frappe.whitelist()
+def planner_get_backlog(searchtext):
+
+    bfilters = {
+        'status': ["in", ["Overdue", "Open", "Working"]], 
+        '_assign' : ["not like", f'%@%'] # Make sure this is not assigned to anyone
+    }
+
+    if (searchtext):
+        bfilters['subject'] = ['like', f'%{searchtext}%']
+
+    backlogdata = frappe.db.get_all(
+        "Task", 
+        filters=bfilters,
+        order_by='exp_start_date asc',
+        fields=['name', 'subject', 'type', 'status', 'expected_time', 'priority', 'exp_start_date', 'project']
+    )
+
+    for bdata in backlogdata: 
+        # If there is a project attached, we should get the project name
+        if bdata.project: 
+            bdata["project_name"] = frappe.db.get_value("Project", bdata.project, "project_name")
+
+    return backlogdata
 
 # This method will get a string and return a string one day later to it in the format YYYY-MM-DD
 def get_one_day_later(strdate):

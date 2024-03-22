@@ -226,7 +226,6 @@ const dataAvatars = computed(() => {
 
 onMounted(() => {
 
-    console.log(props.task)
     const response = createResource({
         url: 'frappe.desk.form.load.getdoc', 
         params : {
@@ -235,14 +234,11 @@ onMounted(() => {
         }, 
         auto: true,
         onSuccess: (data) => {
-            console.log(response.data)
-            console.log(data)
+
+
             if (response.data) {
                 dataTask.value = response.data.docs[0];
                 avatars.value = response.data.docinfo?.user_info;
-
-                console.log(data)
-                console.log(dataTask.value.subject)
 
                 subject.value = dataTask.value.subject;
                 status.value = dataTask.value.status;
@@ -251,11 +247,7 @@ onMounted(() => {
                 exp_end_date.value = dataTask.value.exp_end_date;
                 expected_time.value = dataTask.value.expected_time;
                 actual_time.value = dataTask.value.actual_time;
-
-                console.log("end")
             }
-
-            console.log("end2")
             
         }
     });

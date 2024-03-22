@@ -29,27 +29,33 @@
                             <p class="text-lg mb-3">Backlog</p>
                             <div class="grid grid-rows gap-3 mb-3">
                                 <div class="flex flex-col bg-gray-200 p-3 rounded gap-2 cursor-grab select-none"
-                                    v-for="task in backLog" :key="task.id" @click="openTaskDetail" draggable="true"
+                                    v-for="task in backlog.data" :key="task.name" @click="openTaskDetail(task.name)" draggable="true"
                                     @dragstart="dragBackLog($event, task)">
-                                    <div class="flex justify-between items-center">
-                                        <p class="text-sm">{{ task.title }}</p>
-                                        <p class="text-xs">{{ task.duration }}</p>
-                                    </div>
-                                    <div class="flex justify-start items-center">
-                                        <p class="text-sm font-semibold">{{ task.project_name }}</p>
+                                    <div :id="task.name" class="flex justify-between items-center">
+                                        <div>
+                                            <p v-if="task.project" class="leading-4 text-xs">{{ task.project }}</p>
+                                            <p class="leading-4 text-sm font-bold">{{ task.subject }}</p>
+                                            <p class="leading-4 text-sm">{{ task.expected_time }} h</p>
+                                            <p class="leading-4 text-sm">{{ task.project_name }}</p>
+                                        </div>
+
+                                        <div class="text-right">
+                                            <p class="text-xs">{{ task.priority }}</p>
+                                            <p class="text-xs font-semibold">{{ task.exp_start_date }}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </template>
                         <template v-else>
                             <div class="mb-3 flex justify-between items-center">
-                                <p class="text-lg">Edit Task</p>
+                                <a target=”_blank” :href="getURL() + '/app/task/' + activeTask" >{{ activeTask }}</a>
                                 <Button :variant="'solid'" theme="gray" size="sm" label="Button" :loadingText="null"
                                     :disabled="false" :link="null" icon="arrow-left" :loading="false"
                                     @click="backToBackLog">
                                 </Button>
                             </div>
-                            <TaskForm v-bind:task="activeTask" />
+                            <TaskForm :task='activeTask' />
                         </template>
                     </div>
                 </div>
@@ -64,22 +70,23 @@ import { computed, ref, onMounted, watchEffect } from "vue";
 import TaskForm from "@/components/Task/TaskForm.vue";
 import { Timeline, DataSet } from 'vis-timeline/standalone';
 import { useRoute } from 'vue-router';
-import { createResource } from 'frappe-ui'
+import { createResource, createListResource, Avatar } from 'frappe-ui'
 import { getURL } from '../getURL.js' 
-
-
-// Props to be taken
-const props = defineProps({
-  task: {
-    type: String, 
-    required: true
-  }
-});
 
 
 const route = useRoute(); // Access to the current route
 
+// The employees with all tasks
 var employees = {}
+
+// All the tasks in backlog
+const backlog = createResource({
+    url: 'planner.api.planner_get_backlog', 
+    params : {
+        searchtext: ""
+    }, 
+    auto: true
+});
 
 // Get which dashboard we are supposed to load
 const dashboardName = route.params.dashboardName;
@@ -106,22 +113,15 @@ let activeTask = ref("");
 let weekNumber = ref(0);
 
 const timeline = ref();
-const backLog = ref([
-    {
-        name: '1ddffffff-a',
-        title: "P-ANL-20222024-01-Montage",
-        duration: "6 Tage",
-        project_name: "Hofnerstrasse 4, Haus B, 8888 Unterageri",
-        type: 1 // Enum 1 = work 
-    },
-]);
 
-const openTaskDetail = (task) => {
-    activeTask = task
+const openTaskDetail = (taskName) => {
+    activeTask = taskName // Ensure to set the current task first
     isTaskFormActive.value = true;
 };
 
-const dragEndBackLog = () => {}
+const dragEndBackLog = (val) => {
+    console.log(val)
+}
 
 const dragBackLog = (event, task) => {
 
@@ -132,6 +132,8 @@ const dragBackLog = (event, task) => {
         content: task
     };
 
+    console.log(task)
+
     event.target.id = new Date(item.id).toISOString();
 
     let startDateTime = new Date(currentDate.value);
@@ -139,6 +141,7 @@ const dragBackLog = (event, task) => {
     item.content.startDate = startDateTime.toLocaleDateString('en-CA'); 
 
     let endDateTime = new Date(currentDate.value.setDate(currentDate.value.getDate() + 1));
+
     endDateTime.setHours(0, 0, 0, 0);
     item.content.endDate = endDateTime.toLocaleDateString('en-CA'); 
 
@@ -152,6 +155,12 @@ const backToBackLog = () => {
     if (selectedItem) {
         selectedItem.classList.remove('vis-selected');
     }
+};
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const formattedDate = date.toISOString().split('T')[0];
+  return formattedDate;
 };
 
 const getWeekNumber = (d) => {
@@ -222,6 +231,32 @@ const initTimeLine = () => {
         margin: {
             axis: 5,  
         },
+        onMove: function (item, callback) {
+            console.log("onMove", item, callback)
+            
+            var start_date = new Date(item.start)
+            start_date.setDate(start_date.getDate() + 1) // Add one because the format option counts wrong
+
+            createResource({
+                url: 'planner.api.planner_change_date_task', 
+                params: {
+                    task : item.id, 
+                    exp_start_date: formatDate(start_date), 
+                    exp_end_date: formatDate(new Date(item.end))
+                }, 
+                auto: true,
+                onSuccess: () =>  {
+                    callback(item); // send back adjusted item
+                }, 
+                onError: () =>  {
+                    callback(null); // cancel updating the item
+                }
+            })
+        },
+        onDropObjectOnItem: function(objectData, item, callback) {
+            console.log("drop")
+            console.log("ondrop", objectData, item, callback)
+        },
         template: function (item, element, data) {
             element.classList.add('task-card');
             element.parentNode.parentNode.setAttribute('task-type', item.content.type);
@@ -229,8 +264,12 @@ const initTimeLine = () => {
         },
         groupTemplate: function (group, element) {
             element.classList.add('employee');
+            var templateimage = ""
+            if (group.content.image) {
+                templateimage = '<img class="employee-avatar" src="' + group.content.image + '" alt="Avatar">'
+            }
             return '<div class="employee">' +
-                '<img class="employee-avatar" src="' + group.content.image + '" alt="Avatar">' +
+                templateimage +
                 '<p class="employee-name">' + group.content.name + '</p>' + '</div>';
         },
         snap: function (date, scale, step) {
@@ -248,7 +287,9 @@ const initTimeLine = () => {
 
     timeline.value.on('select', function (properties) {
         if(properties.items.length > 0) {
+            activeTask = properties.items[0];
             isTaskFormActive.value = true;
+            
         } else {
             isTaskFormActive.value = false;
         }
@@ -258,6 +299,7 @@ const initTimeLine = () => {
         var startOfWeek = properties.start;
         weekNumber.value = getWeekNumber(startOfWeek);
     });
+
 }
 
 onMounted(() => {
@@ -273,7 +315,6 @@ onMounted(() => {
             initTimeLine()
         }
     });
-
     
     weekNumber.value = getWeekNumber(new Date(currentDate.value));
 });

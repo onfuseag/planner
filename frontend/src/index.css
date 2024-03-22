@@ -10,9 +10,11 @@ body {
     position: relative;
     margin-right: 0.75rem;
     border-radius: 100%;
-    width: 2rem;
-    height: 2rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: #002366;
 }
+
 
 .employee p {
     font-size: 0.875rem;
