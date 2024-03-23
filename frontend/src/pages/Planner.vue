@@ -26,10 +26,22 @@
                 <div class="w-full lg:w-3/12">
                     <div class="bg-white rounded p-3">
                         <template v-if="!isTaskFormActive">
+                            <div class="p-0">
+                                <TextInput type="text" placeholder="Search ..." v-model="searchText" @keyup.enter="getBacklogTasks">
+                                    <template #suffix>
+                                    <FeatherIcon
+                                        class="w-4"
+                                        name="search"
+                                        @click="getBacklogTasks"
+                                    />
+                                    </template>
+                                </TextInput>
+                            </div>
+                            <br>
                             <p class="text-lg mb-3">Backlog</p>
                             <div class="grid grid-rows gap-3 mb-3">
                                 <div class="flex flex-col bg-gray-200 p-3 rounded gap-2 cursor-grab select-none"
-                                    v-for="task in backlog.data" :key="task.name" @click="openTaskDetail(task.name)" draggable="true"
+                                    v-for="task in backlog" :key="task.name" @click="openTaskDetail(task.name)" draggable="true"
                                     @dragstart="dragBackLog($event, task)">
                                     <div :id="task.name" class="flex justify-between items-center">
                                         <div>
@@ -66,7 +78,7 @@
 
 <script setup>
 import Layout from "@/pages/shared/Layout.vue";
-import { computed, ref, onMounted, watchEffect } from "vue";
+import { computed, ref, onMounted, watchEffect, reactive  } from "vue";
 import TaskForm from "@/components/Task/TaskForm.vue";
 import { Timeline, DataSet } from 'vis-timeline/standalone';
 import { useRoute } from 'vue-router';
@@ -75,18 +87,33 @@ import { getURL } from '../getURL.js'
 
 
 const route = useRoute(); // Access to the current route
+const searchText = defineModel('searchText')
 
 // The employees with all tasks
 var employees = {}
 
 // All the tasks in backlog
-const backlog = createResource({
-    url: 'planner.api.planner_get_backlog', 
-    params : {
-        searchtext: ""
-    }, 
-    auto: true
-});
+var backlog = reactive([]);
+
+const getBacklogTasks = () => {
+    const resp = createResource({
+        url: 'planner.api.planner_get_backlog', 
+        params : {
+            searchtext: searchText.value
+        }, 
+        auto: true,
+        onSuccess:(data) => {
+            // Clear backlog array
+            backlog.splice(0);
+
+            // Push new items into the backlog array
+            data.forEach(task => {
+                backlog.push(task);
+            });
+        }
+    });
+
+}
 
 // Get which dashboard we are supposed to load
 const dashboardName = route.params.dashboardName;
@@ -353,6 +380,8 @@ const initTimeLine = () => {
 
 onMounted(() => {
 
+    searchText.value =""
+
     const resource = createResource({
         url: 'planner.api.get_planner_tasks', 
         params : {
@@ -364,6 +393,8 @@ onMounted(() => {
             initTimeLine()
         }
     });
+
+    getBacklogTasks();
     
     weekNumber.value = getWeekNumber(new Date(currentDate.value));
 });

@@ -5,8 +5,10 @@
                 <label class="block text-xs text-gray-600 mb-2">Assigned to</label>
 
                 <div class="flex justify-start items-center">
-                    <Avatar :shape="'circle'" :image="avatar" label="EY" size="2xl"
+                    <!--<Avatar :shape="'circle'" :image="avatar" label="EY" size="2xl"
                         v-for="(avatar, index) in dataAvatars" :key="index" v-if="dataAvatars.length > 0" />
+                    
+                    --><Avatar :shape="'circle'" :label="assignee.owner" :image="assignee.image" size="2xl" v-for="assignee in docinfo.assignments" :key="assignee.owner" v-if="docinfo" />
                     <Button :variant="'subtle'" theme="gray" size="lg" label="Button" :loading="false"
                         :loadingText="null" :disabled="false" :link="null" icon="user-plus" class="rounded-full"
                         type="button" @click="addAssigneePopup = true">
@@ -214,15 +216,15 @@ watchDebounced(
 // 
 
 const addAssigneePopup = ref(false);
-let avatars = ref();
-const dataAvatars = computed(() => {
-    return avatars.value ? Object.values(avatars.value).map(user => {
-        if (user.image){
-            return getURL() + user.image
-        }
-    }) : [];
-});
+var docinfo = ref();
 
+const sortDocinfo = () => {
+    for (var i = 0; i < docinfo.assignments.length; i++) {
+        if (docinfo.user_info[docinfo.assignments[i].owner].image){
+            docinfo.assignments[i].image = getURL() + docinfo.user_info[docinfo.assignments[i].owner].image
+        }
+    }
+}
 
 onMounted(() => {
 
@@ -238,7 +240,11 @@ onMounted(() => {
 
             if (response.data) {
                 dataTask.value = response.data.docs[0];
-                avatars.value = response.data.docinfo?.user_info;
+                docinfo = response.data.docinfo;
+                console.log(docinfo)
+                console.log(docinfo.assignments)
+                console.log(docinfo.assignments.length)
+
 
                 subject.value = dataTask.value.subject;
                 status.value = dataTask.value.status;
@@ -247,6 +253,8 @@ onMounted(() => {
                 exp_end_date.value = dataTask.value.exp_end_date;
                 expected_time.value = dataTask.value.expected_time;
                 actual_time.value = dataTask.value.actual_time;
+
+                sortDocinfo()
             }
             
         }
