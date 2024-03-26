@@ -1,36 +1,32 @@
 <template>
     <Combobox v-model="selectedValue">
         <div class="relative">
-            <ComboboxInput @change="
-                      (e) => {
-                        query = e.target.value
-                      }
-                    " :value="selectedValue?.value" :placeholder="props.placeholder"
+            <ComboboxInput @change="(e) => {
+            query = e.target.value
+        }
+        " :value="query" :placeholder="props.placeholder"
                 class="text-base rounded h-7 py-1.5 pl-2 pr-2 border border-gray-100 bg-gray-100 placeholder-gray-500 hover:border-gray-200 hover:bg-gray-200 focus:bg-white focus:border-gray-500 focus:shadow-sm focus:ring-0 focus-visible:ring-2 focus-visible:ring-gray-400 text-gray-800 transition-colors w-full" />
             <Button :variant="'outline'" type="button" theme="gray" size="sm" label="Button" icon="arrow-right"
                 class="button-field absolute right-0">
             </Button>
         </div>
         <div class="relative mt-1 rounded-lg bg-white text-base shadow-2xl">
-            <ComboboxOptions class="max-h-[15rem] overflow-y-auto px-1.5 pb-1.5">
+            <ComboboxOptions class="max-h-[15rem] overflow-y-auto px-1.5 pb-1.5 pt-1.5">
                 <div v-for="group in groups" :key="group.key" v-show="group.items.length > 0">
                     <div v-if="group.group && !group.hideLabel"
                         class="sticky top-10 truncate bg-white px-2.5 py-1.5 text-sm font-medium text-gray-600">
                         {{ group.group }}
                     </div>
-                    <ComboboxOption as="template" v-for="(option, idx) in group.items.slice(0, 50)"
-                        :key="option?.value || idx" :value="option" v-slot="{ active, selected }">
+                    <ComboboxOption as="template" v-for="(option, idx) in group.items.slice(0, 50)" :key="idx"
+                        :value="option" v-slot="{ active, selected }">
                         <li :class="[
-        'flex cursor-pointer items-center justify-between rounded px-2.5 py-1.5 text-base',
-        { 'bg-gray-100': active },
-    ]">
+                            'flex cursor-pointer items-center justify-between rounded px-2.5 py-1.5 text-base',
+                            { 'bg-gray-100': active },
+                        ]">
                             <div class="flex flex-1 gap-2 overflow-hidden">
-                                <!-- <span class="flex-1 truncate">
-                                    {{ option }}
-                                </span> -->
                                 <div class="flex flex-col">
-                                    <span class="text-base">{{ option.value }}</span>
-                                    <span class="text-sm text-gray-500">{{ option.label }}</span>
+                                    <span class="text-base">{{ option[props.valueBy] }}</span>
+                                    <span class="text-sm text-gray-500">{{ option[props.labelBy] }}</span>
                                 </div>
                             </div>
                         </li>
@@ -57,6 +53,14 @@ const props = defineProps({
     modelValue: [String, Object],
     options: Array,
     placeholder: String,
+    valueBy: {
+        type: String,
+        default: 'value',
+    },
+    labelBy: {
+        type: String,
+        default: 'label',
+    },
 });
 
 const query = ref('');
@@ -103,33 +107,41 @@ const allOptions = computed(() => {
 
 const findOption = (option) => {
     if (!option) return option
-    const value = isOptionOrValue(option) === 'value' ? option : option.value
-    return allOptions.value?.find((o) => o.value === value)
+    const value = isOptionOrValue(option) === 'value' ? option : option[props.valueBy]
+    return allOptions.value?.find((o) => o[props.valueBy] === value)
 };
 
-const getLabel = (option) => {
-    if (isOptionOrValue(option) === 'value') return option
-    return option?.label || option?.value || 'No label'
-}
+// const getLabel = (option) => {
+//     if (isOptionOrValue(option) === 'value') return option
+//     return option[props.labelBy] || option[props.valueBy] || 'No label'
+// }
 
 const selectedValue = computed({
     get() {
-        return findOption(props.modelValue)
+        const option = findOption(props.modelValue);
+        return option ? option[props.valueBy] : null;
     },
     set(val) {
-        query.value = ''
         if (val) showOptions.value = false
-        emits('update:modelValue', val)
+        const option = findOption(val);
+        const value = option ? option[props.valueBy] : null;
+        emits('update:modelValue', value)
+        query.value = value;
         return
     },
+});
+
+const queryResult = computed(() => {
+    const option = findOption(selectedValue.value);
+    return option ? option[props.valueBy] : null;
 });
 
 const filterOptions = (options) => {
     if (!query.value) return options
     return options.filter((option) => {
         return (
-            option.label.toLowerCase().includes(query.value.toLowerCase()) ||
-            option.value.toLowerCase().includes(query.value.toLowerCase())
+            option[props.labelBy].toLowerCase().includes(query.value.toLowerCase()) ||
+            option[props.valueBy].toLowerCase().includes(query.value.toLowerCase())
         )
     })
 };

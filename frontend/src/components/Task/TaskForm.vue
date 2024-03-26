@@ -75,7 +75,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Elevator</label>
-                    <TextInputAutocomplete v-model="elevator" placeholder="Elevator" :options="elevatorOptions" />
+                    <TextInputAutocomplete v-model="elevator" placeholder="Elevator" :options="elevatorOptions" value-by="elevator" label-by="name" />
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Type</label>
@@ -92,7 +92,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Parent Task</label>
-                    <TextInputAutocomplete v-model="parent_task" placeholder="Parent Task" :options="parentTaskOptions" />
+                    <TextInputAutocomplete v-model="parent_task" placeholder="Parent Task" :options="parentTaskOptions" value-by="parent_name" label-by="name" />
                 </div>
 
                 <div class="mb-3">
@@ -235,7 +235,7 @@ const addAssignee = () => {
     // to close the popup
     // addAssigneePopup.value = false;
 }
-
+// default options structure
 let projectOptions = ref([
     {
         "label": "TASK-2024-00004",
@@ -250,19 +250,19 @@ let projectOptions = ref([
         "value": "PROJ-0008"
     }]);
 
-
+// you can define which property to be used as label and value, don't forget to add value-by and label-by on the component
 let elevatorOptions = ref([
     {
-        "label": "Elevator 1",
-        "value": "Elevator 1",
+        "name": "Elevator 1",
+        "elevator": "Elevator 1 value",
     },
     {
-        "label": "Elevator 2",
-        "value": "Elevator 2"
+        "name": "Elevator 2",
+        "elevator": "Elevator 2 value"
     },
     {
-        "label": "Elevator 3",
-        "value": "Elevator 3"
+        "name": "Elevator 3",
+        "elevator": "Elevator 3 value"
     }]);
 
 let typeOptions = ref([
@@ -281,16 +281,16 @@ let typeOptions = ref([
 
 let parentTaskOptions = ref([
     {
-        "label": "TASK-2024-00004",
-        "value": "TASK-2024-00004",
+        "name": "TASK-2024-00004",
+        "parent_name": "TASK-2024-00004 value",
     },
     {
-        "label": "TASK-2024-00005",
-        "value": "TASK-2024-00005"
+        "name": "TASK-2024-00005",
+        "parent_name": "TASK-2024-00005 value"
     },
     {
-        "label": "TASK-2024-00008",
-        "value": "TASK-2024-00008"
+        "name": "TASK-2024-00008",
+        "parent_name": "TASK-2024-00008 value"
     }]);
 
 const { values, errors, defineField, handleSubmit } = useForm({
