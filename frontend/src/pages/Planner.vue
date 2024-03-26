@@ -135,7 +135,7 @@ let breadcrumbs = [
 ];
 
 let currentDate = ref(new Date());
-let isTaskFormActive = ref(false);
+let isTaskFormActive = ref(true);
 let activeTask = ref("");
 let weekNumber = ref(0);
 

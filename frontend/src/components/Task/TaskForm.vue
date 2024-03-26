@@ -5,10 +5,15 @@
                 <label class="block text-xs text-gray-600 mb-2">Assigned to</label>
 
                 <div class="flex justify-start items-center">
-                    <!--<Avatar :shape="'circle'" :image="avatar" label="EY" size="2xl"
-                        v-for="(avatar, index) in dataAvatars" :key="index" v-if="dataAvatars.length > 0" />
+                    <Avatar :shape="'circle'" :image="employee?.image" label="EY" size="2xl"
+                        v-for="(employee, index) in selectedEmployees" :key="index" v-if="selectedEmployees.length > 0" 
+                        class="cursor-pointer"
+                        @click="addAssigneePopup = true"
+                    />
                     
-                    --><Avatar :shape="'circle'" :label="assignee.owner" :image="assignee.image" size="2xl" v-for="assignee in docinfo.assignments" :key="assignee.owner" v-if="docinfo" />
+                   
+                    <Avatar :shape="'circle'" :label="assignee.owner" :image="assignee.image" size="2xl"
+                        v-for="assignee in docinfo.assignments" :key="assignee.owner" v-if="docinfo" />
                     <Button :variant="'subtle'" theme="gray" size="lg" label="Button" :loading="false"
                         :loadingText="null" :disabled="false" :link="null" icon="user-plus" class="rounded-full"
                         type="button" @click="addAssigneePopup = true">
@@ -18,41 +23,25 @@
                             <p class="text-base">Assigned to</p>
                         </template>
                         <template #body-content>
-                            <Autocomplete :options="[
-                            {
-                                label: 'Muhammad Darwis Arifin',
-                                value: 'Muhammad-Darwis-Arifin',
-                                image: 'https://i.pravatar.cc/400?img=70',
-                            },
-                            {
-                                label: 'Christoph Diethelm',
-                                value: 'Christoph-Diethelm',
-                                image: 'https://i.pravatar.cc/400?img=69',
-                            },
-                            {
-                                label: 'John Smith',
-                                value: 'john-smith',
-                                image: 'https://randomuser.me/api/portraits/men/59.jpg',
-                            },
-                            {
-                                label: 'Jane Smith',
-                                value: 'jane-smith',
-                                image: 'https://randomuser.me/api/portraits/women/59.jpg',
-                            },
-                            {
-                                label: 'John Wayne',
-                                value: 'john-wayne',
-                                image: 'https://randomuser.me/api/portraits/men/57.jpg',
-                            },
-                            {
-                                label: 'Jane Wayne',
-                                value: 'jane-wayne',
-                                image: 'https://randomuser.me/api/portraits/women/51.jpg',
-                            },
-                        ]" v-model="people" placeholder="Select people" :multiple="false" />
+                            <Autocomplete :options="unselectedEmployees" v-model="employees" placeholder="Select people"
+                                :multiple="false" class="mb-5" 
+                                @update:modelValue="onSelectEmployee"
+                                />
+                            <div class="flex flex-col gap-3">
+                                <div class="flex justify-between items-center" v-for="(employee, index) in selectedEmployees">
+                                    <div class="flex justify-start items-center gap-3">
+                                        <Avatar :shape="'circle'" :image="employee?.image" label="EY" size="xl" />
+                                        <span>{{ employee?.label }}</span>
+                                    </div>
+                                    <Button :variant="'outline'" theme="gray" size="sm" label="Button" icon="x"
+                                        @click="unselectEmployee(index)">
+                                    </Button>
+                                </div>
+                            </div>
                         </template>
+
                         <template #actions>
-                            <Button variant="solid">
+                            <Button variant="solid" @click="addAssignee">
                                 Add
                             </Button>
                             <Button class="ml-2" @click="addAssigneePopup = false">
@@ -72,18 +61,13 @@
                 </div>
 
                 <div class="mb-3">
-                    <FormControl
-                        type="text"
-                        label="K">
+                    <FormControl type="text" label="K">
                         <template #suffix>
-                        <FeatherIcon
-                            class="w-4"
-                            name="search"
-                        />
+                            <FeatherIcon class="w-4" name="search" />
                         </template>
                     </FormControl>
                     <label class="block text-xs text-gray-600 mb-2">Project</label>
-                    
+
                     <div
                         class="flex justify-between items-center text-gray-800 bg-gray-100 rounded py-2 h-7 cursor-pointer px-2">
                         <span class="text-sm">P-ANL-20022024-01</span>
@@ -108,11 +92,12 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Status</label>
-                    <Select :options="['Open', 'Working', 'Pending Review', 'Overdue', 'Completed', 'Cancelled']" v-model="status" />
+                    <Select :options="['Open', 'Working', 'Pending Review', 'Overdue', 'Completed', 'Cancelled']"
+                        v-model="status" />
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Priority</label>
-                    <Select :options="['Low','Medium','High']" v-model="priority" />
+                    <Select :options="['Low', 'Medium', 'High']" v-model="priority" />
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Parent Task</label>
@@ -167,11 +152,11 @@ import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/yup';
 import { object, string, number, date, array } from 'yup';
 import { watchDebounced } from '@vueuse/core';
-import { getURL } from '../../getURL.js' 
+import { getURL } from '../../getURL.js'
 
 // Props to be taken
 const props = defineProps({
-  task: String
+    task: String
 });
 
 let dataTask = ref();
@@ -187,6 +172,77 @@ const schema = toTypedSchema(
         actual_time: string().required(),
     })
 );
+
+let employees = ref();
+// get employee list from API
+let employeesList = ref([
+    {
+        label: 'Muhammad Darwis Arifin',
+        value: 'Muhammad-Darwis-Arifin',
+        image: 'https://i.pravatar.cc/400?img=70',
+    },
+    {
+        label: 'Christoph Diethelm',
+        value: 'Christoph-Diethelm',
+        image: 'https://i.pravatar.cc/400?img=69',
+    },
+    {
+        label: 'John Smith',
+        value: 'john-smith',
+        image: 'https://randomuser.me/api/portraits/men/59.jpg',
+    },
+    {
+        label: 'Jane Smith',
+        value: 'jane-smith',
+        image: 'https://randomuser.me/api/portraits/women/59.jpg',
+    },
+    {
+        label: 'John Wayne',
+        value: 'john-wayne',
+        image: 'https://randomuser.me/api/portraits/men/57.jpg',
+    },
+    {
+        label: 'Jane Wayne',
+        value: 'jane-wayne',
+        image: 'https://randomuser.me/api/portraits/women/51.jpg',
+    },
+]);
+// get selected employees from API
+let selectedEmployees = ref([{
+    label: 'Muhammad Darwis Arifin',
+    value: 'Muhammad-Darwis-Arifin',
+    image: 'https://i.pravatar.cc/400?img=70',
+},
+{
+    label: 'Christoph Diethelm',
+    value: 'Christoph-Diethelm',
+    image: 'https://i.pravatar.cc/400?img=69',
+},]);
+// filter out selected employees from employees list automatically
+const unselectedEmployees = computed(() => {
+    return employeesList.value.filter(employee => {
+        return !selectedEmployees.value.some(selectedEmployee => selectedEmployee?.value === employee?.value);
+    });
+});
+// event when remove selected employee
+const unselectEmployee = (index) => {
+    selectedEmployees.value.splice(index, 1);
+    if (selectedEmployees.value?.length == 0) {
+        employees.value = undefined;
+    }
+};
+// event when select employee
+const onSelectEmployee = (employee) => {
+    if(employee){
+        selectedEmployees.value.push(employee);
+    }
+};
+
+const addAssignee = () => {
+    console.log(selectedEmployees.value);
+    // to close the popup
+    // addAssigneePopup.value = false;
+}
 
 const { values, errors, defineField, handleSubmit } = useForm({
     validationSchema: schema
@@ -220,7 +276,7 @@ var docinfo = ref();
 
 const sortDocinfo = () => {
     for (var i = 0; i < docinfo.assignments.length; i++) {
-        if (docinfo.user_info[docinfo.assignments[i].owner].image){
+        if (docinfo.user_info[docinfo.assignments[i].owner].image) {
             docinfo.assignments[i].image = getURL() + docinfo.user_info[docinfo.assignments[i].owner].image
         }
     }
@@ -229,11 +285,11 @@ const sortDocinfo = () => {
 onMounted(() => {
 
     const response = createResource({
-        url: 'frappe.desk.form.load.getdoc', 
-        params : {
-            doctype: "Task", 
+        url: 'frappe.desk.form.load.getdoc',
+        params: {
+            doctype: "Task",
             name: props.task
-        }, 
+        },
         auto: true,
         onSuccess: (data) => {
 
@@ -256,7 +312,7 @@ onMounted(() => {
 
                 sortDocinfo()
             }
-            
+
         }
     });
 
