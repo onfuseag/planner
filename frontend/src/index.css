@@ -95,3 +95,7 @@ body {
 .rounded-full {
     border-radius: 9999px !important;
 }
+.button-field {
+    background: transparent;
+    border: none;
+}

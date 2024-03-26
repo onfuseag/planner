@@ -2,52 +2,42 @@
     <form>
         <div class="flex flex-col">
             <div class="mb-3">
-                <div class="flex justify-between items-center"><p></p>
-                    <Button 
-                        :variant="'solid'" 
-                        theme="gray" 
-                        size="sm" 
-                        label="Speichern"
-                        :loading="false"
-                        :link="null"
-                        :disabled="false"
-                        type="button"
-                        @click="addAssigneePopup = true"
-                    ></Button>
+                <div class="flex justify-between items-center">
+                    <p></p>
+                    <Button :variant="'solid'" theme="gray" size="sm" label="Speichern" :loading="false" :link="null"
+                        :disabled="false" type="button" @click="addAssigneePopup = true"></Button>
                     <Button :variant="'subtle'" theme="gray" size="lg" label="Button" :loading="false"
                         :loadingText="null" :disabled="false" :link="null" icon="user-plus" class="rounded-full"
                         type="button" @click="addAssigneePopup = true">
-                    </Button></div>
+                    </Button>
+                </div>
 
                 <label class="block text-xs text-gray-600 mb-2">Assigned to</label>
 
                 <div class="flex justify-start items-center">
                     <Avatar :shape="'circle'" :image="employee?.image" label="EY" size="2xl"
-                        v-for="(employee, index) in selectedEmployees" :key="index" v-if="selectedEmployees.length > 0" 
-                        class="cursor-pointer"
-                        @click="addAssigneePopup = true"
-                    />
-                    
-                   
+                        v-for="(employee, index) in selectedEmployees" :key="index" v-if="selectedEmployees.length > 0"
+                        class="cursor-pointer" @click="addAssigneePopup = true" />
+
+
                     <Avatar :shape="'circle'" :label="assignee.owner" :image="assignee.image" size="2xl"
                         v-for="assignee in docinfo.assignments" :key="assignee.owner" v-if="docinfo" />
                     <Button :variant="'subtle'" theme="gray" size="lg" label="Button" :loading="false"
                         :loadingText="null" :disabled="false" :link="null" icon="user-plus" class="rounded-full"
                         type="button" @click="addAssigneePopup = true">
                     </Button>
-                    
-                    
+
+
                     <Dialog v-model="addAssigneePopup">
                         <template #body-title>
                             <p class="text-base">Assigned to</p>
                         </template>
                         <template #body-content>
                             <Autocomplete :options="unselectedEmployees" v-model="employees" placeholder="Select people"
-                                :multiple="false" class="mb-5" 
-                                @update:modelValue="onSelectEmployee"
-                                />
+                                :multiple="false" class="mb-5" @update:modelValue="onSelectEmployee" />
                             <div class="flex flex-col gap-3">
-                                <div class="flex justify-between items-center" v-for="(employee, index) in selectedEmployees">
+                                <div class="flex justify-between items-center"
+                                    v-for="(employee, index) in selectedEmployees">
                                     <div class="flex justify-start items-center gap-3">
                                         <Avatar :shape="'circle'" :image="employee?.image" label="EY" size="xl" />
                                         <span>{{ employee?.label }}</span>
@@ -79,21 +69,17 @@
                     <ErrorMessage v-if="errors.subject" :message="Error(errors.subject)" class="mt-1" />
                 </div>
 
-                <div class="mb-3">     
+                <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Project</label>
-                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="Project" :disabled="true"
-                        v-model="project"/>         
+                    <TextInputAutocomplete v-model="project" placeholder="Project" :options="projectOptions" />
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Elevator</label>
-                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="Elevator" :disabled="true"
-                        v-model="elevator" /> 
+                    <TextInputAutocomplete v-model="elevator" placeholder="Elevator" :options="elevatorOptions" />
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Type</label>
-                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="Type" :disabled="true"
-                        v-model="type"
-                        :class="[errors.subject ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />         
+                    <TextInputAutocomplete v-model="type" placeholder="Type" :options="typeOptions" />
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Status</label>
@@ -106,9 +92,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Parent Task</label>
-                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="Parent Task" :disabled="true"
-                        v-model="parent_task"
-                        :class="[errors.subject ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />         
+                    <TextInputAutocomplete v-model="parent_task" placeholder="Parent Task" :options="parentTaskOptions" />
                 </div>
 
                 <div class="mb-3">
@@ -156,6 +140,7 @@ import { toTypedSchema } from '@vee-validate/yup';
 import { object, string, number, date, array } from 'yup';
 import { watchDebounced } from '@vueuse/core';
 import { getURL } from '../../getURL.js'
+import TextInputAutocomplete from '@/components/TextInputAutocomplete.vue';
 
 // Props to be taken
 const props = defineProps({
@@ -168,7 +153,7 @@ const schema = toTypedSchema(
     object({
         subject: string().required(),
         project: string(),
-        elevator: string(), 
+        elevator: string(),
         type: string(),
         parent_task: string(),
         status: string().required(),
@@ -240,7 +225,7 @@ const unselectEmployee = (index) => {
 };
 // event when select employee
 const onSelectEmployee = (employee) => {
-    if(employee){
+    if (employee) {
         selectedEmployees.value.push(employee);
     }
 };
@@ -250,6 +235,63 @@ const addAssignee = () => {
     // to close the popup
     // addAssigneePopup.value = false;
 }
+
+let projectOptions = ref([
+    {
+        "label": "TASK-2024-00004",
+        "value": "PROJ-0001",
+    },
+    {
+        "label": "TASK-2024-00005",
+        "value": "PROJ-0006"
+    },
+    {
+        "label": "TASK-2024-00008",
+        "value": "PROJ-0008"
+    }]);
+
+
+let elevatorOptions = ref([
+    {
+        "label": "Elevator 1",
+        "value": "Elevator 1",
+    },
+    {
+        "label": "Elevator 2",
+        "value": "Elevator 2"
+    },
+    {
+        "label": "Elevator 3",
+        "value": "Elevator 3"
+    }]);
+
+let typeOptions = ref([
+    {
+        "label": "Task",
+        "value": "Task",
+    },
+    {
+        "label": "Bug",
+        "value": "Bug"
+    },
+    {
+        "label": "Feature",
+        "value": "Feature"
+    }]);
+
+let parentTaskOptions = ref([
+    {
+        "label": "TASK-2024-00004",
+        "value": "TASK-2024-00004",
+    },
+    {
+        "label": "TASK-2024-00005",
+        "value": "TASK-2024-00005"
+    },
+    {
+        "label": "TASK-2024-00008",
+        "value": "TASK-2024-00008"
+    }]);
 
 const { values, errors, defineField, handleSubmit } = useForm({
     validationSchema: schema
@@ -298,15 +340,15 @@ const updateValue = (field, value) => {
     console.log("test here")
     console.log(value)
     const resp = createResource({
-        url: 'frappe.client.set_value', 
-        params : {
-            doctype: "Task", 
-            name: props.task, 
-            fieldname: field, 
+        url: 'frappe.client.set_value',
+        params: {
+            doctype: "Task",
+            name: props.task,
+            fieldname: field,
             value: value
-        }, 
+        },
         auto: true,
-        onSuccess:(data) => {
+        onSuccess: (data) => {
             console.log("Success")
         }
     });
