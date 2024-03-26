@@ -2,6 +2,23 @@
     <form>
         <div class="flex flex-col">
             <div class="mb-3">
+                <div class="flex justify-between items-center"><p></p>
+                    <Button 
+                        :variant="'solid'" 
+                        theme="gray" 
+                        size="sm" 
+                        label="Speichern"
+                        :loading="false"
+                        :link="null"
+                        :disabled="false"
+                        type="button"
+                        @click="addAssigneePopup = true"
+                    ></Button>
+                    <Button :variant="'subtle'" theme="gray" size="lg" label="Button" :loading="false"
+                        :loadingText="null" :disabled="false" :link="null" icon="user-plus" class="rounded-full"
+                        type="button" @click="addAssigneePopup = true">
+                    </Button></div>
+
                 <label class="block text-xs text-gray-600 mb-2">Assigned to</label>
 
                 <div class="flex justify-start items-center">
@@ -13,6 +30,8 @@
                         :loadingText="null" :disabled="false" :link="null" icon="user-plus" class="rounded-full"
                         type="button" @click="addAssigneePopup = true">
                     </Button>
+                    
+                    
                     <Dialog v-model="addAssigneePopup">
                         <template #body-title>
                             <p class="text-base">Assigned to</p>
@@ -71,40 +90,21 @@
                     <ErrorMessage v-if="errors.subject" :message="Error(errors.subject)" class="mt-1" />
                 </div>
 
-                <div class="mb-3">
-                    <FormControl
-                        type="text"
-                        label="K">
-                        <template #suffix>
-                        <FeatherIcon
-                            class="w-4"
-                            name="search"
-                        />
-                        </template>
-                    </FormControl>
+                <div class="mb-3">     
                     <label class="block text-xs text-gray-600 mb-2">Project</label>
-                    
-                    <div
-                        class="flex justify-between items-center text-gray-800 bg-gray-100 rounded py-2 h-7 cursor-pointer px-2">
-                        <span class="text-sm">P-ANL-20022024-01</span>
-                        <FeatherIcon class="w-4" name="arrow-right" />
-                    </div>
+                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="Project" :disabled="true"
+                        v-model="project"/>         
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Elevator</label>
-                    <div
-                        class="flex justify-between items-center text-gray-800 bg-gray-100 rounded py-2 h-7 cursor-pointer px-2">
-                        <span class="text-sm">ANL-20022024-01</span>
-                        <FeatherIcon class="w-4" name="arrow-right" />
-                    </div>
+                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="Elevator" :disabled="true"
+                        v-model="elevator" /> 
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Type</label>
-                    <div
-                        class="flex justify-between items-center text-gray-800 bg-gray-100 rounded py-2 h-7 cursor-pointer px-2">
-                        <span class="text-sm">Bonus</span>
-                        <FeatherIcon class="w-4" name="arrow-right" />
-                    </div>
+                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="Type" :disabled="true"
+                        v-model="type"
+                        :class="[errors.subject ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />         
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Status</label>
@@ -116,11 +116,9 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Parent Task</label>
-                    <div
-                        class="flex justify-between items-center text-gray-800 bg-gray-100 rounded py-2 h-7 cursor-pointer px-2">
-                        <span class="text-sm">Montageanlieferung</span>
-                        <FeatherIcon class="w-4" name="arrow-right" />
-                    </div>
+                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="Parent Task" :disabled="true"
+                        v-model="parent_task"
+                        :class="[errors.subject ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />         
                 </div>
 
                 <div class="mb-3">
@@ -179,6 +177,10 @@ let dataTask = ref();
 const schema = toTypedSchema(
     object({
         subject: string().required(),
+        project: string(),
+        elevator: string(), 
+        type: string(),
+        parent_task: string(),
         status: string().required(),
         priority: string().required(),
         exp_start_date: string().required(),
@@ -193,6 +195,10 @@ const { values, errors, defineField, handleSubmit } = useForm({
 });
 
 const [subject] = defineField('subject');
+const [project] = defineField('project');
+const [elevator] = defineField('elevator');
+const [type] = defineField('type');
+const [parent_task] = defineField('parent_task');
 const [status] = defineField('status');
 const [priority] = defineField('priority');
 const [exp_start_date] = defineField('exp_start_date');
@@ -226,6 +232,27 @@ const sortDocinfo = () => {
     }
 }
 
+const updateValue = (field, value) => {
+    console.log(field)
+    console.log("test here")
+    console.log(value)
+    const resp = createResource({
+        url: 'frappe.client.set_value', 
+        params : {
+            doctype: "Task", 
+            name: props.task, 
+            fieldname: field, 
+            value: value
+        }, 
+        auto: true,
+        onSuccess:(data) => {
+            console.log("Success")
+        }
+    });
+
+}
+
+
 onMounted(() => {
 
     const response = createResource({
@@ -241,12 +268,12 @@ onMounted(() => {
             if (response.data) {
                 dataTask.value = response.data.docs[0];
                 docinfo = response.data.docinfo;
-                console.log(docinfo)
-                console.log(docinfo.assignments)
-                console.log(docinfo.assignments.length)
-
 
                 subject.value = dataTask.value.subject;
+                project.value = dataTask.value.project;
+                elevator.value = dataTask.value.elevator;
+                type.value = dataTask.value.task;
+                parent_task.value = dataTask.value.parent_task;
                 status.value = dataTask.value.status;
                 priority.value = dataTask.value.priority;
                 exp_start_date.value = dataTask.value.exp_start_date;

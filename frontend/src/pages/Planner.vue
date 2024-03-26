@@ -61,7 +61,7 @@
                         </template>
                         <template v-else>
                             <div class="mb-3 flex justify-between items-center">
-                                <a target=”_blank” :href="getURL() + '/app/task/' + activeTask" >{{ activeTask }}</a>
+                                <a target=”_blank” :href="getURL() + '/app/task/' + activeTask" class="text-blue-700">{{ activeTask }}</a>
                                 <Button :variant="'solid'" theme="gray" size="sm" label="Button" :loadingText="null"
                                     :disabled="false" :link="null" icon="arrow-left" :loading="false"
                                     @click="backToBackLog">
