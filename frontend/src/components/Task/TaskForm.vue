@@ -2,22 +2,11 @@
     <form>
         <div class="flex flex-col">
             <div class="mb-3">
-                <div class="flex justify-between items-center">
-                    <p></p>
-                    <Button :variant="'solid'" theme="gray" size="sm" label="Speichern" :loading="false" :link="null"
-                        :disabled="false" type="button" @click="addAssigneePopup = true"></Button>
-                    <Button :variant="'subtle'" theme="gray" size="lg" label="Button" :loading="false"
-                        :loadingText="null" :disabled="false" :link="null" icon="user-plus" class="rounded-full"
-                        type="button" @click="addAssigneePopup = true">
-                    </Button>
-                </div>
 
                 <label class="block text-xs text-gray-600 mb-2">Assigned to</label>
 
                 <div class="flex justify-start items-center">
-                    <Avatar :shape="'circle'" :image="employee?.image" label="EY" size="2xl"
-                        v-for="(employee, index) in selectedEmployees" :key="index" v-if="selectedEmployees.length > 0"
-                        class="cursor-pointer" @click="addAssigneePopup = true" />
+                    
 
 
                     <Avatar :shape="'circle'" :label="assignee.owner" :image="assignee.image" size="2xl"
@@ -37,13 +26,13 @@
                                 :multiple="false" class="mb-5" @update:modelValue="onSelectEmployee" />
                             <div class="flex flex-col gap-3">
                                 <div class="flex justify-between items-center"
-                                    v-for="(employee, index) in selectedEmployees">
+                                    v-for="assignee in docinfo.assignments">
                                     <div class="flex justify-start items-center gap-3">
-                                        <Avatar :shape="'circle'" :image="employee?.image" label="EY" size="xl" />
-                                        <span>{{ employee?.label }}</span>
+                                        <Avatar :shape="'circle'" :image="assignee.image" :label="assignee.owner" size="2xl" />
+                                        <span>{{ assignee.fullname }}</span>
                                     </div>
                                     <Button :variant="'outline'" theme="gray" size="sm" label="Button" icon="x"
-                                        @click="unselectEmployee(index)">
+                                        @click="unselectEmployee(assignee.owner)">
                                     </Button>
                                 </div>
                             </div>
@@ -210,18 +199,36 @@ let selectedEmployees = ref([{
     value: 'Christoph-Diethelm',
     image: 'https://i.pravatar.cc/400?img=69',
 },]);
+
 // filter out selected employees from employees list automatically
 const unselectedEmployees = computed(() => {
     return employeesList.value.filter(employee => {
         return !selectedEmployees.value.some(selectedEmployee => selectedEmployee?.value === employee?.value);
     });
 });
+
 // event when remove selected employee
-const unselectEmployee = (index) => {
-    selectedEmployees.value.splice(index, 1);
-    if (selectedEmployees.value?.length == 0) {
-        employees.value = undefined;
-    }
+const unselectEmployee = (assignedperson) => {
+
+    const resp = createResource({
+        url: 'frappe.desk.form.assign_to.remove',
+        params: {
+            doctype: "Task",
+            name: props.task,
+            assign_to: assignedperson
+        },
+        auto: true, 
+        onSuccess: () => {
+
+            for (let index in docinfo.assignments) {
+                const assignee = docinfo.assignments[index];
+                if (assignedperson === assignee.owner) {
+                    // Remove the assignee at this index
+                    docinfo.assignments.splice(index, 1);
+                }
+            }
+        }
+    });
 };
 // event when select employee
 const onSelectEmployee = (employee) => {
@@ -312,10 +319,23 @@ const [actual_time] = defineField('actual_time');
 // track if any changes on the form fields, you can use this to make autosave feature
 watchDebounced(
     values,
-    () => {
-        // let formData = new FormData();
-        // formData.append('data', JSON.stringify(values));
+    () => { 
+        if (dataTask.value.subject !== values.subject){
+            updateValue("subject", values.subject)
+            values.subject = dataTask.value.subject
+        }
+        if (dataTask.value.project !== values.project) {
+            updateValue("project", values.project)
+            values.project = dataTask.values.project
+        }
+        if (dataTask.value.status !== values.status) {
+            values.status = dataTask.values.status
+        }
+        if (dataTask.value.priority !== values.priority) {
+            values.priority = dataTask.values.priority
+        }
         console.log(values)
+    
     },
     { debounce: 1000, maxWait: 5000 },
 )
@@ -332,13 +352,14 @@ const sortDocinfo = () => {
         if (docinfo.user_info[docinfo.assignments[i].owner].image) {
             docinfo.assignments[i].image = getURL() + docinfo.user_info[docinfo.assignments[i].owner].image
         }
+
+        // Assign the user readable name always
+        docinfo.assignments[i].fullname = docinfo.user_info[docinfo.assignments[i].owner].fullname
     }
 }
 
 const updateValue = (field, value) => {
-    console.log(field)
-    console.log("test here")
-    console.log(value)
+
     const resp = createResource({
         url: 'frappe.client.set_value',
         params: {
@@ -347,12 +368,8 @@ const updateValue = (field, value) => {
             fieldname: field,
             value: value
         },
-        auto: true,
-        onSuccess: (data) => {
-            console.log("Success")
-        }
+        auto: true
     });
-
 }
 
 
