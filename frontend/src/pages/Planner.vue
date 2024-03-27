@@ -261,7 +261,8 @@ const initTimeLine = () => {
                 },
                 start: task.startDate,
                 end: task.endDate,
-                editable : task.type == 1
+                editable : task.type == 1, 
+                style: "background-color: " + task.color + ";" // Make sure it is colored right
             });
         });
     });
