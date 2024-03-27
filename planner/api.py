@@ -37,7 +37,7 @@ def get_planner_tasks(department):
                 filters={
                     "_assign": ["like", f'%{employee.user_id}%']
                 }, 
-                fields=['name', 'project', 'subject', 'exp_start_date', 'exp_end_date', 'expected_time', 'actual_time']
+                fields=['name', 'project', 'subject', 'exp_start_date', 'exp_end_date', 'expected_time', 'actual_time', 'color']
             )
 
             for task in tasks:
@@ -55,6 +55,7 @@ def get_planner_tasks(department):
                 user_task['title'] = tasktitle
                 user_task['startDate'] = task.exp_start_date
                 user_task['endDate'] = get_one_day_later(task.exp_end_date)
+                user_task['color'] = task.color
                 user_task['type'] = 1 # This should be a work task
 
                 user_tasks.append(user_task)
@@ -113,7 +114,7 @@ def planner_get_backlog(searchtext):
         "Task", 
         filters=bfilters,
         order_by='exp_start_date asc',
-        fields=['name', 'subject', 'type', 'status', 'expected_time', 'priority', 'exp_start_date', 'project']
+        fields=['name', 'subject', 'type', 'status', 'expected_time', 'priority', 'exp_start_date', 'project', 'color']
     )
 
     for bdata in backlogdata: 
