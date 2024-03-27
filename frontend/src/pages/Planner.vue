@@ -165,6 +165,7 @@ const dragBackLog = (event, task) => {
 
     let item = {
         id: task.name,
+        name: task.name,
         type: 'range',
         content: {
             name: task.name,
@@ -232,7 +233,8 @@ const initTimeLine = () => {
     employees.forEach(employee => {
         employee.tasks.forEach(task => {
             items.add({
-                id: task.name,
+                id: task.name + "!" + Math.random().toString(16).slice(2), // need to make this random
+                name: task.name,
                 group: employee.user_id,
                 content: {
                     title: task.title,
@@ -277,7 +279,7 @@ const initTimeLine = () => {
             createResource({
                 url: 'planner.api.planner_change_date_task', 
                 params: {
-                    task : item.id, 
+                    task : item.name, 
                     exp_start_date: formatDate(start_date), 
                     exp_end_date: formatDate(new Date(item.end))
                 }, 
@@ -363,7 +365,7 @@ const initTimeLine = () => {
 
     timeline.value.on('select', function (properties) {
         if(properties.items.length > 0) {
-            activeTask = properties.items[0];
+            activeTask = properties.items[0].substring(0,properties.items[0].indexOf("!"))
             isTaskFormActive.value = true;
             
         } else {
