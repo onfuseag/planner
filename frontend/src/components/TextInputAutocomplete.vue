@@ -1,10 +1,10 @@
 <template>
-    <Combobox v-model="selectedValue">
+    <Combobox v-model="selectedValue"
+    nullable
+    >
         <div class="relative">
-            <ComboboxInput @change="(e) => {
-            query = e.target.value
-        }
-        " :value="query" :placeholder="props.placeholder"
+            <ComboboxInput @change="onInputChange"
+        :value="query" :placeholder="props.placeholder"
                 class="text-base rounded h-7 py-1.5 pl-2 pr-2 border border-gray-100 bg-gray-100 placeholder-gray-500 hover:border-gray-200 hover:bg-gray-200 focus:bg-white focus:border-gray-500 focus:shadow-sm focus:ring-0 focus-visible:ring-2 focus-visible:ring-gray-400 text-gray-800 transition-colors w-full" />
             <Button :variant="'outline'" type="button" theme="gray" size="sm" label="Button" icon="arrow-right"
                 class="button-field absolute right-0">
@@ -116,6 +116,10 @@ const findOption = (option) => {
 //     return option[props.labelBy] || option[props.valueBy] || 'No label'
 // }
 
+const onInputChange = (e) => {
+    query.value = e.target.value;
+};
+
 const selectedValue = computed({
     get() {
         const option = findOption(props.modelValue);
@@ -125,11 +129,10 @@ const selectedValue = computed({
         if (val) showOptions.value = false
         const option = findOption(val);
         const value = option ? option[props.valueBy] : null;
-        emits('update:modelValue', value)
         
-        if(query.value.length > 0) {
-            query.value = value;
-        }
+        emits('update:modelValue', value);
+        query.value = value;
+
         return
     },
 });
@@ -140,12 +143,13 @@ const queryResult = computed(() => {
 });
 
 const filterOptions = (options) => {
-    if (!query.value) return options
-    return options.filter((option) => {
+    if (!query.value) return options;
+    const filteredOptions = options.filter((option) => {
         return (
             option[props.labelBy].toLowerCase().includes(query.value.toLowerCase()) ||
             option[props.valueBy].toLowerCase().includes(query.value.toLowerCase())
-        )
-    })
+        );
+    });
+    return filteredOptions.length > 0 ? filteredOptions : [];
 };
 </script>

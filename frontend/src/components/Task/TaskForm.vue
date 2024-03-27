@@ -320,19 +320,19 @@ const [actual_time] = defineField('actual_time');
 watchDebounced(
     values,
     () => { 
-        if (dataTask.value.subject !== values.subject){
+        if (dataTask.value?.subject !== values.subject){
             updateValue("subject", values.subject)
-            values.subject = dataTask.value.subject
+            values.subject = dataTask.value?.subject
         }
-        if (dataTask.value.project !== values.project) {
+        if (dataTask.value?.project !== values.project) {
             updateValue("project", values.project)
-            values.project = dataTask.values.project
+            values.project = dataTask.values?.project
         }
-        if (dataTask.value.status !== values.status) {
-            values.status = dataTask.values.status
+        if (dataTask.value?.status !== values.status) {
+            values.status = dataTask.values?.status
         }
-        if (dataTask.value.priority !== values.priority) {
-            values.priority = dataTask.values.priority
+        if (dataTask.value?.priority !== values.priority) {
+            values.priority = dataTask.values?.priority
         }
         console.log(values)
     
