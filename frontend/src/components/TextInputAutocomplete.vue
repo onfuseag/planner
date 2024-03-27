@@ -126,7 +126,10 @@ const selectedValue = computed({
         const option = findOption(val);
         const value = option ? option[props.valueBy] : null;
         emits('update:modelValue', value)
-        query.value = value;
+        
+        if(query.value.length > 0) {
+            query.value = value;
+        }
         return
     },
 });
