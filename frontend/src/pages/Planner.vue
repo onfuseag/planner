@@ -11,7 +11,7 @@
                 <div class="flex inline">
                     <Button :variant="'solid'" theme="gray" size="sm" label="Button" :loadingText="null"
                         :disabled="false" :link="null" icon="refresh-cw" :loading="false" class="mr-2"
-                        @click="getEmployeeTasks">
+                        @click="getEmployeeTasks(); getBacklogTasks();">
                     </Button>
                     <div class="bg-white py-1 px-3 rounded">
                         
@@ -257,7 +257,8 @@ const initTimeLine = () => {
                 content: {
                     title: task.title,
                     project_name: task.project_name,
-                    type: task.type
+                    type: task.type, 
+                    owner: employee.user_id
                 },
                 start: task.startDate,
                 end: task.endDate,
@@ -296,7 +297,13 @@ const initTimeLine = () => {
             axis: 5,  
         },
         onMove: function (item, callback) {
-            console.log("onMove", item, callback)
+
+            // If the user moves it to another user
+            if (item.content.owner != item.group) {
+                callback(null); // cancel updating the item
+                console.log("Dragged into another timeline")
+                return;
+            }
             
             var start_date = new Date(item.start)
             start_date.setDate(start_date.getDate() + 1) // Add one because the format option counts wrong
