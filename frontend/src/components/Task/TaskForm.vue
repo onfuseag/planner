@@ -276,7 +276,7 @@ let parentTaskOptions = ref([
         "parent_name": "TASK-2024-00008 value"
     }]);
 
-const { values, errors, defineField, handleSubmit } = useForm({
+const { values, errors, defineField, handleSubmit, setError } = useForm({
     validationSchema: schema
 });
 
@@ -314,9 +314,11 @@ watchDebounced(
             dataTask.value.priority = values.priority
         }
         if (dataTask.value.exp_start_date !== values.exp_start_date) {
+            setError({"exp_start_date": 'Error message'});
             updateValue("exp_start_date", values.exp_start_date)
             dataTask.value.exp_start_date = values.exp_start_date
-            errors.exp_start_date ="Not possible";
+
+            
         }
         if (dataTask.value.exp_end_date !== values.exp_end_date) {
             updateValue("exp_end_date", values.exp_end_date)
