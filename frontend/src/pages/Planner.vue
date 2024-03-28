@@ -342,6 +342,9 @@ const initTimeLine = () => {
                 }, 
                 auto: true,
                 onSuccess: () =>  {
+                    // So we can change the length afterwards
+                    item.content.owner = item.group;
+                    
                     callback(item); // send back adjusted item
                     // We now need to update the item to accept the new dates
 
