@@ -18,9 +18,15 @@
                         {{ group.group }}
                     </div>
                     <ComboboxOption as="template" v-for="(option, idx) in group.items.slice(0, 50)" :key="idx"
-                        :value="option" v-slot="{ active, selected }">
+                        :value="option" v-slot="{ active, selected }" :disabled="option.disabled"
+                        :class="{
+                            'opacity-50' : option.disabled,
+                            'cursor-not-allowed' : option.disabled,
+                            'cursor-pointer' : !option.disabled,
+                        }"
+                        >
                         <li :class="[
-                            'flex cursor-pointer items-center justify-between rounded px-2.5 py-1.5 text-base',
+                            'flex items-center justify-between rounded px-2.5 py-1.5 text-base',
                             { 'bg-gray-100': active },
                         ]">
                             <div class="flex flex-1 gap-2 overflow-hidden">
