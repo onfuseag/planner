@@ -17,6 +17,7 @@ def get_planner_tasks(department):
             'department': department, 
             'status' : 'Active'
         },
+        order_by="employee_name asc"
         fields=['name', 'employee_name', 'user_id', 'image']
     )
 

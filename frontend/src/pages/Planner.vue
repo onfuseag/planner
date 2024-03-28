@@ -184,17 +184,21 @@ const dragBackLog = (event, task) => {
 
     console.log("Task: ", task)
 
-    event.target.id = new Date(item.id).toISOString();
+    event.target.id = item.id; 
+    console.log("Task:0")
 
     let startDateTime = new Date(currentDate.value);
     startDateTime.setHours(0, 0, 0, 0);
-    item.content.startDate = startDateTime.toLocaleDateString('en-CA'); 
+    item.content.startDate = startDateTime.toLocaleDateString('de-DE'); 
 
-    let endDateTime = new Date(currentDate.value.setDate(currentDate.value.getDate() + 1));
+    console.log("Task:2")
+
+    let endDateTime = new Date(currentDate.value.setDate(currentDate.value.getDate() + 2));
 
     endDateTime.setHours(0, 0, 0, 0);
-    item.content.endDate = endDateTime.toLocaleDateString('en-CA'); 
+    item.content.endDate = endDateTime.toLocaleDateString('de-DE'); 
 
+    console.log("Task:3")
     event.dataTransfer.setData('text', JSON.stringify(item));
     event.target.addEventListener('dragend', dragEndBackLog.bind(this), false);
 };
