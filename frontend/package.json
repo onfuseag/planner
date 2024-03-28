@@ -13,12 +13,9 @@
     "@vueuse/core": "^10.7.2",
     "feather-icons": "^4.29.1",
     "frappe-ui": "^0.1.31",
-    "pinia": "^2.1.7",
-    "pinia-plugin-persistedstate": "^3.2.1",
     "vee-validate": "^4.12.5",
     "vis-timeline": "^7.7.3",
     "vue": "^3.4.15",
-    "vue-axios": "^3.5.2",
     "vue-router": "^4.2.5",
     "yup": "^1.4.0"
   },
