@@ -22,7 +22,7 @@
                             <p class="text-base">Assigned to</p>
                         </template>
                         <template #body-content>
-                            <Autocomplete :options="unselectedEmployees" v-model="employees" placeholder="Select people"
+                            <Autocomplete :options="employeesList" v-model="employees" placeholder="Select people"
                                 :multiple="false" class="mb-5" @update:modelValue="onSelectEmployee" />
                             <div class="flex flex-col gap-3">
                                 <div class="flex justify-between items-center"
@@ -36,15 +36,6 @@
                                     </Button>
                                 </div>
                             </div>
-                        </template>
-
-                        <template #actions>
-                            <Button variant="solid" @click="addAssignee">
-                                Add
-                            </Button>
-                            <Button class="ml-2" @click="addAssigneePopup = false">
-                                Close
-                            </Button>
                         </template>
                     </Dialog>
                 </div>
@@ -129,11 +120,13 @@ import { toTypedSchema } from '@vee-validate/yup';
 import { object, string, number, date, array } from 'yup';
 import { watchDebounced } from '@vueuse/core';
 import { getURL } from '../../getURL.js'
+import { useRoute } from 'vue-router';
 import TextInputAutocomplete from '@/components/TextInputAutocomplete.vue';
 
 // Props to be taken
 const props = defineProps({
-    task: String
+    task: String, 
+    department: String
 });
 
 let dataTask = ref();
@@ -155,39 +148,9 @@ const schema = toTypedSchema(
 );
 
 let employees = ref();
-// get employee list from API
-let employeesList = ref([
-    {
-        label: 'Muhammad Darwis Arifin',
-        value: 'Muhammad-Darwis-Arifin',
-        image: 'https://i.pravatar.cc/400?img=70',
-    },
-    {
-        label: 'Christoph Diethelm',
-        value: 'Christoph-Diethelm',
-        image: 'https://i.pravatar.cc/400?img=69',
-    },
-    {
-        label: 'John Smith',
-        value: 'john-smith',
-        image: 'https://randomuser.me/api/portraits/men/59.jpg',
-    },
-    {
-        label: 'Jane Smith',
-        value: 'jane-smith',
-        image: 'https://randomuser.me/api/portraits/women/59.jpg',
-    },
-    {
-        label: 'John Wayne',
-        value: 'john-wayne',
-        image: 'https://randomuser.me/api/portraits/men/57.jpg',
-    },
-    {
-        label: 'Jane Wayne',
-        value: 'jane-wayne',
-        image: 'https://randomuser.me/api/portraits/women/51.jpg',
-    },
-]);
+
+let employeesList = ref([]);
+
 // get selected employees from API
 let selectedEmployees = ref([{
     label: 'Muhammad Darwis Arifin',
@@ -202,9 +165,7 @@ let selectedEmployees = ref([{
 
 // filter out selected employees from employees list automatically
 const unselectedEmployees = computed(() => {
-    return employeesList.value.filter(employee => {
-        return !selectedEmployees.value.some(selectedEmployee => selectedEmployee?.value === employee?.value);
-    });
+    return employeesList;
 });
 
 // event when remove selected employee
@@ -232,16 +193,31 @@ const unselectEmployee = (assignedperson) => {
 };
 // event when select employee
 const onSelectEmployee = (employee) => {
-    if (employee) {
-        selectedEmployees.value.push(employee);
-    }
+
+    // have to put this in an array for the api to work
+    const assign_to_array = [employee.value]
+
+    const resp = createResource({
+        url: 'frappe.desk.form.assign_to.add', 
+        params: {
+            doctype: "Task", 
+            name: props.task, 
+            description: props.task, 
+            assign_to: assign_to_array, 
+            bulk_assign: false
+        }, 
+        auto: true,
+        onSuccess: () =>  {
+            docinfo.assignments.push({
+                owner: employee.value, 
+                fullname: employee.label
+            })
+            selectedEmployees.value.push(employee);
+        }
+    })
 };
 
-const addAssignee = () => {
-    console.log(selectedEmployees.value);
-    // to close the popup
-    // addAssigneePopup.value = false;
-}
+
 // default options structure
 let projectOptions = ref([
     {
@@ -320,19 +296,31 @@ const [actual_time] = defineField('actual_time');
 watchDebounced(
     values,
     () => { 
-        if (dataTask.value?.subject !== values.subject){
+        if (dataTask.value.subject !== values.subject){
             updateValue("subject", values.subject)
-            values.subject = dataTask.value?.subject
+            dataTask.value.subject = values.subject
         }
-        if (dataTask.value?.project !== values.project) {
+
+        if (dataTask.value.project !== values.project) {
             updateValue("project", values.project)
-            values.project = dataTask.values?.project
+            dataTask.value.project = values.project
         }
-        if (dataTask.value?.status !== values.status) {
-            values.status = dataTask.values?.status
+        if (dataTask.value.status !== values.status) {
+            updateValue("status", values.status)
+            dataTask.value.status = values.status
         }
-        if (dataTask.value?.priority !== values.priority) {
-            values.priority = dataTask.values?.priority
+        if (dataTask.value.priority !== values.priority) {
+            updateValue("priority", values.priority)
+            dataTask.value.priority = values.priority
+        }
+        if (dataTask.value.exp_start_date !== values.exp_start_date) {
+            updateValue("exp_start_date", values.exp_start_date)
+            dataTask.value.exp_start_date = values.exp_start_date
+            errors.exp_start_date ="Not possible";
+        }
+        if (dataTask.value.exp_end_date !== values.exp_end_date) {
+            updateValue("exp_end_date", values.exp_end_date)
+            dataTask.value.exp_end_date = values.exp_end_date
         }
         console.log(values)
     
@@ -374,6 +362,32 @@ const updateValue = (field, value) => {
 
 
 onMounted(() => {
+
+    const resp = createResource({
+        url: 'frappe.desk.search.search_link',
+        params: {
+            doctype: "User",
+            txt:"",
+            filters: {
+                user_type: "System User", 
+                enabled: 1
+            }
+        },
+        auto: true, 
+        onSuccess: (data) => {
+            var users = []
+            for (var i = 0; i < data.length; i++) {
+                console.log(data[i])
+                var user = {}
+                
+                user.value = data[i].value;
+                user.label = data[i].description;
+
+                users.push(user)
+            }
+            employeesList = users;
+        }
+    });
 
     const response = createResource({
         url: 'frappe.desk.form.load.getdoc',

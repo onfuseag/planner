@@ -8,8 +8,15 @@
                 <div class="bg-white py-1 px-3 rounded">
                     KW{{ weekNumber }}
                 </div>
-                <div class="bg-white py-1 px-3 rounded">
-                    {{ department }}
+                <div class="flex inline">
+                    <Button :variant="'solid'" theme="gray" size="sm" label="Button" :loadingText="null"
+                        :disabled="false" :link="null" icon="refresh-cw" :loading="false" class="mr-2"
+                        @click="getEmployeeTasks(); getBacklogTasks();">
+                    </Button>
+                    <div class="bg-white py-1 px-3 rounded">
+                        
+                        {{ department }}
+                    </div>
                 </div>
                 <!-- <Button :variant="'solid'" theme="gray" size="md" label="Button" @click="goToNextWeek">
                     Next
@@ -19,7 +26,7 @@
                 <div class="w-full lg:w-9/12">
                     <div class="bg-white rounded p-2">
 
-                        <div ref="timeline"></div>
+                        <div id="timeline" ref="timeline"></div>
 
                     </div>
                 </div>
@@ -42,8 +49,8 @@
                             <div class="grid grid-rows gap-3 mb-3">
                                 <div class="flex flex-col bg-gray-200 p-3 rounded gap-2 cursor-grab select-none"
                                     v-for="task in backlog" :key="task.name" @click="openTaskDetail(task.name)" draggable="true"
-                                    @dragstart="dragBackLog($event, task)">
-                                    <div :id="task.name" class="flex justify-between items-center">
+                                    @dragstart="dragBackLog($event, task)" :style="{ backgroundColor: task.color }">
+                                    <div :id="task.name" class="flex justify-between items-center" >
                                         <div>
                                             <p v-if="task.project" class="leading-4 text-xs">{{ task.project }}</p>
                                             <p class="leading-4 text-sm font-bold">{{ task.subject }}</p>
@@ -67,7 +74,7 @@
                                     @click="backToBackLog">
                                 </Button>
                             </div>
-                            <TaskForm :task='activeTask' />
+                            <TaskForm :task='activeTask' :department='department' />
                         </template>
                     </div>
                 </div>
@@ -216,6 +223,17 @@ const getWeekNumber = (d) => {
 }
 
 const initTimeLine = () => {
+    // Get the div element by its ref attribute
+    const timelineDiv = document.getElementById('timeline');
+
+    // Check if the div element exists
+    if (timelineDiv) {
+        // Empty the div by setting its innerHTML to an empty string
+        timelineDiv.innerHTML = '';
+    } else {
+        console.error('Div element with ref "timeline" not found.');
+    }
+
     var groups = new DataSet()
     for (var i = 0; i < employees.length; i++) {
 
@@ -239,11 +257,13 @@ const initTimeLine = () => {
                 content: {
                     title: task.title,
                     project_name: task.project_name,
-                    type: task.type
+                    type: task.type, 
+                    owner: employee.user_id
                 },
                 start: task.startDate,
                 end: task.endDate,
-                editable : task.type == 1
+                editable : task.type == 1, 
+                style: "background-color: " + task.color + ";" // Make sure it is colored right
             });
         });
     });
@@ -259,7 +279,13 @@ const initTimeLine = () => {
         start: startOfWeek,
         end: endOfWeek,
         zoomable: false,
-        editable: true,
+        editable: {
+            add: true,         // add new items by double tapping
+            updateTime: true,  // drag items horizontally
+            updateGroup: false, // drag items from one group to another
+            remove: true,       // delete an item by tapping the delete button top right
+            overrideItems: false  // allow these options to override item.editable
+        },
         orientation: 'top',
         horizontalScroll: true,
         showWeekScale: true,
@@ -271,7 +297,13 @@ const initTimeLine = () => {
             axis: 5,  
         },
         onMove: function (item, callback) {
-            console.log("onMove", item, callback)
+
+            // If the user moves it to another user
+            if (item.content.owner != item.group) {
+                callback(null); // cancel updating the item
+                console.log("Dragged into another timeline")
+                return;
+            }
             
             var start_date = new Date(item.start)
             start_date.setDate(start_date.getDate() + 1) // Add one because the format option counts wrong
@@ -293,7 +325,6 @@ const initTimeLine = () => {
             })
         },
         onAdd: function (item, callback) {
-            console.log("onAdd", item, callback)
             var assignees = [item.group]
 
             createResource({
@@ -380,10 +411,7 @@ const initTimeLine = () => {
 
 }
 
-onMounted(() => {
-
-    searchText.value =""
-
+const getEmployeeTasks = () => {
     const resource = createResource({
         url: 'planner.api.get_planner_tasks', 
         params : {
@@ -395,6 +423,14 @@ onMounted(() => {
             initTimeLine()
         }
     });
+
+}
+
+onMounted(() => {
+
+    searchText.value ="";
+
+    getEmployeeTasks();
 
     getBacklogTasks();
     

@@ -10,8 +10,6 @@
   "department",
   "color",
   "column_break_lmdk",
-  "days_before",
-  "days_after",
   "show_employee_holidays"
  ],
  "fields": [
@@ -39,20 +37,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "days_before",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Days before",
-   "reqd": 1
-  },
-  {
-   "fieldname": "days_after",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Days after",
-   "reqd": 1
-  },
-  {
    "default": "0",
    "fieldname": "show_employee_holidays",
    "fieldtype": "Check",
@@ -61,7 +45,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-03-12 14:30:18.371569",
+ "modified": "2024-03-28 08:04:31.160073",
  "modified_by": "Administrator",
  "module": "Planner",
  "name": "Planner Dashboard",
