@@ -113,6 +113,7 @@ def planner_get_backlog(searchtext):
     backlogdata = frappe.db.get_all(
         "Task", 
         filters=bfilters,
+        page_length=100, # Do not overload the ERP
         order_by='exp_start_date asc',
         fields=['name', 'subject', 'type', 'status', 'expected_time', 'priority', 'exp_start_date', 'project', 'color']
     )
