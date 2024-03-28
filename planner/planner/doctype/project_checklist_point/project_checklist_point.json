@@ -10,7 +10,7 @@
   "task",
   "data",
   "column_break_eqhu",
-  "select_vdrk",
+  "select",
   "image"
  ],
  "fields": [
@@ -36,22 +36,22 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "select_vdrk",
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image"
+  },
+  {
+   "fieldname": "select",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
    "options": "\nDone\nTodo\nNot applicable\nData"
-  },
-  {
-   "fieldname": "image",
-   "fieldtype": "Attach Image",
-   "label": "Image"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-03-28 16:39:03.081004",
+ "modified": "2024-03-28 19:00:50.611732",
  "modified_by": "Administrator",
  "module": "Planner",
  "name": "Project Checklist Point",

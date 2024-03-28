@@ -32,6 +32,7 @@
    "options": "Project"
   },
   {
+   "fetch_from": "project.project_name",
    "fieldname": "project_name",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -98,9 +99,11 @@
    "options": "User"
   },
   {
+   "fetch_from": "user.full_name",
    "fieldname": "user_name",
    "fieldtype": "Data",
-   "label": "User Name"
+   "label": "User Name",
+   "read_only": 1
   },
   {
    "fieldname": "checklist_tab",
@@ -116,7 +119,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-03-28 16:38:56.199318",
+ "modified": "2024-03-28 18:52:44.902620",
  "modified_by": "Administrator",
  "module": "Planner",
  "name": "Project Checklist",
