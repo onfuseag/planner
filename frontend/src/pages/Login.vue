@@ -12,11 +12,7 @@
               <FormControl
                 variant="outline"
                 size="md"
-                :type="
-                  (email || '').toLowerCase() === 'administrator'
-                    ? 'text'
-                    : 'email'
-                "
+                :type="'text'"
                 label="Email"
                 v-model="email"
                 placeholder="jane@example.com"

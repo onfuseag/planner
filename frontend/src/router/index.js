@@ -55,7 +55,9 @@ function saveAndRestoreScrollPosition(to, from) {
 }
 
 router.beforeEach(async (to, from, next) => {
+
   saveAndRestoreScrollPosition(to, from)
+
   let isLoggedIn = session.isLoggedIn
   console.log("isloggedin", isLoggedIn)
   try {
