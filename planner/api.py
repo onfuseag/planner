@@ -36,7 +36,9 @@ def get_planner_tasks(department):
             tasks = frappe.db.get_all(
                 "Task", 
                 filters={
-                    "_assign": ["like", f'%{employee.user_id}%']
+                    "_assign": ["like", f'%{employee.user_id}%'], 
+                    "exp_start_date": ["is", "set"], # Make sure the start and end dates are set, else we cannot show this in timeline
+                    "exp_end_date": ["is", "set"]
                 }, 
                 fields=['name', 'project', 'subject', 'exp_start_date', 'exp_end_date', 'expected_time', 'actual_time', 'color']
             )
