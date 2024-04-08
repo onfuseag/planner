@@ -51,11 +51,15 @@
 
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Project</label>
-                    <TextInputAutocomplete v-model="project" placeholder="Project" :options="projectOptions" />
+                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="" :disabled="true"
+                        v-model="project"/>
+                    <!--<TextInputAutocomplete v-model="project" placeholder="Project" :options="projectOptions" /> -->
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Elevator</label>
-                    <TextInputAutocomplete v-model="elevator" placeholder="Elevator" :options="elevatorOptions" value-by="elevator" label-by="name" />
+                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="" :disabled="true"
+                        v-model="elevator"/>
+                    <!-- <TextInputAutocomplete v-model="elevator" placeholder="Elevator" :options="elevatorOptions" value-by="elevator" label-by="name" />-->
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Type</label>

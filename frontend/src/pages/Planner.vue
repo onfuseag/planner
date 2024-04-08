@@ -34,7 +34,17 @@
                     <div class="bg-white rounded p-3">
                         <template v-if="!isTaskFormActive">
                             <div class="p-0">
-                                <TextInput type="text" placeholder="Search ..." v-model="searchText" @keyup.enter="getBacklogTasks">
+                                <TextInput class="p-1" type="text" placeholder="Search ..." v-model="searchText" @keyup.enter="getBacklogTasks">
+                                    <template #suffix>
+                                    <FeatherIcon
+                                        class="w-4"
+                                        name="search"
+                                        @click="getBacklogTasks"
+                                    />
+                                    </template>
+                                </TextInput>
+
+                                <TextInput class="p-1" type="text" placeholder="Project ..." v-model="projectText" @keyup.enter="getBacklogTasks">
                                     <template #suffix>
                                     <FeatherIcon
                                         class="w-4"
@@ -95,6 +105,7 @@ import { getURL } from '../getURL.js'
 
 const route = useRoute(); // Access to the current route
 const searchText = defineModel('searchText')
+const projectText = defineModel('projectText')
 
 // The employees with all tasks
 var employees = {}
@@ -106,7 +117,8 @@ const getBacklogTasks = () => {
     const resp = createResource({
         url: 'planner.api.planner_get_backlog', 
         params : {
-            searchtext: searchText.value
+            searchtext: searchText.value, 
+            projectText: projectText.value
         }, 
         auto: true,
         onSuccess:(data) => {
@@ -436,6 +448,7 @@ const getEmployeeTasks = () => {
 onMounted(() => {
 
     searchText.value ="";
+    projectText.value ="";
 
     getEmployeeTasks();
 

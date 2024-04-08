@@ -103,7 +103,7 @@ def planner_change_date_task(task, exp_start_date, exp_end_date):
 
 
 @frappe.whitelist()
-def planner_get_backlog(searchtext):
+def planner_get_backlog(searchtext, projectText):
 
     bfilters = {
         'status': ["in", ["Overdue", "Open", "Working"]], 
@@ -112,6 +112,9 @@ def planner_get_backlog(searchtext):
 
     if (searchtext):
         bfilters['subject'] = ['like', f'%{searchtext}%']
+
+    if (projectText): 
+        bfilters['project'] = ['like', f'%{searchtext}%']
 
     backlogdata = frappe.db.get_all(
         "Task", 
