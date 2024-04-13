@@ -34,7 +34,17 @@
                     <div class="bg-white rounded p-3">
                         <template v-if="!isTaskFormActive">
                             <div class="p-0">
-                                <TextInput type="text" placeholder="Search ..." v-model="searchText" @keyup.enter="getBacklogTasks">
+                                <TextInput class="p-1" type="text" placeholder="Search ..." v-model="searchText" @keyup.enter="getBacklogTasks">
+                                    <template #suffix>
+                                    <FeatherIcon
+                                        class="w-4"
+                                        name="search"
+                                        @click="getBacklogTasks"
+                                    />
+                                    </template>
+                                </TextInput>
+
+                                <TextInput class="p-1" type="text" placeholder="Project ..." v-model="projectText" @keyup.enter="getBacklogTasks">
                                     <template #suffix>
                                     <FeatherIcon
                                         class="w-4"
@@ -95,6 +105,7 @@ import { getURL } from '../getURL.js'
 
 const route = useRoute(); // Access to the current route
 const searchText = defineModel('searchText')
+const projectText = defineModel('projectText')
 
 // The employees with all tasks
 var employees = {}
@@ -106,7 +117,8 @@ const getBacklogTasks = () => {
     const resp = createResource({
         url: 'planner.api.planner_get_backlog', 
         params : {
-            searchtext: searchText.value
+            searchtext: searchText.value, 
+            projectText: projectText.value
         }, 
         auto: true,
         onSuccess:(data) => {
@@ -184,17 +196,21 @@ const dragBackLog = (event, task) => {
 
     console.log("Task: ", task)
 
-    event.target.id = new Date(item.id).toISOString();
+    event.target.id = item.id; 
+    console.log("Task:0")
 
     let startDateTime = new Date(currentDate.value);
     startDateTime.setHours(0, 0, 0, 0);
-    item.content.startDate = startDateTime.toLocaleDateString('en-CA'); 
+    item.content.startDate = startDateTime.toLocaleDateString('de-DE'); 
 
-    let endDateTime = new Date(currentDate.value.setDate(currentDate.value.getDate() + 1));
+    console.log("Task:2")
+
+    let endDateTime = new Date(currentDate.value.setDate(currentDate.value.getDate() + 2));
 
     endDateTime.setHours(0, 0, 0, 0);
-    item.content.endDate = endDateTime.toLocaleDateString('en-CA'); 
+    item.content.endDate = endDateTime.toLocaleDateString('de-DE'); 
 
+    console.log("Task:3")
     event.dataTransfer.setData('text', JSON.stringify(item));
     event.target.addEventListener('dragend', dragEndBackLog.bind(this), false);
 };
@@ -338,6 +354,9 @@ const initTimeLine = () => {
                 }, 
                 auto: true,
                 onSuccess: () =>  {
+                    // So we can change the length afterwards
+                    item.content.owner = item.group;
+                    
                     callback(item); // send back adjusted item
                     // We now need to update the item to accept the new dates
 
@@ -429,6 +448,7 @@ const getEmployeeTasks = () => {
 onMounted(() => {
 
     searchText.value ="";
+    projectText.value ="";
 
     getEmployeeTasks();
 

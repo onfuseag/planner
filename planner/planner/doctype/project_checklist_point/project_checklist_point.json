@@ -1,0 +1,63 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-03-28 15:50:10.677613",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "category",
+  "task",
+  "data",
+  "column_break_eqhu",
+  "select",
+  "image"
+ ],
+ "fields": [
+  {
+   "fieldname": "category",
+   "fieldtype": "Data",
+   "label": "Category"
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Task"
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Data"
+  },
+  {
+   "fieldname": "column_break_eqhu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image"
+  },
+  {
+   "fieldname": "select",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "\nDone\nToDo\nNot applicable\nData"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-04-01 10:52:35.702276",
+ "modified_by": "Administrator",
+ "module": "Planner",
+ "name": "Project Checklist Point",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

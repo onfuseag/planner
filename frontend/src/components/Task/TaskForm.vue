@@ -51,11 +51,15 @@
 
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Project</label>
-                    <TextInputAutocomplete v-model="project" placeholder="Project" :options="projectOptions" />
+                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="" :disabled="true"
+                        v-model="project"/>
+                    <!--<TextInputAutocomplete v-model="project" placeholder="Project" :options="projectOptions" /> -->
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Elevator</label>
-                    <TextInputAutocomplete v-model="elevator" placeholder="Elevator" :options="elevatorOptions" value-by="elevator" label-by="name" />
+                    <TextInput :type="'text'" size="sm" variant="subtle" placeholder="" :disabled="true"
+                        v-model="elevator"/>
+                    <!-- <TextInputAutocomplete v-model="elevator" placeholder="Elevator" :options="elevatorOptions" value-by="elevator" label-by="name" />-->
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Type</label>
@@ -276,7 +280,7 @@ let parentTaskOptions = ref([
         "parent_name": "TASK-2024-00008 value"
     }]);
 
-const { values, errors, defineField, handleSubmit } = useForm({
+const { values, errors, defineField, handleSubmit, setErrors } = useForm({
     validationSchema: schema
 });
 
@@ -314,9 +318,11 @@ watchDebounced(
             dataTask.value.priority = values.priority
         }
         if (dataTask.value.exp_start_date !== values.exp_start_date) {
+            
             updateValue("exp_start_date", values.exp_start_date)
             dataTask.value.exp_start_date = values.exp_start_date
-            errors.exp_start_date ="Not possible";
+
+            
         }
         if (dataTask.value.exp_end_date !== values.exp_end_date) {
             updateValue("exp_end_date", values.exp_end_date)
@@ -325,7 +331,7 @@ watchDebounced(
         console.log(values)
     
     },
-    { debounce: 1000, maxWait: 5000 },
+    { debounce: 2000, maxWait: 8000 },
 )
 
 // The doctype is accessible through data.doc
@@ -356,7 +362,13 @@ const updateValue = (field, value) => {
             fieldname: field,
             value: value
         },
-        auto: true
+        auto: true, 
+        onError: (err) => {
+
+            // Set the error to the field directly
+            setErrors({[field]: 'Error update'});
+            
+        }
     });
 }
 

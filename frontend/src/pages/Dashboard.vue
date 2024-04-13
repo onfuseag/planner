@@ -15,7 +15,7 @@
             <div class="flex flex-wrap -m-2">
                 <div class="w-3/12 lg:w-1/4 p-2" v-for="dashboard in dashboards.data" :key="dashboard.dashboard_name">
                     <router-link :to="{ name: 'Planner', params: { dashboardName: dashboard.dashboard_name, department: dashboard.department }}">
-                        <div style="background-color: {{ dashboard.color }}" class="flex flex-col bg-white p-4 rounded gap-2 w-full" >
+                        <div :style="{ backgroundColor: dashboard.color }" class="flex flex-col bg-white p-4 rounded gap-2 w-full" >
                             <div class="flex justify-between items-center">
                                 <p class="text-xs font-semibold">{{ dashboard.dashboard_name }}</p>
                             </div>

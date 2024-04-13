@@ -1,20 +1,16 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { session } from '../data/session'
+import { users } from '../data/users'
+import { getScrollContainer, scrollTo } from '../utils/scrollContainer'
 
 const Planner = () => import("@/pages/Planner.vue");
-const SignIn = () => import("@/pages/SignIn.vue");
 const Dashboard = () => import("@/pages/Dashboard.vue");
 
-// import { AuthStore } from "@/stores/AuthStore"
-
 const routes = [
-  // {
-  //   path: "/:pathMatch(.*)*",
-  //   redirect: '/login'
-  // },
   {
     path: "/",
     name: "Dashboard",
-    component: Dashboard,
+    component: () => import("@/pages/Dashboard.vue"),
     meta: {
       requiresAuth: true
     }
@@ -22,15 +18,15 @@ const routes = [
   {
     path: "/planner/:dashboardName/:department",
     name: "Planner",
-    component: Planner,
+    component: () => import("@/pages/Planner.vue"),
     meta: {
       requiresAuth: true
     }
   },
   {
-    path: "/signin",
-    name: "SignIn",
-    component: SignIn,
+    path: "/login",
+    name: "Login",
+    component: () => import("@/pages/Login.vue"),
   },
 ];
 
@@ -45,9 +41,39 @@ const router = createRouter({
   },
 });
 
+let scrollPositions = {}
+function saveAndRestoreScrollPosition(to, from) {
+  let scrollContainer = getScrollContainer()
+  if (scrollContainer) {
+    scrollPositions[from.path] = scrollContainer.scrollTop
+  }
+  if (scrollPositions[to.path] !== undefined && to.path !== from.path) {
+    setTimeout(() => {
+      scrollTo({ top: scrollPositions[to.path] })
+    }, 0)
+  }
+}
+
 router.beforeEach(async (to, from, next) => {
-  next();
-});
+
+  saveAndRestoreScrollPosition(to, from)
+
+  let isLoggedIn = session.isLoggedIn
+  console.log("isloggedin", isLoggedIn)
+  try {
+    await users.promise
+  } catch (error) {
+    isLoggedIn = false
+  }
+
+  if (to.name === 'Login' && isLoggedIn) {
+    next({ name: 'Dashboard' })
+  } else if (to.name !== 'Login' && !isLoggedIn) {
+    next({ name: 'Login' })
+  } else {
+    next()
+  }
+})
 
 
 export default router;

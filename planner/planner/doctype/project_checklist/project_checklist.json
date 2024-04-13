@@ -1,0 +1,170 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2024-03-28 15:42:32.879191",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "project",
+  "project_name",
+  "type",
+  "template",
+  "column_break_bsuu",
+  "date",
+  "pretext",
+  "section_break_txgg",
+  "customer",
+  "customer_role",
+  "customer_mail",
+  "column_break_hlpd",
+  "user",
+  "user_name",
+  "checklist_tab",
+  "checklist"
+ ],
+ "fields": [
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fetch_from": "project.project_name",
+   "fieldname": "project_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Project Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Type",
+   "options": "Project Checklist Type",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "template",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Template"
+  },
+  {
+   "fieldname": "column_break_bsuu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "pretext",
+   "fieldtype": "Small Text",
+   "label": "Pretext"
+  },
+  {
+   "fieldname": "section_break_txgg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Data",
+   "label": "Customer"
+  },
+  {
+   "fieldname": "customer_role",
+   "fieldtype": "Data",
+   "label": "Customer Role"
+  },
+  {
+   "fieldname": "customer_mail",
+   "fieldtype": "Data",
+   "label": "Customer Mail"
+  },
+  {
+   "fieldname": "column_break_hlpd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User"
+  },
+  {
+   "fetch_from": "user.full_name",
+   "fieldname": "user_name",
+   "fieldtype": "Data",
+   "label": "User Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checklist_tab",
+   "fieldtype": "Tab Break",
+   "label": "Checklist"
+  },
+  {
+   "fieldname": "checklist",
+   "fieldtype": "Table",
+   "label": "Checklist",
+   "options": "Project Checklist Point"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-04-04 18:32:02.016586",
+ "modified_by": "Administrator",
+ "module": "Planner",
+ "name": "Project Checklist",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "type",
+ "track_changes": 1
+}
