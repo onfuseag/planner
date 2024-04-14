@@ -310,6 +310,13 @@ const initTimeLine = () => {
             item: true,
             range: true
         },
+        format: {
+            majorLabels: function (date, scale, step) {
+                let dateObj = new Date(date);
+                let monthName = dateObj.toLocaleString('default', { month: 'long' });
+                return monthName + ' ' + 'KW' + getWeekNumber(dateObj);
+            }
+        },
         margin: {
             axis: 5,  
         },
