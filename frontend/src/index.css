@@ -10,9 +10,11 @@ body {
     position: relative;
     margin-right: 0.75rem;
     border-radius: 100%;
-    width: 2.5rem;
-    height: 2.5rem;
-    background-color: #002366;
+    max-width: 2.5rem;
+    max-height: 2.5rem;
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
 }
 
 

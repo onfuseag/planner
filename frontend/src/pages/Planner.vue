@@ -1,36 +1,37 @@
 <template>
     <Layout :breadcrumbs="breadcrumbs">
         <div class="mx-auto px-4 lg:px-8 max-w-[1800px]">
-            <div class="flex justify-between items-center gap-x-2 mb-3">
-                <!-- <Button :variant="'solid'" theme="gray" size="md" label="Button" @click="goToPrevWeek">
-                    Prev
-                </Button> -->
-                <div class="bg-white py-1 px-3 rounded">
-                    KW{{ weekNumber }}
-                </div>
-                <div class="flex inline">
-                    <Button :variant="'solid'" theme="gray" size="sm" label="Button" :loadingText="null"
-                        :disabled="false" :link="null" icon="refresh-cw" :loading="false" class="mr-2"
-                        @click="getEmployeeTasks(); getBacklogTasks();">
+            <div class="flex justify-between items-center mb-3 sticky top-0" ref="timelineInfoRef">
+                <div class="flex gap-x-2">
+                    <Button :variant="'solid'" theme="gray" size="md" label="Button" id="buttonPrev">
+                        Prev
                     </Button>
                     <div class="bg-white py-1 px-3 rounded">
-                        
+                        KW{{ weekNumber }}
+                    </div>
+                    <Button :variant="'solid'" theme="gray" size="md" label="Button" id="buttonNext">
+                        Next
+                    </Button>
+                </div>
+                <div class="flex gap-x-2">
+                    <Button :variant="'solid'" theme="gray" size="md" label="Button" :loadingText="null"
+                        :disabled="false" :link="null" icon="refresh-cw" :loading="false"
+                        @click="getEmployeeTasks(); getBacklogTasks();">
+                    </Button>
+                    <div class="bg-white py-1 px-3 rounded">     
                         {{ department }}
                     </div>
                 </div>
-                <!-- <Button :variant="'solid'" theme="gray" size="md" label="Button" @click="goToNextWeek">
-                    Next
-                </Button> -->
             </div>
             <div class="flex flex-col lg:flex-row justify-between items-start gap-6">
                 <div class="w-full lg:w-9/12">
                     <div class="bg-white rounded p-2">
 
-                        <div id="timeline" ref="timeline"></div>
+                        <div ref="timeline" id="timeline"></div>
 
                     </div>
                 </div>
-                <div class="w-full lg:w-3/12">
+                <div class="w-full lg:w-3/12 sticky top-16">
                     <div class="bg-white rounded p-3">
                         <template v-if="!isTaskFormActive">
                             <div class="p-0">
@@ -410,10 +411,10 @@ const initTimeLine = () => {
     };
 
     // create a Timeline
-    var container = timeline.value;
-    timeline.value = new Timeline(container, items, groups, options);
+    var container = document.getElementById('timeline');
+    var timeline = new Timeline(container, items, groups, options);
 
-    timeline.value.on('select', function (properties) {
+    timeline.on('select', function (properties) {
         if(properties.items.length > 0) {
             activeTask = properties.items[0].substring(0,properties.items[0].indexOf("!"))
             isTaskFormActive.value = true;
@@ -423,10 +424,34 @@ const initTimeLine = () => {
         }
     });
 
-    timeline.value.on('rangechanged', function (properties) {
+    timeline.on('rangechanged', function (properties) {
         var startOfWeek = properties.start;
         weekNumber.value = getWeekNumber(startOfWeek);
+        setTimeout(function () {
+            var element = document.querySelector(".vis-panel.vis-top");
+            if (element && element.classList.contains('scroll')) {
+                element.style.top = (window.scrollY - 135) + 'px';
+            }
+        }, 100);
     });
+
+    document.getElementById('buttonNext').onclick = function () {
+        var currentStart = timeline.getWindow().start;
+        var nextWeekStart = new Date(currentStart);
+        nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+        var nextWeekEnd = new Date(nextWeekStart);
+        nextWeekEnd.setDate(nextWeekEnd.getDate() + 6);
+        timeline.setWindow(nextWeekStart, nextWeekEnd);
+    };
+
+    document.getElementById('buttonPrev').onclick = function () {
+        var currentStart = timeline.getWindow().start;
+        var prevWeekStart = new Date(currentStart);
+        prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+        var prevWeekEnd = new Date(prevWeekStart);
+        prevWeekEnd.setDate(prevWeekEnd.getDate() + 6);
+        timeline.setWindow(prevWeekStart, prevWeekEnd);
+    };
 
 }
 
@@ -445,6 +470,8 @@ const getEmployeeTasks = () => {
 
 }
 
+const timelineInfoRef = ref();
+
 onMounted(() => {
 
     searchText.value ="";
@@ -455,9 +482,37 @@ onMounted(() => {
     getBacklogTasks();
     
     weekNumber.value = getWeekNumber(new Date(currentDate.value));
+    var element = document.querySelector(".vis-panel.vis-top");
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 100) {
+            timelineInfoRef.value.classList.add('scrolled');
+        } else {
+            timelineInfoRef.value.classList.remove('scrolled');
+        }
+        if (window.scrollY > 200) {
+            if (element) {
+                element.classList.add('scroll');
+                element.style.top = (window.scrollY - 135) + 'px';
+            }
+        } else {
+            if (element) {
+                element.classList.remove('scroll');
+                element.style.top = '0px';
+            }
+        }
+    });
 });
 
 
 </script>
 
-<style scoped></style>
+<style scoped>
+.scrolled {
+    background-color: #fff;
+    z-index: 999;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    border-radius: 0 0 0.5rem 0.5rem;
+    transition: all 0.3s ease;
+}
+</style>
