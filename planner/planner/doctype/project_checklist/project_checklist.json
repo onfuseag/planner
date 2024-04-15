@@ -8,10 +8,13 @@
   "project",
   "project_name",
   "type",
-  "template",
   "column_break_bsuu",
   "date",
+  "status",
+  "section_break_ugjg",
   "pretext",
+  "column_break_ewve",
+  "posttext",
   "section_break_txgg",
   "customer",
   "customer_role",
@@ -46,13 +49,6 @@
    "label": "Type",
    "options": "Project Checklist Type",
    "reqd": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "template",
-   "fieldtype": "Check",
-   "in_standard_filter": 1,
-   "label": "Template"
   },
   {
    "fieldname": "column_break_bsuu",
@@ -115,11 +111,33 @@
    "fieldtype": "Table",
    "label": "Checklist",
    "options": "Project Checklist Point"
+  },
+  {
+   "fieldname": "section_break_ugjg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_ewve",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posttext",
+   "fieldtype": "Small Text",
+   "label": "Posttext"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "\nOpen\nPending Review\nTemplate\nCompleted\nCancelled"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-04-04 18:32:02.016586",
+ "modified": "2024-04-15 06:17:32.889080",
  "modified_by": "Administrator",
  "module": "Planner",
  "name": "Project Checklist",
