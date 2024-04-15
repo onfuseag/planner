@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vee-validate/yup": "^4.12.6",
+    "@vuepic/vue-datepicker": "^8.4.0",
     "@vueuse/core": "^10.7.2",
     "feather-icons": "^4.29.1",
     "frappe-ui": "^0.1.31",
