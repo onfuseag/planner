@@ -16,6 +16,8 @@ import { setConfig, frappeRequest, resourcesPlugin,
     ErrorMessage,
     TextInput
 } from 'frappe-ui'
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
 
 const app = createApp(App);
 setConfig('resourceFetcher', frappeRequest)
@@ -32,4 +34,5 @@ app.component('Dialog', Dialog)
 app.component('Autocomplete', Autocomplete)
 app.component('ErrorMessage', ErrorMessage)
 app.component('TextInput', TextInput)
+app.component('VueDatePicker', VueDatePicker);
 app.mount("#app");

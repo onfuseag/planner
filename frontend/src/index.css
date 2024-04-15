@@ -101,3 +101,18 @@ body {
     background: transparent;
     border: none;
 }
+.datepicker-icon {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+}
+.dp__calendar {
+    font-family: 'InterVar';
+}
+.dp__range_end, .dp__range_start, .dp__active_date, .dp__overlay_cell_active {
+    background: #171717 !important;
+    color: #fff !important;
+}
+.dp__today {
+    border: 1px solid #171717 !important;
+}
