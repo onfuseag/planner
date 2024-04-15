@@ -6,7 +6,7 @@ app_email = "contact@onfuse.ch"
 app_license = "mit"
 
 fixtures = [
-    {"doctype": "Custom Field", "filters": [["dt", "=", "Project"]]}
+    {"doctype": "Custom Field", "filters": [["group", "=", "Project"]]}
 ]
 
 # required_apps = []
