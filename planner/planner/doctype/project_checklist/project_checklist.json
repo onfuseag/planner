@@ -17,7 +17,7 @@
   "posttext",
   "section_break_txgg",
   "customer",
-  "customer_role",
+  "position",
   "customer_mail",
   "column_break_hlpd",
   "user",
@@ -75,11 +75,6 @@
    "label": "Customer"
   },
   {
-   "fieldname": "customer_role",
-   "fieldtype": "Data",
-   "label": "Customer Role"
-  },
-  {
    "fieldname": "customer_mail",
    "fieldtype": "Data",
    "label": "Customer Mail"
@@ -133,11 +128,16 @@
    "in_standard_filter": 1,
    "label": "Status",
    "options": "\nOpen\nPending Review\nTemplate\nCompleted\nCancelled"
+  },
+  {
+   "fieldname": "position",
+   "fieldtype": "Data",
+   "label": "Position"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-04-15 06:17:32.889080",
+ "modified": "2024-04-15 11:39:05.537581",
  "modified_by": "Administrator",
  "module": "Planner",
  "name": "Project Checklist",

@@ -45,13 +45,13 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "\nDone\nToDo\nNot applicable\nData"
+   "options": "\nOpen\nDone\nNot applicable\nData"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-04-15 06:01:15.122367",
+ "modified": "2024-04-15 11:39:43.487403",
  "modified_by": "Administrator",
  "module": "Planner",
  "name": "Project Checklist Point",
