@@ -10,7 +10,7 @@
   "task",
   "data",
   "column_break_eqhu",
-  "select",
+  "status",
   "image"
  ],
  "fields": [
@@ -41,7 +41,7 @@
    "label": "Image"
   },
   {
-   "fieldname": "select",
+   "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
@@ -51,7 +51,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-04-01 10:52:35.702276",
+ "modified": "2024-04-15 06:01:15.122367",
  "modified_by": "Administrator",
  "module": "Planner",
  "name": "Project Checklist Point",

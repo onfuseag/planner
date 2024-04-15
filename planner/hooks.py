@@ -4,6 +4,9 @@ app_publisher = "ONFUSE AG"
 app_description = "Planning tool for projects in erpnext"
 app_email = "contact@onfuse.ch"
 app_license = "mit"
+
+#fixtures = {"dt": "Project"}
+
 # required_apps = []
 
 # Includes in <head>
