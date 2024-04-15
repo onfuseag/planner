@@ -6,7 +6,7 @@
                 <label class="block text-xs text-gray-600 mb-2">Assigned to</label>
 
                 <div class="flex justify-start items-center">
-                    
+
 
 
                     <Avatar :shape="'circle'" :label="assignee.owner" :image="assignee.image" size="2xl"
@@ -25,10 +25,10 @@
                             <Autocomplete :options="employeesList" v-model="employees" placeholder="Select people"
                                 :multiple="false" class="mb-5" @update:modelValue="onSelectEmployee" />
                             <div class="flex flex-col gap-3">
-                                <div class="flex justify-between items-center"
-                                    v-for="assignee in docinfo.assignments">
+                                <div class="flex justify-between items-center" v-for="assignee in docinfo.assignments">
                                     <div class="flex justify-start items-center gap-3">
-                                        <Avatar :shape="'circle'" :image="assignee.image" :label="assignee.owner" size="2xl" />
+                                        <Avatar :shape="'circle'" :image="assignee.image" :label="assignee.owner"
+                                            size="2xl" />
                                         <span>{{ assignee.fullname }}</span>
                                     </div>
                                     <Button :variant="'outline'" theme="gray" size="sm" label="Button" icon="x"
@@ -52,13 +52,13 @@
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Project</label>
                     <TextInput :type="'text'" size="sm" variant="subtle" placeholder="" :disabled="true"
-                        v-model="project"/>
+                        v-model="project" />
                     <!--<TextInputAutocomplete v-model="project" placeholder="Project" :options="projectOptions" /> -->
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Elevator</label>
                     <TextInput :type="'text'" size="sm" variant="subtle" placeholder="" :disabled="true"
-                        v-model="elevator"/>
+                        v-model="elevator" />
                     <!-- <TextInputAutocomplete v-model="elevator" placeholder="Elevator" :options="elevatorOptions" value-by="elevator" label-by="name" />-->
                 </div>
                 <div class="mb-3">
@@ -76,23 +76,42 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Parent Task</label>
-                    <TextInputAutocomplete v-model="parent_task" placeholder="Parent Task" :options="parentTaskOptions" value-by="parent_name" label-by="name" />
+                    <TextInputAutocomplete v-model="parent_task" placeholder="Parent Task" :options="parentTaskOptions"
+                        value-by="parent_name" label-by="name" />
                 </div>
 
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Expected Start Date</label>
-                    <TextInput :type="'date'" size="sm" variant="subtle" placeholder="Expected Start Date"
-                        :disabled="false" v-model="exp_start_date"
-                        :class="[errors.exp_start_date ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />
-                    <ErrorMessage v-if="errors.exp_start_date" :message="Error(errors.exp_start_date)" class="mt-1" />
+                    <VueDatePicker placeholder="mm/dd/yyyy" v-model="exp_start_date" class="mb-3"
+                        :week-numbers="{ type: 'iso' }" autoApply :closeOnAutoApply="true" :clearable="false"
+                        :enable-time-picker="false">
+                        <template #dp-input="{ value }">
+                            <input type="text" :value="value"
+                                class="text-base relative font-['InterVar'] rounded h-7 py-1.5 pl-2 pr-2 border border-gray-100 bg-gray-100 placeholder-gray-500 hover:border-gray-200 hover:bg-gray-200 focus:bg-white focus:border-gray-500 focus:shadow-sm focus:ring-0 focus-visible:ring-2 focus-visible:ring-gray-400 text-gray-800 transition-colors w-full"
+                                placeholder="mm/dd/yyyy"
+                                :class="[errors.exp_start_date ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />
+                            <FeatherIcon name="calendar" class="w-4 h-4 datepicker-icon text-gray-600" />
+                            <ErrorMessage v-if="errors.exp_start_date" :message="Error(errors.exp_start_date)"
+                                class="mt-1" />
+                        </template>
+                    </VueDatePicker>
                 </div>
 
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Expected End Date</label>
-                    <TextInput :type="'date'" size="sm" variant="subtle" placeholder="Expected End Date"
-                        :disabled="false" v-model="exp_end_date"
-                        :class="[errors.exp_end_date ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />
-                    <ErrorMessage v-if="errors.exp_end_date" :message="Error(errors.exp_end_date)" class="mt-1" />
+                    <VueDatePicker placeholder="mm/dd/yyyy" v-model="exp_end_date" class="mb-3"
+                        :week-numbers="{ type: 'iso' }" autoApply :closeOnAutoApply="true" :clearable="false"
+                        :enable-time-picker="false">
+                        <template #dp-input="{ value }">
+                            <input type="text" :value="value"
+                                class="text-base relative font-['InterVar'] rounded h-7 py-1.5 pl-2 pr-2 border border-gray-100 bg-gray-100 placeholder-gray-500 hover:border-gray-200 hover:bg-gray-200 focus:bg-white focus:border-gray-500 focus:shadow-sm focus:ring-0 focus-visible:ring-2 focus-visible:ring-gray-400 text-gray-800 transition-colors w-full"
+                                placeholder="mm/dd/yyyy"
+                                :class="[errors.exp_end_date ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />
+                            <FeatherIcon name="calendar" class="w-4 h-4 datepicker-icon text-gray-600" />
+                            <ErrorMessage v-if="errors.exp_end_date" :message="Error(errors.exp_end_date)"
+                                class="mt-1" />
+                        </template>
+                    </VueDatePicker>
                 </div>
 
                 <div class="mb-3">
@@ -129,7 +148,7 @@ import TextInputAutocomplete from '@/components/TextInputAutocomplete.vue';
 
 // Props to be taken
 const props = defineProps({
-    task: String, 
+    task: String,
     department: String
 });
 
@@ -182,7 +201,7 @@ const unselectEmployee = (assignedperson) => {
             name: props.task,
             assign_to: assignedperson
         },
-        auto: true, 
+        auto: true,
         onSuccess: () => {
 
             for (let index in docinfo.assignments) {
@@ -202,18 +221,18 @@ const onSelectEmployee = (employee) => {
     const assign_to_array = [employee.value]
 
     const resp = createResource({
-        url: 'frappe.desk.form.assign_to.add', 
+        url: 'frappe.desk.form.assign_to.add',
         params: {
-            doctype: "Task", 
-            name: props.task, 
-            description: props.task, 
-            assign_to: assign_to_array, 
+            doctype: "Task",
+            name: props.task,
+            description: props.task,
+            assign_to: assign_to_array,
             bulk_assign: false
-        }, 
+        },
         auto: true,
-        onSuccess: () =>  {
+        onSuccess: () => {
             docinfo.assignments.push({
-                owner: employee.value, 
+                owner: employee.value,
                 fullname: employee.label
             })
             selectedEmployees.value.push(employee);
@@ -299,8 +318,8 @@ const [actual_time] = defineField('actual_time');
 // track if any changes on the form fields, you can use this to make autosave feature
 watchDebounced(
     values,
-    () => { 
-        if (dataTask.value.subject !== values.subject){
+    () => {
+        if (dataTask.value.subject !== values.subject) {
             updateValue("subject", values.subject)
             dataTask.value.subject = values.subject
         }
@@ -318,18 +337,18 @@ watchDebounced(
             dataTask.value.priority = values.priority
         }
         if (dataTask.value.exp_start_date !== values.exp_start_date) {
-            
+
             updateValue("exp_start_date", values.exp_start_date)
             dataTask.value.exp_start_date = values.exp_start_date
 
-            
+
         }
         if (dataTask.value.exp_end_date !== values.exp_end_date) {
             updateValue("exp_end_date", values.exp_end_date)
             dataTask.value.exp_end_date = values.exp_end_date
         }
         console.log(values)
-    
+
     },
     { debounce: 2000, maxWait: 8000 },
 )
@@ -362,12 +381,12 @@ const updateValue = (field, value) => {
             fieldname: field,
             value: value
         },
-        auto: true, 
+        auto: true,
         onError: (err) => {
 
             // Set the error to the field directly
-            setErrors({[field]: 'Error update'});
-            
+            setErrors({ [field]: 'Error update' });
+
         }
     });
 }
@@ -379,19 +398,19 @@ onMounted(() => {
         url: 'frappe.desk.search.search_link',
         params: {
             doctype: "User",
-            txt:"",
+            txt: "",
             filters: {
-                user_type: "System User", 
+                user_type: "System User",
                 enabled: 1
             }
         },
-        auto: true, 
+        auto: true,
         onSuccess: (data) => {
             var users = []
             for (var i = 0; i < data.length; i++) {
                 console.log(data[i])
                 var user = {}
-                
+
                 user.value = data[i].value;
                 user.label = data[i].description;
 
