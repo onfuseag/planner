@@ -82,13 +82,13 @@
 
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Expected Start Date</label>
-                    <VueDatePicker placeholder="mm/dd/yyyy" v-model="exp_start_date" class="mb-3"
-                        :week-numbers="{ type: 'iso' }" autoApply :closeOnAutoApply="true" :clearable="false"
+                    <VueDatePicker placeholder="dd.MM.yyyy" v-model="exp_start_date" class="mb-3"
+                        :week-numbers="{ type: 'iso' }" autoApply :closeOnAutoApply="true" :clearable="false"  format="dd.MM.yyyy"
                         :enable-time-picker="false">
                         <template #dp-input="{ value }">
                             <input type="text" :value="value"
                                 class="text-base relative font-['InterVar'] rounded h-7 py-1.5 pl-2 pr-2 border border-gray-100 bg-gray-100 placeholder-gray-500 hover:border-gray-200 hover:bg-gray-200 focus:bg-white focus:border-gray-500 focus:shadow-sm focus:ring-0 focus-visible:ring-2 focus-visible:ring-gray-400 text-gray-800 transition-colors w-full"
-                                placeholder="mm/dd/yyyy"
+                                placeholder="dd.MM.yyyy"
                                 :class="[errors.exp_start_date ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />
                             <FeatherIcon name="calendar" class="w-4 h-4 datepicker-icon text-gray-600" />
                             <ErrorMessage v-if="errors.exp_start_date" :message="Error(errors.exp_start_date)"
@@ -99,13 +99,13 @@
 
                 <div class="mb-3">
                     <label class="block text-xs text-gray-600 mb-2">Expected End Date</label>
-                    <VueDatePicker placeholder="mm/dd/yyyy" v-model="exp_end_date" class="mb-3"
-                        :week-numbers="{ type: 'iso' }" autoApply :closeOnAutoApply="true" :clearable="false"
+                    <VueDatePicker placeholder="dd.MM.yyyy" v-model="exp_end_date" class="mb-3"
+                        :week-numbers="{ type: 'iso' }" autoApply :closeOnAutoApply="true" :clearable="false"  format="dd.MM.yyyy"
                         :enable-time-picker="false">
                         <template #dp-input="{ value }">
                             <input type="text" :value="value"
                                 class="text-base relative font-['InterVar'] rounded h-7 py-1.5 pl-2 pr-2 border border-gray-100 bg-gray-100 placeholder-gray-500 hover:border-gray-200 hover:bg-gray-200 focus:bg-white focus:border-gray-500 focus:shadow-sm focus:ring-0 focus-visible:ring-2 focus-visible:ring-gray-400 text-gray-800 transition-colors w-full"
-                                placeholder="mm/dd/yyyy"
+                                placeholder="dd.MM.yyyy"
                                 :class="[errors.exp_end_date ? 'border-red-400 hover:border-red-400 hover:bg-grey-200 focus:border-red-500 focus-visible:ring-red-400' : '']" />
                             <FeatherIcon name="calendar" class="w-4 h-4 datepicker-icon text-gray-600" />
                             <ErrorMessage v-if="errors.exp_end_date" :message="Error(errors.exp_end_date)"
@@ -337,15 +337,21 @@ watchDebounced(
             dataTask.value.priority = values.priority
         }
         if (dataTask.value.exp_start_date !== values.exp_start_date) {
-
-            updateValue("exp_start_date", values.exp_start_date)
-            dataTask.value.exp_start_date = values.exp_start_date
+            
+            const d = new Date(values.exp_start_date);
+            const strNewDate = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}-${('0' + d.getDate()).slice(-2)}`;
+            updateValue("exp_start_date", strNewDate)
+            dataTask.value.exp_start_date = strNewDate
 
 
         }
         if (dataTask.value.exp_end_date !== values.exp_end_date) {
-            updateValue("exp_end_date", values.exp_end_date)
-            dataTask.value.exp_end_date = values.exp_end_date
+
+            const d = new Date(values.exp_end_date);
+            const strNewDate = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}-${('0' + d.getDate()).slice(-2)}`;
+            updateValue("exp_end_date", strNewDate)
+            dataTask.value.exp_end_date = strNewDate
+
         }
         console.log(values)
 
