@@ -5,9 +5,7 @@ app_description = "Planning tool for projects in erpnext"
 app_email = "contact@onfuse.ch"
 app_license = "mit"
 
-fixtures = [
-    {"doctype": "Custom Field", "filters": [["group", "=", "Project"]]}
-]
+#fixtures = {"dt": "Project"}
 
 # required_apps = []
 
