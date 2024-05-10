@@ -5,7 +5,7 @@ app_description = "Planning tool for projects in erpnext"
 app_email = "contact@onfuse.ch"
 app_license = "mit"
 
-#fixtures = {"dt": "Project"}
+fixtures = ["Custom Field", "Property Setter", "Custom Script", {"dt": "DocType", "filters": [["name", "in", ["Project"]]]}]
 
 # required_apps = []
 
