@@ -114,7 +114,7 @@ def planner_get_backlog(searchtext, projectText):
         bfilters['subject'] = ['like', f'%{searchtext}%']
 
     if (projectText): 
-        bfilters['project'] = ['like', f'%{searchtext}%']
+        bfilters['project'] = ['like', f'%{projectText}%']
 
     backlogdata = frappe.db.get_all(
         "Task", 
