@@ -170,9 +170,9 @@ fixtures = ["Custom Field", "Property Setter", "Custom Script", {"dt": "DocType"
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
-# override_doctype_dashboards = {
-# 	"Task": "planner.task.get_dashboard_data"
-# }
+override_doctype_dashboards = {
+	"Project": "planner.overrides.dashboard_overrides.get_dashboard_project"
+}
 
 # exempt linked doctypes from being automatically cancelled
 #
