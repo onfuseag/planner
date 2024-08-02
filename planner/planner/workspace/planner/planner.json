@@ -1,0 +1,77 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"d-y-LrgpXu\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Planner</span>\",\"col\":12}},{\"id\":\"1v17xkLk7u\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Planner\",\"col\":3}},{\"id\":\"jO1sKuNiRO\",\"type\":\"header\",\"data\":{\"text\":\"Reports &amp; Masters<span class=\\\"h4\\\"><b></b></span>\",\"col\":12}},{\"id\":\"3rLV9DEE7Y\",\"type\":\"card\",\"data\":{\"card_name\":\"Links\",\"col\":4}}]",
+ "creation": "2024-08-02 13:21:03.179058",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "education",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Planner",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Links",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Planner Dashboard",
+   "link_count": 0,
+   "link_to": "Planner Dashboard",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Project Checklist",
+   "link_count": 0,
+   "link_to": "Project Checklist",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Project Checklist Type",
+   "link_count": 0,
+   "link_to": "Project Checklist Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2024-08-02 13:23:29.467365",
+ "modified_by": "Administrator",
+ "module": "Planner",
+ "name": "Planner",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 39.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Planner",
+   "type": "URL",
+   "url": "/frontend"
+  }
+ ],
+ "title": "Planner"
+}
