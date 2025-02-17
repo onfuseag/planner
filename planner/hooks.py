@@ -5,10 +5,12 @@ app_description = "Planning tool for projects in erpnext"
 app_email = "contact@onfuse.ch"
 app_license = "mit"
 
-fixtures = ["Custom Field", "Property Setter", "Custom Script", {"dt": "DocType", "filters": [["name", "in", ["Project"]]]}]
+fixtures = [
+	"Custom Field", "Property Setter", "Custom Script", {"dt": "DocType", "filters": [["name", "in", ["Project"]]]}
+	]
 
 
-# required_apps = []
+required_apps = ["frappe/erpnext", "frappe/hrms"]
 
 # Includes in <head>
 # ------------------
@@ -72,7 +74,7 @@ fixtures = ["Custom Field", "Property Setter", "Custom Script", {"dt": "DocType"
 # ------------
 
 # before_install = "planner.install.before_install"
-# after_install = "planner.install.after_install"
+after_migrate = "planner.install.after_migrate"
 
 # Uninstallation
 # ------------
@@ -118,9 +120,9 @@ fixtures = ["Custom Field", "Property Setter", "Custom Script", {"dt": "DocType"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	"ToDo": "planner.overrides.todo.CustomToDo"
+}
 
 # Document Events
 # ---------------
@@ -231,3 +233,4 @@ override_doctype_dashboards = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+website_route_rules = [{'from_route': '/task-manager/<path:app_path>', 'to_route': 'task-manager'},]
