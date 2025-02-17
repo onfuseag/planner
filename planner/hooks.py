@@ -61,6 +61,10 @@ required_apps = ["frappe/erpnext", "frappe/hrms"]
 # automatically create page for each record of this doctype
 # website_generators = ["Web Page"]
 
+website_route_rules = [
+    {"from_route": "/task-manager/<path:app_path>", "to_route": "task-manager"},
+]
+
 # Jinja
 # ----------
 
@@ -232,5 +236,3 @@ override_doctype_dashboards = {
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-
-website_route_rules = [{'from_route': '/task-manager/<path:app_path>', 'to_route': 'task-manager'},]
