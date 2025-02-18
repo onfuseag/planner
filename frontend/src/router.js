@@ -9,7 +9,7 @@ const routes = [
 ]
 
 let router = createRouter({
-  history: createWebHistory('/task-manager'),
+  history: createWebHistory('/planner'),
   routes,
 })
 

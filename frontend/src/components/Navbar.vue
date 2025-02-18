@@ -14,16 +14,16 @@
       class="ml-auto"
       :options="[
         {
-          label: 'My Account',
-          onClick: () => goTo('/me'),
+          label: 'Switch to Desk',
+          onClick: () => goTo('/app'),
+        },
+        {
+          label: 'Open Tasks',
+          onClick: () => goTo('/app/task'),
         },
         {
           label: 'Log Out',
           onClick: () => logout.submit(),
-        },
-        {
-          label: 'Switch to Desk',
-          onClick: () => goTo('/app'),
         },
       ]"
     >

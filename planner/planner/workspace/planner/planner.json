@@ -43,7 +43,7 @@
    "type": "Link"
   }
  ],
- "modified": "2025-02-17 11:01:29.955322",
+ "modified": "2025-02-18 06:10:50.926782",
  "modified_by": "Administrator",
  "module": "Planner",
  "name": "Planner",
@@ -67,7 +67,7 @@
    "doc_view": "List",
    "label": "Planner",
    "type": "URL",
-   "url": "/task-manager"
+   "url": "/planner"
   }
  ],
  "title": "Planner"

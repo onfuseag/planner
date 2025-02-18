@@ -396,11 +396,14 @@ const handleShifts = (event, date, mappedEvents, employee, key) => {
 }
 
 const handleLeave = (event, date) => {
-	if (dayjs(event.from_date).isSameOrBefore(date) && dayjs(event.to_date).isSameOrAfter(date))
-		return {
-			leave: event.leave,
-			leave_type: event.leave_type,
-		};
+  if (
+    dayjs(event.from_date).isSameOrBefore(date) &&
+    dayjs(event.to_date).isSameOrAfter(date)
+  )
+    return {
+      leave: event.leave,
+      leave_type: event.leave_type,
+    }
 }
 
 const handleHoliday = (event, date) => {
