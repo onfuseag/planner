@@ -41,23 +41,23 @@ def get_holidays(month_start: str, month_end: str, employee_filters: dict[str, s
 
 def get_tasks(month_start: str, month_end: str, employee_filters: dict[str, str],task_filters):
 	filters = {
-		"exp_start_date": ["between", (month_start, month_end)],
-		"exp_end_date": ["between", (month_start, month_end)],
-	}
-	cond = ""
-	for key, value in task_filters.items():
-		cond += f"AND task.{key} = '{value}' "
+        "exp_start_date": ["between", (month_start, month_end)],
+        "exp_end_date": ["between", (month_start, month_end)],
+    }
+    cond = ""
+    for key, value in task_filters.items():
+        cond += f"AND task.{key} = '{value}' "
 
-	tasks = frappe.db.sql(f"""SELECT task.name, task.exp_start_date as start_date, task.exp_end_date as end_date, task.subject, task.status, employee_item.employee, task.color, task.completed_on
-	FROM `tabTask` as task
-	JOIN `tabEmployee Item` as employee_item
-	ON task.name = employee_item.parent
-	WHERE employee_item.parenttype = 'Task'
-	AND employee_item.parentfield = 'employees'
-	AND task.exp_start_date BETWEEN "{month_start}" AND "{month_end}"
-	AND task.exp_end_date BETWEEN "{month_start}" AND "{month_end}"
-	{cond}
-	""", as_dict=True)
+    tasks = frappe.db.sql(f"""
+    SELECT task.name, task.exp_start_date as start_date, task.exp_end_date as end_date, task.subject, task.status, employee_item.employee, task.color, task.completed_on
+    FROM `tabTask` as task
+    JOIN `tabEmployee Item` as employee_item ON task.name = employee_item.parent
+    WHERE employee_item.parenttype = 'Task'
+    AND employee_item.parentfield = 'employees'
+    AND task.exp_start_date <= "{month_end}"
+    AND task.exp_end_date >= "{month_start}"
+    {cond}
+    """, as_dict=True)
 
 
 	# group tasks by employee
