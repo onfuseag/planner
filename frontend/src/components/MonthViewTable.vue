@@ -68,8 +68,8 @@
             :key="colIdx"
             class="p-1.5 z-[1]"
             :class="{
-              'border-l': colIdx,
-              'border-t': rowIdx,
+              'border-m': colIdx,
+              'border-l': rowIdx,
               'align-top': events.data?.[employee.name]?.[day.date],
               'align-middle bg-gray-50':
                 events.data?.[employee.name]?.[day.date]?.holiday,
@@ -187,9 +187,17 @@
                 "
               >
                 <div
-                  class="truncate mb-1.5 pointer-events-none text-base font-medium"
+                  class="text-xs pointer-events-none space-y-1.5"
                 >
                   {{ shift['subject'] }}
+                </div>
+                <div
+                  class="truncate mb-1.5 pointer-events-none text-base font-medium"
+                >
+                  {{ shift['project'] }}
+                </div>
+                <div class="truncate mb-1.5 pointer-events-none text-base font-medium">
+                  {{ shift['project_name'] ?? "" }}
                 </div>
                 <div
                   class="text-xs text-gray-500 pointer-events-none space-y-1.5"
@@ -385,6 +393,7 @@ const handleShifts = (event, date, mappedEvents, employee, key) => {
       name: event.name,
       subject: event.subject,
       project: event.project,
+      project_name: event.project_name,
       priority: event.priority,
       status: event.status,
       color: event.color.toLowerCase() || 'blue',

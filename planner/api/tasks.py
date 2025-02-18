@@ -51,7 +51,7 @@ def get_tasks(month_start: str, month_end: str, employee_filters: dict[str, str]
 		cond += f"AND task.{key} = '{value}' "
 	
 	tasks = frappe.db.sql(f"""
-		SELECT task.name, task.exp_start_date as start_date, task.exp_end_date as end_date, task.subject, task.status, employee_item.employee, task.color, task.completed_on
+		SELECT task.name, task.exp_start_date as start_date, task.exp_end_date as end_date, task.project, task.subject, task.status, employee_item.employee, task.color, task.completed_on
 		FROM `tabTask` as task
 		JOIN `tabEmployee Item` as employee_item ON task.name = employee_item.parent
 		WHERE employee_item.parenttype = 'Task'
@@ -64,12 +64,16 @@ def get_tasks(month_start: str, month_end: str, employee_filters: dict[str, str]
 	# group tasks by employee
 	employee_tasks = {}
 	for task in tasks:
+		# Get the project name
+		if task.project:
+			task.project_name =  frappe.db.get_value('Project', task.project, 'project_name')
+		
 		if task.employee not in employee_tasks:
 			employee_tasks[task.employee] = []
 		employee_tasks[task.employee].append(task)
 		if(not task.get('color')):
 			task.color = "#EFF6FE"
-			
+
 	return employee_tasks
 
 
