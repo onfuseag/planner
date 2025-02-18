@@ -44,7 +44,9 @@ def get_tasks(month_start: str, month_end: str, employee_filters: dict[str, str]
 		"exp_start_date": ["between", (month_start, month_end)],
 		"exp_end_date": ["between", (month_start, month_end)],
 	}
+
 	cond = ""
+
 	for key, value in task_filters.items():
 		cond += f"AND task.{key} = '{value}' "
 	
@@ -67,6 +69,7 @@ def get_tasks(month_start: str, month_end: str, employee_filters: dict[str, str]
 		employee_tasks[task.employee].append(task)
 		if(not task.get('color')):
 			task.color = "#EFF6FE"
+			
 	return employee_tasks
 
 
