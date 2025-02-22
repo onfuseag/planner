@@ -117,9 +117,9 @@ const show = defineModel()
 const form = reactive({
   employees: null,
   subject: '',
-  status: '',
+  status: 'Open',
   project: '',
-  priority: '',
+  priority: 'Low',
   start_date: '',
   end_date: '',
   description: '',
