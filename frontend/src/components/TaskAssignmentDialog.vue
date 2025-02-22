@@ -197,10 +197,7 @@ const _employees = computed(() => {
 
 onMounted(() => {
   if (props.taskName && props.taskSubject) {
-    form.task = {
-      label: `${props.taskName}: ${props.taskSubject}`,
-      value: props.taskName,
-    }
+    form.task = props.taskName
   }
   // if (props.selectedEmployee) {
   //   form.employees.push({

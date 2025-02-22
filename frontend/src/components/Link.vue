@@ -144,7 +144,7 @@ const options = createResource({
         value: option.value,
         label:
           option?.label ||
-          `${props.showDescription ? option?.value + ' ' + option.description : option.value}`,
+          `${props.showDescription ? option?.value + ': ' + option.description : option.value}`,
       }
     })
 
