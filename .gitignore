@@ -5,3 +5,6 @@
 tags
 node_modules
 __pycache__
+
+planner/public
+planner/www/planner.html

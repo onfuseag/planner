@@ -24,12 +24,21 @@
         class="w-40"
       >
         <FormControl
-          v-if="!['status', 'priority'].includes(key)"
+          v-if="!['status', 'priority', 'project'].includes(key)"
           type="autocomplete"
           :placeholder="toTitleCase(key)"
           :options="value.options"
           v-model="value.model"
           :disabled="!value.options.length"
+        />
+        <Link
+          v-else-if="key === 'project'"
+          doctype="Project"
+          v-model="filters.project.model"
+          placeholder="Select Project"
+          :show-description="true"
+          :update-filters="true"
+          class="overflow-hidden"
         />
         <FormControl
           v-else
@@ -60,6 +69,8 @@ import { FormControl, createResource, createListResource } from 'frappe-ui'
 import { raiseToast } from '../utils'
 import { Dayjs } from 'dayjs'
 import { priority, status } from '../data'
+import Link from './Link.vue'
+import { ref } from 'vue'
 export type FilterField =
   | 'company'
   | 'department'
@@ -85,19 +96,23 @@ const filters: {
   }
 } = reactive({
   company: { options: [], model: null },
+  project: { model: null },
   department: { options: [], model: null },
   branch: { options: [], model: null },
   designation: { options: [], model: null },
   status: { options: status, model: null },
   priority: { options: priority, model: null },
-  project: { options: [], model: null },
 })
 
+// company changes update department options
+const projectFilters = ref({})
 watch(
   () => filters.company.model,
   (val) => {
-    if (val?.value) getFilterOptions('department', { company: val.value })
-    else {
+    if (val?.value) {
+      getFilterOptions('department', { company: val.value })
+      projectFilters.value = { company: val?.value }
+    } else {
       filters.department.model = null
       filters.department.options = []
     }
@@ -112,7 +127,7 @@ watch(filters, (val) => {
     designation: val.designation.model?.value || '',
     status: val.status.model || '',
     priority: val.priority.model || '',
-    project: val.project.model?.value || '',
+    project: val?.project?.model || '',
   }
   emit('updateFilters', newFilters)
 })
@@ -129,7 +144,7 @@ const defaultCompany = createResource({
   url: 'planner.api.tasks.get_default_company',
   auto: true,
   onSuccess: () => {
-    ;['company', 'branch', 'designation', 'project'].forEach((field) =>
+    ;['company', 'branch', 'designation'].forEach((field) =>
       getFilterOptions(field as FilterField),
     )
   },
