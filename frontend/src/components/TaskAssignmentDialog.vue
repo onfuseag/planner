@@ -234,7 +234,7 @@ const submitTask = async (close) => {
     await updateTask(
       {
         name: form.task || null,
-        project: form.project?.value || null,
+        project: form.project || null,
         status: form.status,
         priority: form.priority,
         exp_start_date: form.start_date,
@@ -246,18 +246,18 @@ const submitTask = async (close) => {
       close,
     )
   } catch (e) {
-    const err = e.messages[0] || 'Could not update task'
+    const err = e.messages || 'Could not update task'
+    console.log(e)
     raiseToast('error', err)
   }
 }
 async function updateTask(form, close) {
-  const d = await call('planner.api.tasks.update_task', {
+  await call('planner.api.tasks.update_task', {
     task_doc: form,
   })
   raiseToast('success', 'Task updated successfully')
   close()
   emit('update')
-  return d.name
 }
 
 const taskFilters = ref({})
@@ -277,7 +277,6 @@ watch(
 watch(
   () => form.task,
   (newVal) => {
-    console.log(newVal)
     if (!newVal) return
     _taskName.value = newVal
     task.fetch()
