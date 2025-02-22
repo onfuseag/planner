@@ -17,11 +17,10 @@
         <!-- Project -->
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5">Project </label>
-          <Autocomplete
-            :options="projects.data"
+          <Link
+            doctype="Project"
             v-model="form.project"
             placeholder="Select Project"
-            label="Project"
           />
         </div>
 
@@ -93,7 +92,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import {
   Dialog,
   FormControl,
@@ -104,7 +103,7 @@ import {
 import { reactive } from 'vue'
 import { dayjs, raiseToast } from '../utils'
 import { projects, priority, status } from '../data'
-import { onMounted } from 'vue'
+import Link from './Link.vue'
 
 const props = defineProps({
   employees: Array,
@@ -134,7 +133,7 @@ const dialog = computed(() => {
       action: () => {},
     }
   return {
-    title: 'New Task Assignment',
+    title: 'New Task Creation',
     button: 'Submit',
     action: createTask,
     actionDisabled: false,
@@ -143,7 +142,6 @@ const dialog = computed(() => {
 
 function createTask() {
   if (!validateForm()) return
-  form.project = form.project?.value
   newTask.submit()
 }
 

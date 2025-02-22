@@ -12,24 +12,25 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >Task <span class="text-ink-red-3">*</span></label
           >
-          <Autocomplete
-            :options="tasks.data"
+          <Link
+            doctype="Task"
             v-model="form.task"
-            placeholder="Select task"
-            label="Task"
+            placeholder="Select Project"
+            :show-description="true"
+            :filters="taskFilters"
+            :update-filters="true"
           />
         </div>
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5">Project </label>
-          <Autocomplete
-            :options="projects.data"
+          <Link
+            doctype="Project"
             v-model="form.project"
-            placeholder="Select project"
-            label="Project"
+            placeholder="Select Project"
           />
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-4 mt-4" v-if="form.task?.value">
+      <div class="grid grid-cols-2 gap-4 mt-4" v-if="form.task">
         <FormControl
           type="input"
           label="Subject"
@@ -118,6 +119,7 @@ import {
 import { onMounted, reactive, watch, computed, ref } from 'vue'
 import { projects, priority, status } from '../data'
 import { raiseToast, dayjs } from '../utils'
+import Link from './Link.vue'
 const props = defineProps({
   employees: Array,
   taskName: String,
@@ -141,17 +143,6 @@ const form = reactive({
   completed_on: '',
 })
 
-const tasks = createListResource({
-  doctype: 'Task',
-  fields: ['name', 'subject'],
-  transform(data) {
-    return data.map((task) => ({
-      label: `${task.name}: ${task.subject}`,
-      value: task.name,
-    }))
-  },
-})
-
 const _taskName = ref(props.taskName)
 const task = createResource({
   url: 'planner.api.tasks.get_task',
@@ -169,7 +160,7 @@ const task = createResource({
     form.start_date = data.exp_start_date
     form.end_date = data.exp_end_date
     form.completed_on = data.completed_on
-    form.project = getProject(data.project)
+    form.project = data.project
   },
   auto: props.taskName ? true : false,
 })
@@ -198,7 +189,6 @@ const _employees = computed(() => {
 })
 
 onMounted(() => {
-  if (!tasks.data) tasks.fetch()
   if (!projects.data) projects.fetch()
   if (props.taskName && props.taskSubject) {
     form.task = {
@@ -217,7 +207,7 @@ function validateForm() {
     !form.status ||
     !form.priority ||
     (form.status === 'Completed' && !form.completed_on) ||
-    !form.task?.value
+    !form.task
   ) {
     raiseToast('error', 'Please fill all the required fields')
     return false
@@ -234,7 +224,7 @@ const submitTask = async (close) => {
   try {
     await updateTask(
       {
-        name: form.task?.value || null,
+        name: form.task || null,
         project: form.project?.value || null,
         status: form.status,
         priority: form.priority,
@@ -261,23 +251,22 @@ async function updateTask(form, close) {
   return d.name
 }
 
+const taskFilters = ref({})
+
 watch(
   () => form.project,
   (newProject) => {
-    if (form.task?.value) return
-    if (newProject?.value) {
-      tasks.filters = {
-        project: newProject?.value || '',
-      }
+    if (form.task) return
+    if (newProject) {
+      taskFilters.value = { project: newProject }
     } else {
-      tasks.filters = {}
+      taskFilters.value = {}
     }
-    tasks.fetch()
   },
 )
 
 watch(
-  () => form.task?.value,
+  () => form.task,
   (newVal) => {
     if (!newVal) return
     _taskName.value = newVal
