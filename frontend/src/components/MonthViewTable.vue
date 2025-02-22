@@ -66,10 +66,9 @@
             "
             v-for="(day, colIdx) in daysOfMonth"
             :key="colIdx"
-            class="p-1.5 z-[1]"
+            class="p-1.5 z-[1] border-t"
             :class="{
-              'border-m': colIdx,
-              'border-l': rowIdx,
+              'border-l': rowIdx + 1,
               'align-top': events.data?.[employee.name]?.[day.date],
               'align-middle bg-gray-50':
                 events.data?.[employee.name]?.[day.date]?.holiday,
@@ -137,15 +136,15 @@
               class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 w-32"
             >
               <div
-                v-for="shift in events.data?.[employee.name]?.[day.date]"
+                v-for="task in events.data?.[employee.name]?.[day.date]"
                 @mouseenter="
                   () => {
-                    hoveredCell.task = shift.name
-                    hoveredCell.subject = shift.subject
-                    hoveredCell.shift_status = shift.status
-                    hoveredCell.priority = shift.priority || ''
-                    hoveredCell.project = shift.project || ''
-                    hoveredCell.color = shift.color || colors[shift.color][50]
+                    hoveredCell.task = task.name
+                    hoveredCell.subject = task.subject
+                    hoveredCell.shift_status = task.status
+                    hoveredCell.priority = task.priority || ''
+                    hoveredCell.project = task.project || ''
+                    hoveredCell.color = task.color || colors[task.color][50]
                     hoveredCell.employee = employee.name
                     hoveredCell.date = day.date
                   }
@@ -164,52 +163,52 @@
                 :class="[
                   dropCell.employee === employee.name &&
                     dropCell.date === day.date &&
-                    dropCell.shift === shift.name &&
+                    dropCell.task === task.name &&
                     'scale-105',
                   hoveredCell.employee === employee.name &&
                     hoveredCell.date === day.date &&
-                    hoveredCell.task === shift.name &&
+                    hoveredCell.task === task.name &&
                     dropCell.employee &&
                     'opacity-0',
                 ]"
                 :style="{
                   backgroundColor:
-                    shift.status === 'Completed'
+                    task.status === 'Completed'
                       ? '#dcfae7'
-                      : shift.color || colors[shift.color][50],
+                      : task.color || colors[task.color][50],
                 }"
                 @click="
                   () => {
-                    selectedTask.task = shift.name
-                    selectedTask.subject = shift.subject
+                    selectedTask.task = task.name
+                    selectedTask.subject = task.subject
                     showTaskAssignmentDialog = true
                   }
                 "
               >
-                <div
-                  class="text-xs pointer-events-none space-y-1.5"
-                >
-                  {{ shift['subject'] }}
+                <div class="text-xs pointer-events-none space-y-1.5">
+                  {{ task['subject'] }}
                 </div>
                 <div
                   class="truncate mb-1.5 pointer-events-none text-base font-medium"
                 >
-                  {{ shift['project'] }}
+                  {{ task['project'] }}
                 </div>
-                <div class="truncate mb-1.5 pointer-events-none text-base font-medium">
-                  {{ shift['project_name'] ?? "" }}
+                <div
+                  class="truncate mb-1.5 pointer-events-none text-base font-medium"
+                >
+                  {{ task['project_name'] ?? '' }}
                 </div>
                 <div
                   class="text-xs text-gray-500 pointer-events-none space-y-1.5"
                 >
                   <div class="flex items-center space-x-1">
                     <span>
-                      {{ shift['status'] }}
+                      {{ task['status'] }}
                     </span>
                   </div>
                   <div
                     class="flex items-center space-x-1 text-xs"
-                    v-if="shift.status === 'Completed'"
+                    v-if="task.status === 'Completed'"
                   >
                     <FeatherIcon
                       name="check"
@@ -220,7 +219,7 @@
                       }"
                     />
                     <span>
-                      {{ shift['completed_on'] }}
+                      {{ task['completed_on'] }}
                     </span>
                   </div>
                 </div>
@@ -262,6 +261,7 @@
     :employees="props.employees"
     :task-name="selectedTask.task"
     :task-subject="selectedTask.subject"
+    :selected-employee="selectedTask.employee"
     @update="() => events.reload()"
   />
 </template>
@@ -323,7 +323,7 @@ const selectedTask = ref({
   employee: {},
 })
 
-const dropCell = ref({ employee: '', date: '', shift: '' })
+const dropCell = ref({ employee: '', date: '', task: '' })
 const loading = ref(false)
 const isHolidayOrLeave = (employee, day) =>
   events.data?.[employee]?.[day]?.holiday ||

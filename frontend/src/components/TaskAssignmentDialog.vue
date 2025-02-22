@@ -124,6 +124,7 @@ const props = defineProps({
   employees: Array,
   taskName: String,
   taskSubject: String,
+  selectedEmployee: Object,
 })
 const emit = defineEmits(['update'])
 
@@ -162,18 +163,24 @@ const task = createResource({
     form.completed_on = data.completed_on
     form.project = data.project
   },
-  auto: props.taskName ? true : false,
 })
 
 const getEmployeeData = (employees) => {
   employees = employees.map((emp) => emp.employee)
   if (!employees) return
-  return props.employees
+  const data = props.employees
     .filter((emp) => employees.includes(emp.name))
     .map((emp) => ({
       label: `${emp.name}: ${emp.employee_name}`,
       value: emp.name,
     }))
+  if (props.selectedEmployee) {
+    data.push({
+      label: props.selectedEmployee.label,
+      value: props.selectedEmployee.value,
+    })
+  }
+  return data
 }
 
 const getProject = (project) => {
@@ -189,13 +196,18 @@ const _employees = computed(() => {
 })
 
 onMounted(() => {
-  if (!projects.data) projects.fetch()
   if (props.taskName && props.taskSubject) {
     form.task = {
       label: `${props.taskName}: ${props.taskSubject}`,
       value: props.taskName,
     }
   }
+  // if (props.selectedEmployee) {
+  //   form.employees.push({
+  //     label: props.selectedEmployee.label,
+  //     value: props.selectedEmployee.value,
+  //   })
+  // }
 })
 
 function validateForm() {
@@ -268,6 +280,7 @@ watch(
 watch(
   () => form.task,
   (newVal) => {
+    console.log(newVal)
     if (!newVal) return
     _taskName.value = newVal
     task.fetch()
