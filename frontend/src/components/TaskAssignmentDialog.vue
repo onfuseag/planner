@@ -106,6 +106,7 @@
             :content="form.description"
             @change="(val) => (form.description = val)"
             :bubble-menu="true"
+            editor-class="text-sm"
           />
         </div>
       </div>

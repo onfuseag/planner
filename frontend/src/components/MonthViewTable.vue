@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-lg border max-h-[90%] max-w-[100%] overflow-x-scroll table-container"
+    class="rounded-lg border max-h-[90%] max-w-[100%] overflow-scroll table-container"
     :class="loading && 'animate-pulse pointer-events-none'"
   >
     <table class="border-separate border-spacing-0">
@@ -185,9 +185,9 @@
                 <div class="text-xs pointer-events-none truncate">
                   {{ task['subject'] }}
                 </div>
-                <div class="truncate pointer-events-none text-xs">
+                <!-- <div class="truncate pointer-events-none text-xs">
                   {{ task['project'] }}
-                </div>
+                </div> -->
                 <div class="truncate pointer-events-none text-xs font-bold">
                   {{ task['project_name'] ?? '' }}
                 </div>
@@ -436,11 +436,12 @@ defineExpose({
 .blocked-cell {
   @apply text-sm text-gray-500 text-center p-2;
 }
-.table-container {
+</style>
+
+<!-- .table-container {
   -ms-overflow-style: none; /* IE and Edge */
 }
 
 .table-container::-webkit-scrollbar {
   display: none;
-}
-</style>
+} -->
