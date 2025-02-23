@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-lg border max-h-[90%] max-w-[100%] overflow-x-scroll table-container"
+    class="rounded-lg border max-h-[90%] max-w-[100%] overflow-scroll table-container"
     :class="loading && 'animate-pulse pointer-events-none'"
   >
     <table class="border-separate border-spacing-0">
@@ -133,7 +133,7 @@
             <!-- Tasks -->
             <div
               v-else
-              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 w-32"
+              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-36"
             >
               <div
                 v-for="task in events.data?.[employee.name]?.[day.date]"
@@ -159,7 +159,7 @@
                     hoveredCell.color = ''
                   }
                 "
-                class="rounded border-2 p-2 cursor-pointer"
+                class="rounded border-2 p-2 cursor-pointer space-y-1.5"
                 :class="[
                   dropCell.employee === employee.name &&
                     dropCell.date === day.date &&
@@ -172,10 +172,7 @@
                     'opacity-0',
                 ]"
                 :style="{
-                  backgroundColor:
-                    task.status === 'Completed'
-                      ? '#dcfae7'
-                      : task.color || colors[task.color][50],
+                  backgroundColor: task.color || colors[task.color][50],
                 }"
                 @click="
                   () => {
@@ -185,17 +182,13 @@
                   }
                 "
               >
-                <div class="text-xs pointer-events-none space-y-1.5">
+                <div class="text-xs pointer-events-none truncate">
                   {{ task['subject'] }}
                 </div>
-                <div
-                  class="truncate mb-1.5 pointer-events-none text-base font-medium"
-                >
+                <!-- <div class="truncate pointer-events-none text-xs">
                   {{ task['project'] }}
-                </div>
-                <div
-                  class="truncate mb-1.5 pointer-events-none text-base font-medium"
-                >
+                </div> -->
+                <div class="truncate pointer-events-none text-xs font-bold">
                   {{ task['project_name'] ?? '' }}
                 </div>
                 <div
@@ -219,7 +212,7 @@
                       }"
                     />
                     <span>
-                      {{ task['completed_on'] }}
+                      {{ dayjs(task['completed_on']).format(dateFormat) }}
                     </span>
                   </div>
                 </div>
@@ -270,7 +263,7 @@
 import { ref, computed, watch } from 'vue'
 import colors from 'tailwindcss/colors'
 import { Avatar, Autocomplete, createResource, FeatherIcon } from 'frappe-ui'
-import { dayjs, raiseToast } from '../utils'
+import { dateFormat, dayjs, raiseToast } from '../utils'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 
 const props = defineProps({
@@ -320,7 +313,7 @@ const hoveredCell = ref({
 const selectedTask = ref({
   task: '',
   subject: '',
-  employee: {},
+  employee: null,
 })
 
 const dropCell = ref({ employee: '', date: '', task: '' })
@@ -443,11 +436,12 @@ defineExpose({
 .blocked-cell {
   @apply text-sm text-gray-500 text-center p-2;
 }
-.table-container {
+</style>
+
+<!-- .table-container {
   -ms-overflow-style: none; /* IE and Edge */
 }
 
 .table-container::-webkit-scrollbar {
   display: none;
-}
-</style>
+} -->

@@ -12,6 +12,8 @@ fixtures = [
 
 required_apps = ["frappe/erpnext", "frappe/hrms"]
 
+
+
 # Includes in <head>
 # ------------------
 
@@ -123,7 +125,6 @@ after_migrate = "planner.install.after_migrate"
 # DocType Class
 # ---------------
 # Override standard doctype classes
-
 override_doctype_class = {
 	"ToDo": "planner.overrides.todo.CustomToDo"
 }

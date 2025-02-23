@@ -40,12 +40,8 @@ def get_holidays(month_start: str, month_end: str, employee_filters: dict[str, s
 
 
 def get_tasks(month_start: str, month_end: str, employee_filters: dict[str, str],task_filters):
-	filters = {
-		"exp_start_date": ["between", (month_start, month_end)],
-		"exp_end_date": ["between", (month_start, month_end)],
-	}
 
-	cond = ""
+	cond = "AND task.status != 'Template' "
 
 	for key, value in task_filters.items():
 		cond += f"AND task.{key} = '{value}' "
@@ -73,6 +69,12 @@ def get_tasks(month_start: str, month_end: str, employee_filters: dict[str, str]
 		employee_tasks[task.employee].append(task)
 		if(not task.get('color')):
 			task.color = "#EFF6FE"
+		
+		if task.status == "Completed":
+			task.color = "#dcfae7"
+		
+		if task.status == "Overdue":
+			task.color = "#fdf0f0"
 
 	return employee_tasks
 

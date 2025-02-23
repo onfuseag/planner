@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between">
+  <div class="flex items-center justify-between sticky top-0 bg-white z-10">
     <div class="flex items-center bg-gray-50 rounded-md space-x-0.5">
       <Button
         icon="chevron-left"

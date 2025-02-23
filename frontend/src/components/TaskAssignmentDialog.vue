@@ -15,10 +15,11 @@
           <Link
             doctype="Task"
             v-model="form.task"
-            placeholder="Select Project"
+            placeholder="Select Task"
             :show-description="true"
             :filters="taskFilters"
             :update-filters="true"
+            class="overflow-hidden"
           />
         </div>
         <div>
@@ -27,6 +28,7 @@
             doctype="Project"
             v-model="form.project"
             placeholder="Select Project"
+            class="overflow-hidden"
           />
         </div>
       </div>
@@ -58,15 +60,21 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >Start Date <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker v-model="form.start_date" />
+          <DatePicker
+            v-model="form.start_date"
+            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          />
         </div>
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >End Date <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker v-model="form.end_date" />
+          <DatePicker
+            v-model="form.end_date"
+            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          />
         </div>
-        <div>
+        <div class="w-full col-span-2">
           <label class="block text-xs text-ink-gray-5 mb-1.5">
             Employees <span class="text-ink-red-3">*</span>
           </label>
@@ -82,20 +90,36 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >Completed On <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker v-model="form.completed_on" />
+          <DatePicker
+            v-model="form.completed_on"
+            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          />
         </div>
-        <FormControl
-          type="textarea"
-          label="Description"
-          v-model="form.description"
-          :required="true"
-          placeholder="Task description"
-          class="col-span-2"
-        />
+        <div class="col-span-2">
+          <label class="block text-xs text-ink-gray-5 mb-1.5"
+            >Description
+          </label>
+          <TextEditor
+            class="col-span-2 rounded py-1.5 px-2 border border-[--surface-gray-2] bg-surface-gray-2 placeholder-ink-gray-4 hover:border-outline-gray-modals hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:shadow-sm focus:ring-0 focus-visible:ring-2 focus-visible:ring-outline-gray-3 text-ink-gray-8 transition-colors w-full block text-xs min-h-[80px]"
+            type="textarea"
+            placeholder="This task is about..."
+            :content="form.description"
+            @change="(val) => (form.description = val)"
+            :bubble-menu="true"
+            editor-class="text-sm"
+          />
+        </div>
       </div>
     </template>
     <template #actions="{ close }">
       <div class="flex space-x-3 justify-end">
+        <Button
+          v-if="form.task"
+          label="Link to Task"
+          variant="subtle"
+          @click="goToBlank('/app/task/' + form.task)"
+          iconLeft="external-link"
+        />
         <Button
           :label="taskName ? 'Update Task' : 'Assign Task'"
           variant="solid"
@@ -112,19 +136,22 @@ import {
   Autocomplete,
   FormControl,
   DatePicker,
-  createListResource,
+  TextEditor,
   call,
   createResource,
 } from 'frappe-ui'
 import { onMounted, reactive, watch, computed, ref } from 'vue'
 import { projects, priority, status } from '../data'
-import { raiseToast, dayjs } from '../utils'
+import { raiseToast, dayjs, goToBlank, dateFormat } from '../utils'
 import Link from './Link.vue'
 const props = defineProps({
   employees: Array,
   taskName: String,
   taskSubject: String,
-  selectedEmployee: Object,
+  selectedEmployee: {
+    type: Object || null,
+    default: null,
+  },
 })
 const emit = defineEmits(['update'])
 
@@ -174,7 +201,11 @@ const getEmployeeData = (employees) => {
       label: `${emp.name}: ${emp.employee_name}`,
       value: emp.name,
     }))
-  if (props.selectedEmployee) {
+  if (
+    props.selectedEmployee &&
+    props.selectedEmployee?.value !== '' &&
+    !data.some((emp) => emp.value === props.selectedEmployee.value)
+  ) {
     data.push({
       label: props.selectedEmployee.label,
       value: props.selectedEmployee.value,
@@ -246,7 +277,7 @@ const submitTask = async (close) => {
       close,
     )
   } catch (e) {
-    const err = e.messages || 'Could not update task'
+    const err = e.messages[0] || 'Could not update task'
     console.log(e)
     raiseToast('error', err)
   }

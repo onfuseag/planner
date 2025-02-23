@@ -11,7 +11,7 @@ import { Toasts, createResource } from 'frappe-ui'
 
 import Navbar from '../components/Navbar.vue'
 import MonthView from './MonthView.vue'
-
+import { dateFormat } from '../utils'
 // RESOURCES
 
 const user = createResource({
@@ -19,6 +19,9 @@ const user = createResource({
   auto: true,
   onError() {
     window.location.href = '/login?redirect-to=%2Ftask-manager'
+  },
+  onSuccess(data) {
+    dateFormat.value = data.date_format.toUpperCase()
   },
 })
 </script>
