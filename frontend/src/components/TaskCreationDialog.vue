@@ -37,13 +37,19 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >Start Date <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker v-model="form.start_date" />
+          <DatePicker
+            v-model="form.start_date"
+            :formatter="(date) => dayjs(date).format(dateFormat)"
+          />
         </div>
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >End Date <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker v-model="form.end_date" />
+          <DatePicker
+            v-model="form.end_date"
+            :formatter="(date) => dayjs(date).format(dateFormat)"
+          />
         </div>
 
         <FormControl
@@ -110,7 +116,7 @@ import {
   TextEditor,
 } from 'frappe-ui'
 import { reactive } from 'vue'
-import { dayjs, raiseToast } from '../utils'
+import { dateFormat, dayjs, raiseToast } from '../utils'
 import { projects, priority, status } from '../data'
 import Link from './Link.vue'
 

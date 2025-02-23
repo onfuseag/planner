@@ -215,7 +215,7 @@
                       }"
                     />
                     <span>
-                      {{ task['completed_on'] }}
+                      {{ dayjs(task['completed_on']).format(dateFormat) }}
                     </span>
                   </div>
                 </div>
@@ -266,7 +266,7 @@
 import { ref, computed, watch } from 'vue'
 import colors from 'tailwindcss/colors'
 import { Avatar, Autocomplete, createResource, FeatherIcon } from 'frappe-ui'
-import { dayjs, raiseToast } from '../utils'
+import { dateFormat, dayjs, raiseToast } from '../utils'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 
 const props = defineProps({

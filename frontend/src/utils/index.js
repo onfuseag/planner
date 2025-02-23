@@ -1,4 +1,5 @@
 import { toast } from 'frappe-ui'
+import { ref } from 'vue'
 
 export { default as dayjs } from './dayjs'
 
@@ -35,3 +36,5 @@ export const goTo = (path) => {
 export const goToBlank = (path) => {
   window.open(path, '_blank')
 }
+
+export const dateFormat = ref('YYYY-MM-DD')

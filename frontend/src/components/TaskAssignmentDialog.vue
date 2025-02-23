@@ -60,13 +60,19 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >Start Date <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker v-model="form.start_date" />
+          <DatePicker
+            v-model="form.start_date"
+            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          />
         </div>
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >End Date <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker v-model="form.end_date" />
+          <DatePicker
+            v-model="form.end_date"
+            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          />
         </div>
         <div class="w-full col-span-2">
           <label class="block text-xs text-ink-gray-5 mb-1.5">
