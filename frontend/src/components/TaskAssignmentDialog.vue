@@ -104,6 +104,13 @@
     <template #actions="{ close }">
       <div class="flex space-x-3 justify-end">
         <Button
+          v-if="form.task"
+          label="Link to Task"
+          variant="subtle"
+          @click="goToBlank('/app/task/' + form.task)"
+          iconLeft="external-link"
+        />
+        <Button
           :label="taskName ? 'Update Task' : 'Assign Task'"
           variant="solid"
           @click="submitTask(close)"
@@ -125,7 +132,7 @@ import {
 } from 'frappe-ui'
 import { onMounted, reactive, watch, computed, ref } from 'vue'
 import { projects, priority, status } from '../data'
-import { raiseToast, dayjs } from '../utils'
+import { raiseToast, dayjs, goToBlank } from '../utils'
 import Link from './Link.vue'
 const props = defineProps({
   employees: Array,

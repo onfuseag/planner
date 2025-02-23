@@ -133,7 +133,7 @@
             <!-- Tasks -->
             <div
               v-else
-              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 w-32"
+              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-36"
             >
               <div
                 v-for="task in events.data?.[employee.name]?.[day.date]"
@@ -188,10 +188,10 @@
                 <div class="text-xs pointer-events-none truncate">
                   {{ task['subject'] }}
                 </div>
-                <div class="truncate pointer-events-none text-base font-medium">
+                <div class="truncate pointer-events-none text-xs">
                   {{ task['project'] }}
                 </div>
-                <div class="truncate pointer-events-none text-base font-medium">
+                <div class="truncate pointer-events-none text-xs font-bold">
                   {{ task['project_name'] ?? '' }}
                 </div>
                 <div

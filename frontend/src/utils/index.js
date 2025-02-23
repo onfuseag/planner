@@ -32,3 +32,6 @@ export const raiseToast = (type, message) => {
 export const goTo = (path) => {
   window.location.href = path
 }
+export const goToBlank = (path) => {
+  window.open(path, '_blank')
+}
