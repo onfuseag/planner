@@ -12,6 +12,10 @@ fixtures = [
 
 required_apps = ["frappe/erpnext", "frappe/hrms"]
 
+override_doctype_class = {
+	"ToDo": "planner.overrides.todo.CustomToDo"
+}
+
 # Includes in <head>
 # ------------------
 
