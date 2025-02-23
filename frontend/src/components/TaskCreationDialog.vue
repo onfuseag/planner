@@ -21,6 +21,7 @@
             doctype="Project"
             v-model="form.project"
             placeholder="Select Project"
+            class="overflow-hidden"
           />
         </div>
 

@@ -19,6 +19,7 @@
             :show-description="true"
             :filters="taskFilters"
             :update-filters="true"
+            class="overflow-hidden"
           />
         </div>
         <div>
@@ -67,7 +68,7 @@
           </label>
           <DatePicker v-model="form.end_date" />
         </div>
-        <div>
+        <div class="w-full col-span-2">
           <label class="block text-xs text-ink-gray-5 mb-1.5">
             Employees <span class="text-ink-red-3">*</span>
           </label>

@@ -159,7 +159,7 @@
                     hoveredCell.color = ''
                   }
                 "
-                class="rounded border-2 p-2 cursor-pointer"
+                class="rounded border-2 p-2 cursor-pointer space-y-1.5"
                 :class="[
                   dropCell.employee === employee.name &&
                     dropCell.date === day.date &&
@@ -185,17 +185,13 @@
                   }
                 "
               >
-                <div class="text-xs pointer-events-none space-y-1.5 truncate">
+                <div class="text-xs pointer-events-none truncate">
                   {{ task['subject'] }}
                 </div>
-                <div
-                  class="truncate mb-1.5 pointer-events-none text-base font-medium"
-                >
+                <div class="truncate pointer-events-none text-base font-medium">
                   {{ task['project'] }}
                 </div>
-                <div
-                  class="truncate mb-1.5 pointer-events-none text-base font-medium"
-                >
+                <div class="truncate pointer-events-none text-base font-medium">
                   {{ task['project_name'] ?? '' }}
                 </div>
                 <div
@@ -320,7 +316,7 @@ const hoveredCell = ref({
 const selectedTask = ref({
   task: '',
   subject: '',
-  employee: {},
+  employee: null,
 })
 
 const dropCell = ref({ employee: '', date: '', task: '' })
