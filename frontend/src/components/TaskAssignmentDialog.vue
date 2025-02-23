@@ -90,7 +90,10 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >Completed On <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker v-model="form.completed_on" />
+          <DatePicker
+            v-model="form.completed_on"
+            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          />
         </div>
         <div class="col-span-2">
           <label class="block text-xs text-ink-gray-5 mb-1.5"
@@ -138,7 +141,7 @@ import {
 } from 'frappe-ui'
 import { onMounted, reactive, watch, computed, ref } from 'vue'
 import { projects, priority, status } from '../data'
-import { raiseToast, dayjs, goToBlank } from '../utils'
+import { raiseToast, dayjs, goToBlank, dateFormat } from '../utils'
 import Link from './Link.vue'
 const props = defineProps({
   employees: Array,

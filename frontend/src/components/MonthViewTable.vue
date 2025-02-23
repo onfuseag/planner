@@ -172,10 +172,7 @@
                     'opacity-0',
                 ]"
                 :style="{
-                  backgroundColor:
-                    task.status === 'Completed'
-                      ? '#dcfae7'
-                      : task.color || colors[task.color][50],
+                  backgroundColor: task.color || colors[task.color][50],
                 }"
                 @click="
                   () => {
