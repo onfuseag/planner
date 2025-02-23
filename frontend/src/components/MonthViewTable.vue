@@ -185,7 +185,7 @@
                   }
                 "
               >
-                <div class="text-xs pointer-events-none space-y-1.5">
+                <div class="text-xs pointer-events-none space-y-1.5 truncate">
                   {{ task['subject'] }}
                 </div>
                 <div

@@ -15,7 +15,7 @@
           <Link
             doctype="Task"
             v-model="form.task"
-            placeholder="Select Project"
+            placeholder="Select Task"
             :show-description="true"
             :filters="taskFilters"
             :update-filters="true"
@@ -27,6 +27,7 @@
             doctype="Project"
             v-model="form.project"
             placeholder="Select Project"
+            class="overflow-hidden"
           />
         </div>
       </div>
@@ -124,7 +125,10 @@ const props = defineProps({
   employees: Array,
   taskName: String,
   taskSubject: String,
-  selectedEmployee: Object,
+  selectedEmployee: {
+    type: Object || null,
+    default: null,
+  },
 })
 const emit = defineEmits(['update'])
 
@@ -174,7 +178,11 @@ const getEmployeeData = (employees) => {
       label: `${emp.name}: ${emp.employee_name}`,
       value: emp.name,
     }))
-  if (props.selectedEmployee) {
+  if (
+    props.selectedEmployee &&
+    props.selectedEmployee?.value !== '' &&
+    !data.some((emp) => emp.value === props.selectedEmployee.value)
+  ) {
     data.push({
       label: props.selectedEmployee.label,
       value: props.selectedEmployee.value,
@@ -246,7 +254,7 @@ const submitTask = async (close) => {
       close,
     )
   } catch (e) {
-    const err = e.messages || 'Could not update task'
+    const err = e.messages[0] || 'Could not update task'
     console.log(e)
     raiseToast('error', err)
   }
