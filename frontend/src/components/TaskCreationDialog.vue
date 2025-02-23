@@ -60,13 +60,20 @@
           :options="priority"
           :required="true"
         />
-        <FormControl
-          class="col-span-2"
-          type="textarea"
-          label="Description"
-          v-model="form.description"
-          placeholder="This task is about..."
-        />
+        <!-- Description Text Editor here -->
+        <div class="col-span-2">
+          <label class="block text-xs text-ink-gray-5 mb-1.5"
+            >Description
+          </label>
+          <TextEditor
+            class="col-span-2 rounded py-1.5 px-2 border border-[--surface-gray-2] bg-surface-gray-2 placeholder-ink-gray-4 hover:border-outline-gray-modals hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:shadow-sm focus:ring-0 focus-visible:ring-2 focus-visible:ring-outline-gray-3 text-ink-gray-8 transition-colors w-full block text-xs min-h-[80px]"
+            type="textarea"
+            placeholder="This task is about..."
+            :content="form.description"
+            @change="(val) => (form.description = val)"
+            :bubble-menu="true"
+          />
+        </div>
       </div>
     </template>
     <template #actions>
@@ -100,6 +107,7 @@ import {
   DatePicker,
   Autocomplete,
   createResource,
+  TextEditor,
 } from 'frappe-ui'
 import { reactive } from 'vue'
 import { dayjs, raiseToast } from '../utils'
