@@ -18,7 +18,7 @@ const user = createResource({
   url: 'planner.api.get_current_user_info',
   auto: true,
   onError() {
-    window.location.href = '/login?redirect-to=%2Ftask-manager'
+    window.location.href = '/login?redirect-to=%2Fplanner'
   },
   onSuccess(data) {
     dateFormat.value = data.date_format.toUpperCase()
