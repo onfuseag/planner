@@ -12,6 +12,7 @@
   {
    "fieldname": "employee",
    "fieldtype": "Link",
+   "ignore_user_permissions": 1,
    "in_list_view": 1,
    "label": "Employee",
    "options": "Employee"
@@ -20,7 +21,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-02-17 10:05:20.746787",
+ "modified": "2025-02-25 06:46:32.432860",
  "modified_by": "Administrator",
  "module": "Planner",
  "name": "Employee Item",
