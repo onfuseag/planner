@@ -21,7 +21,7 @@
       <div
         v-for="[key, value] of Object.entries(filters)"
         :key="key"
-        class="w-40"
+        class="max-w-36 w-36"
       >
         <FormControl
           v-if="!['status', 'priority', 'project'].includes(key)"
