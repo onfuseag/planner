@@ -1,13 +1,16 @@
 import frappe
 from frappe import _
 from erpnext.projects.doctype.task.task import Task
+from frappe.desk.form import assign_to
 
 class CustomTask(Task):
 	def validate(self):
 		super().validate()
 	
-	def before_save(self):
-		# Create  Todo
+	def on_update(self):
+		# Create Todo
+		if not self.has_value_changed("employees"):
+			return
 		for e in self.employees:
 			user_id = self.get_user(e.employee)
 			if not user_id:
@@ -18,8 +21,10 @@ class CustomTask(Task):
 				self.create_todo(user_id)
 		
 		# cancel existing todo for removed employees
-		old_employees = self.get_doc_before_save().employees
+		old_doc = self.get_doc_before_save()
+		old_employees = old_doc.employees if old_doc else []
 		removed_employees = []
+
 		for e in old_employees:
 			if e.employee not in [e.employee for e in self.employees]:
 				removed_employees.append(e.employee)
@@ -31,18 +36,18 @@ class CustomTask(Task):
 				"ToDo",
 				{"reference_type":"Task","reference_name":self.name,"allocated_to":user_id,"status":"Open"}
 			):
-				frappe.db.set_value("ToDo",todo,"status","Cancelled")
+				assign_to.remove("Task",self.name,user_id,True)
 
 
 	def get_user(self, emp):
 		return frappe.db.get_value("Employee", emp, "user_id")
 
 	def create_todo(self,user_id):
-		todo = frappe.new_doc(
-			"ToDo",
-			reference_type="Task",
-			reference_name=self.name,
-			allocated_to=user_id,
-			description=self.subject,
-			assigned_by=frappe.session.user
-		).insert()
+		assign_to.add(
+			{
+				"assign_to": [user_id],
+				"doctype": "Task",
+				"name": self.name,
+				"description": self.subject,
+			}
+		)
