@@ -86,6 +86,18 @@
             label="Employee"
           />
         </div>
+        <div class="w-full col-span-2">
+          <label class="block text-xs text-ink-gray-5 mb-1.5">
+            Employees2 <span class="text-ink-red-3">*</span>
+          </label>
+          <Autocomplete2
+            :options="_employees"
+            v-model="form.employees"
+            multiple
+            placeholder="Select Employee"
+            label="Employee"
+          />
+        </div>
         <div v-if="form.status === 'Completed'">
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >Completed On <span class="text-ink-red-3">*</span>
@@ -143,6 +155,7 @@ import {
 import { onMounted, reactive, watch, computed, ref } from 'vue'
 import { projects, priority, status } from '../data'
 import { raiseToast, dayjs, goToBlank, dateFormat } from '../utils'
+import Autocomplete2 from './Autocomplete2.vue'
 import Link from './Link.vue'
 const props = defineProps({
   employees: Array,
