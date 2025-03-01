@@ -6,12 +6,11 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5">
             Employee <span class="text-ink-red-3">*</span>
           </label>
-          <Autocomplete
+          <Autocomplete2
             :options="_employees"
             v-model="form.employees"
-            multiple
+            :multiple="true"
             placeholder="Select Employee"
-            label="Employee"
           />
         </div>
         <!-- Project -->
@@ -111,7 +110,6 @@ import {
   Dialog,
   FormControl,
   DatePicker,
-  Autocomplete,
   createResource,
   TextEditor,
 } from 'frappe-ui'
@@ -119,7 +117,7 @@ import { reactive } from 'vue'
 import { dateFormat, dayjs, raiseToast } from '../utils'
 import { projects, priority, status } from '../data'
 import Link from './Link.vue'
-
+import Autocomplete2 from './Autocomplete2.vue'
 const props = defineProps({
   employees: Array,
   taskName: String,

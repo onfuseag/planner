@@ -78,24 +78,11 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5">
             Employees <span class="text-ink-red-3">*</span>
           </label>
-          <Autocomplete
-            :options="_employees"
-            v-model="form.employees"
-            multiple
-            placeholder="Select Employee"
-            label="Employee"
-          />
-        </div>
-        <div class="w-full col-span-2">
-          <label class="block text-xs text-ink-gray-5 mb-1.5">
-            Employees2 <span class="text-ink-red-3">*</span>
-          </label>
           <Autocomplete2
             :options="_employees"
             v-model="form.employees"
-            multiple
+            :multiple="true"
             placeholder="Select Employee"
-            label="Employee"
           />
         </div>
         <div v-if="form.status === 'Completed'">
@@ -145,7 +132,6 @@
 <script setup>
 import {
   Dialog,
-  Autocomplete,
   FormControl,
   DatePicker,
   TextEditor,
