@@ -78,12 +78,11 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5">
             Employees <span class="text-ink-red-3">*</span>
           </label>
-          <Autocomplete
+          <Autocomplete2
             :options="_employees"
             v-model="form.employees"
-            multiple
+            :multiple="true"
             placeholder="Select Employee"
-            label="Employee"
           />
         </div>
         <div v-if="form.status === 'Completed'">
@@ -133,7 +132,6 @@
 <script setup>
 import {
   Dialog,
-  Autocomplete,
   FormControl,
   DatePicker,
   TextEditor,
@@ -143,6 +141,7 @@ import {
 import { onMounted, reactive, watch, computed, ref } from 'vue'
 import { projects, priority, status } from '../data'
 import { raiseToast, dayjs, goToBlank, dateFormat } from '../utils'
+import Autocomplete2 from './Autocomplete2.vue'
 import Link from './Link.vue'
 const props = defineProps({
   employees: Array,
