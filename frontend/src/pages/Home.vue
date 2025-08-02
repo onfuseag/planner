@@ -1,18 +1,35 @@
 <template>
   <div v-if="user.data" class="min-h-screen">
     <Navbar :user="user.data" />
-    <MonthView />
+    <div class="px-12 py-4 flex justify-end space-x-2">
+      <Button
+        label="Week"
+        :variant="currentView === 'week' ? 'solid' : 'ghost'"
+        @click="currentView = 'week'"
+      />
+      <Button
+        label="Month"
+        :variant="currentView === 'month' ? 'solid' : 'ghost'"
+        @click="currentView = 'month'"
+      />
+    </div>
+    <WeekView v-if="currentView === 'week'" />
+    <MonthView v-else />
     <Toasts />
   </div>
 </template>
 
 <script setup lang="ts">
-import { Toasts, createResource } from 'frappe-ui'
+import { Toasts, createResource, Button } from 'frappe-ui'
 
 import Navbar from '../components/Navbar.vue'
 import MonthView from './MonthView.vue'
+import WeekView from './WeekView.vue'
 import { dateFormat } from '../utils'
+import { ref } from 'vue'
 // RESOURCES
+
+const currentView = ref('month')
 
 const user = createResource({
   url: 'planner.api.get_current_user_info',

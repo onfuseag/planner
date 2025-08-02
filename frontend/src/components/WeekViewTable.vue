@@ -1,16 +1,16 @@
 <template>
   <div
     ref="tableContainer"
-    class="rounded-lg border max-h-[90%] max-w-[100%] overflow-scroll table-container"
+    class="rounded-lg border max-h-[90%] w-full overflow-scroll table-container"
     :class="loading && 'animate-pulse pointer-events-none'"
   >
-    <table class="border-separate border-spacing-0">
+    <table class="border-separate border-spacing-0 table-fixed w-full">
       <!-- first row -->
       <thead>
-        <tr class="sticky top-0 bg-white z-10">
+        <tr class="bg-white">
           <!-- Employee Search -->
           <th
-            class="p-2 border-b border-r min-w-72 max-w-72 sticky left-0 bg-surface-white"
+            class="p-2 border-b border-r min-w-72 max-w-72 w-72 sticky left-0 bg-surface-white"
           >
             <Autocomplete
               :options="employeeSearchOptions"
@@ -22,10 +22,13 @@
 
           <!-- Day/Date Row -->
           <th
-            v-for="(day, idx) in daysOfMonth"
+            v-for="(day, idx) in daysOfWeek"
             :key="idx"
             class="font-medium border-b min-w-32"
-            :class="{ 'border-l': idx }"
+            :class="{
+              'border-l': idx,
+              'border-r': idx === daysOfWeek.length - 1,
+            }"
           >
             {{ day.dayName }} {{ dayjs(day.date).format('DD') }}
           </th>
@@ -39,7 +42,7 @@
               !employeeSearch?.length ||
               employeeSearch?.some((item) => item.value === employee?.name)
             "
-            class="px-2 py-7 z-[5] border-r min-w-72 max-w-72 sticky left-0 bg-surface-white"
+            class="px-2 py-7 z-[1] border-r min-w-72 max-w-72 w-72 sticky left-0 bg-surface-white"
             :class="{ 'border-t': rowIdx }"
           >
             <div class="flex" :class="!employee.designation && 'items-center'">
@@ -65,11 +68,12 @@
               !employeeSearch?.length ||
               employeeSearch?.some((item) => item.value === employee?.name)
             "
-            v-for="(day, colIdx) in daysOfMonth"
+            v-for="(day, colIdx) in daysOfWeek"
             :key="colIdx"
-            class="p-1.5 z-[1] border-t"
+            class="p-1.5 border-t"
             :class="{
               'border-l': rowIdx + 1,
+              'border-r': colIdx === daysOfWeek.length - 1,
               'align-top': events.data?.[employee.name]?.[day.date],
               'align-middle bg-gray-50':
                 events.data?.[employee.name]?.[day.date]?.holiday,
@@ -134,14 +138,14 @@
             <!-- Tasks -->
             <div
               v-else
-              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-36"
+              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-32"
             >
               <div
                 v-for="task in events.data?.[employee.name]?.[day.date]"
                 @mouseenter="
-                  onTaskMouseEnter(task, employee.name, day.date, $event)
+                  (e) => onTaskMouseEnter(task, employee.name, day.date, e)
                 "
-                @mouseleave="onTaskMouseLeave()"
+                @mouseleave="onTaskMouseLeave"
                 class="rounded border-2 p-2 cursor-pointer space-y-1.5"
                 :class="[
                   dropCell.employee === employee.name &&
@@ -230,6 +234,11 @@
         </tr>
       </tbody>
     </table>
+    <TaskHoverPopover
+      v-if="hoveredCell.task"
+      :data="hoveredCell"
+      :position="hoverPosition"
+    />
   </div>
   <TaskAssignmentDialog
     v-if="showTaskAssignmentDialog"
@@ -240,23 +249,18 @@
     :selected-employee="selectedTask.employee"
     @update="() => events.reload()"
   />
-  <TaskHoverPopover
-    v-if="hoveredCell.task"
-    :data="hoveredCell"
-    :position="hoverPosition"
-  />
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { Autocomplete, Avatar, createResource, FeatherIcon } from 'frappe-ui'
 import colors from 'tailwindcss/colors'
-import { Avatar, Autocomplete, createResource, FeatherIcon } from 'frappe-ui'
-import { dateFormat, dayjs, raiseToast } from '../utils'
+import { computed, ref, watch } from 'vue'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 import TaskHoverPopover from '../components/TaskHoverPopover.vue'
+import { dateFormat, dayjs, raiseToast } from '../utils'
 
 const props = defineProps({
-  firstOfMonth: {
+  firstOfWeek: {
     required: true,
   },
   employees: {
@@ -276,16 +280,16 @@ const employeeSearchOptions = computed(() => {
     label: `${employee.name}: ${employee.employee_name}`,
   }))
 })
-const daysOfMonth = computed(() => {
-  const daysOfMonth = []
-  for (let i = 1; i <= props.firstOfMonth.daysInMonth(); i++) {
-    const date = props.firstOfMonth.date(i)
-    daysOfMonth.push({
+const daysOfWeek = computed(() => {
+  const daysOfWeek = []
+  for (let i = 0; i < 7; i++) {
+    const date = props.firstOfWeek.add(i, 'day')
+    daysOfWeek.push({
       dayName: date.format('ddd'),
       date: date.format('YYYY-MM-DD'),
     })
   }
-  return daysOfMonth
+  return daysOfWeek
 })
 
 const hoveredCell = ref({
@@ -301,6 +305,9 @@ const hoveredCell = ref({
   color: '',
 })
 
+const hoverPosition = ref({ top: 0, left: 0 })
+const tableContainer = ref(null)
+
 const selectedTask = ref({
   task: '',
   subject: '',
@@ -309,38 +316,6 @@ const selectedTask = ref({
 
 const dropCell = ref({ employee: '', date: '', task: '' })
 const loading = ref(false)
-const isHolidayOrLeave = (employee, day) =>
-  events.data?.[employee]?.[day]?.holiday ||
-  events.data?.[employee]?.[day]?.leave
-
-const events = createResource({
-  url: 'planner.api.tasks.get_events',
-  auto: true,
-  makeParams() {
-    return {
-      month_start: props.firstOfMonth.format('YYYY-MM-DD'),
-      month_end: props.firstOfMonth.endOf('month').format('YYYY-MM-DD'),
-      //   employee_filters: props.employeeFilters,
-      task_filters: props.taskFilters,
-    }
-  },
-  onSuccess() {
-    loading.value = false
-  },
-  onError(error) {
-    raiseToast('error', error)
-  },
-  transform: (data) => {
-    const mappedEvents = {}
-    for (const employee in data) {
-      mapEventsToDates(data, mappedEvents, employee)
-    }
-    return mappedEvents
-  },
-})
-
-const hoverPosition = ref({ top: 0, left: 0 })
-const tableContainer = ref(null)
 
 function onTaskMouseEnter(task, employeeName, date, event) {
   hoveredCell.value.task = task.name
@@ -374,13 +349,44 @@ function onTaskMouseLeave() {
   hoveredCell.value.shift_status = ''
   hoveredCell.value.priority = ''
   hoveredCell.value.project = ''
+  hoveredCell.value.project_name = ''
   hoveredCell.value.color = ''
+  hoveredCell.value.employee_display = ''
 }
+const isHolidayOrLeave = (employee, day) =>
+  events.data?.[employee]?.[day]?.holiday ||
+  events.data?.[employee]?.[day]?.leave
+
+const events = createResource({
+  url: 'planner.api.tasks.get_events',
+  auto: true,
+  makeParams() {
+    return {
+      month_start: props.firstOfWeek.format('YYYY-MM-DD'),
+      month_end: props.firstOfWeek.add(6, 'day').format('YYYY-MM-DD'),
+      //   employee_filters: props.employeeFilters,
+      task_filters: props.taskFilters,
+    }
+  },
+  onSuccess() {
+    loading.value = false
+  },
+  onError(error) {
+    raiseToast('error', error)
+  },
+  transform: (data) => {
+    const mappedEvents = {}
+    for (const employee in data) {
+      mapEventsToDates(data, mappedEvents, employee)
+    }
+    return mappedEvents
+  },
+})
 
 const mapEventsToDates = (data, mappedEvents, employee) => {
   mappedEvents[employee] = {}
-  for (let d = 1; d <= props.firstOfMonth.daysInMonth(); d++) {
-    const date = props.firstOfMonth.date(d)
+  for (let d = 0; d < 7; d++) {
+    const date = props.firstOfWeek.add(d, 'day')
     const key = date.format('YYYY-MM-DD')
 
     for (const event of Object.values(data[employee])) {
@@ -448,7 +454,7 @@ const handleHoliday = (event, date) => {
 }
 
 watch(
-  () => [props.firstOfMonth, props.employeeFilters, props.taskFilters],
+  () => [props.firstOfWeek, props.employeeFilters, props.taskFilters],
   () => {
     loading.value = true
     events.fetch()
