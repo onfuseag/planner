@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="tableContainer"
     class="rounded-lg border max-h-[90%] max-w-[100%] overflow-scroll table-container"
     :class="loading && 'animate-pulse pointer-events-none'"
   >
@@ -138,27 +139,9 @@
               <div
                 v-for="task in events.data?.[employee.name]?.[day.date]"
                 @mouseenter="
-                  () => {
-                    hoveredCell.task = task.name
-                    hoveredCell.subject = task.subject
-                    hoveredCell.shift_status = task.status
-                    hoveredCell.priority = task.priority || ''
-                    hoveredCell.project = task.project || ''
-                    hoveredCell.color = task.color || colors[task.color][50]
-                    hoveredCell.employee = employee.name
-                    hoveredCell.date = day.date
-                  }
+                  onTaskMouseEnter(task, employee.name, day.date, $event)
                 "
-                @mouseleave="
-                  () => {
-                    hoveredCell.task = ''
-                    hoveredCell.subject = ''
-                    hoveredCell.shift_status = ''
-                    hoveredCell.priority = ''
-                    hoveredCell.project = ''
-                    hoveredCell.color = ''
-                  }
-                "
+                @mouseleave="onTaskMouseLeave()"
                 class="rounded border-2 p-2 cursor-pointer space-y-1.5"
                 :class="[
                   dropCell.employee === employee.name &&
@@ -257,6 +240,11 @@
     :selected-employee="selectedTask.employee"
     @update="() => events.reload()"
   />
+  <TaskHoverPopover
+    v-if="hoveredCell.task"
+    :data="hoveredCell"
+    :position="hoverPosition"
+  />
 </template>
 
 <script setup>
@@ -265,6 +253,7 @@ import colors from 'tailwindcss/colors'
 import { Avatar, Autocomplete, createResource, FeatherIcon } from 'frappe-ui'
 import { dateFormat, dayjs, raiseToast } from '../utils'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
+import TaskHoverPopover from '../components/TaskHoverPopover.vue'
 
 const props = defineProps({
   firstOfMonth: {
@@ -301,12 +290,14 @@ const daysOfMonth = computed(() => {
 
 const hoveredCell = ref({
   employee: '',
+  employee_display: '',
   date: '',
   task: '',
   subject: '',
   shift_status: '',
   priority: '',
   project: '',
+  project_name: '',
   color: '',
 })
 
@@ -347,6 +338,44 @@ const events = createResource({
     return mappedEvents
   },
 })
+
+const hoverPosition = ref({ top: 0, left: 0 })
+const tableContainer = ref(null)
+
+function onTaskMouseEnter(task, employeeName, date, event) {
+  hoveredCell.value.task = task.name
+  hoveredCell.value.subject = task.subject
+  hoveredCell.value.shift_status = task.status
+  hoveredCell.value.priority = task.priority || ''
+  hoveredCell.value.project = task.project || ''
+  hoveredCell.value.project_name = task.project_name || ''
+  hoveredCell.value.color = task.color || colors[task.color][50]
+  hoveredCell.value.employee = employeeName
+  hoveredCell.value.employee_display =
+    props.employees.find((emp) => emp.name === employeeName)?.employee_name ||
+    employeeName
+  hoveredCell.value.date = date
+
+  const rect = event.currentTarget.getBoundingClientRect()
+  const containerRect = tableContainer.value.getBoundingClientRect()
+  hoverPosition.value = {
+    top: rect.bottom - containerRect.top,
+    left:
+      rect.left -
+      containerRect.left +
+      rect.width / 2 +
+      tableContainer.value.scrollLeft,
+  }
+}
+
+function onTaskMouseLeave() {
+  hoveredCell.value.task = ''
+  hoveredCell.value.subject = ''
+  hoveredCell.value.shift_status = ''
+  hoveredCell.value.priority = ''
+  hoveredCell.value.project = ''
+  hoveredCell.value.color = ''
+}
 
 const mapEventsToDates = (data, mappedEvents, employee) => {
   mappedEvents[employee] = {}
