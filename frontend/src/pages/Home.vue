@@ -14,6 +14,7 @@
       />
     </div>
     <WeekView v-if="currentView === 'week'" />
+
     <MonthView v-else />
     <Toasts />
   </div>
