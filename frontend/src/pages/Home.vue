@@ -13,7 +13,7 @@
         @click="currentView = 'month'"
       />
     </div>
-    <WeekView v-if="currentView === 'week'" />
+    <Weekview v-if="currentView === 'week'" />
 
     <MonthView v-else />
     <Toasts />
@@ -25,7 +25,7 @@ import { Toasts, createResource, Button } from 'frappe-ui'
 
 import Navbar from '../components/Navbar.vue'
 import MonthView from './MonthView.vue'
-import WeekView from './WeekView.vue'
+import Weekview from './Weekview.vue'
 import { dateFormat } from '../utils'
 import { ref } from 'vue'
 // RESOURCES
