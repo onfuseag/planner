@@ -200,8 +200,8 @@ const task = createResource({
     form.priority = data.priority
     form.start_date = data.exp_start_date
     form.end_date = data.exp_end_date
-    form.start_time = data.start_time || ''
-    form.end_time = data.end_time || ''
+    form.start_time = data.custom_start_time || ''
+    form.end_time = data.custom_end_time || ''
     form.completed_on = data.completed_on
     form.project = data.project
   },
