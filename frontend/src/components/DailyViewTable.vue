@@ -362,7 +362,15 @@ function onTaskMouseLeave() {
 }
 
 watch(
-  () => [props.selectedDay, props.taskFilters],
+  () => props.selectedDay?.format('YYYY-MM-DD'),
+  () => {
+    loading.value = true
+    events.fetch()
+  },
+)
+
+watch(
+  () => props.taskFilters,
   () => {
     loading.value = true
     events.fetch()

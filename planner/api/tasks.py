@@ -25,13 +25,14 @@ def get_tasks(month_start: str, month_end: str, user_filters: dict[str, str], ta
 		if value:  # Only add filter if value is not empty/null
 			cond += f"AND task.{key} = '{value}' "
 
+	# Try to fetch tasks with User Item first
 	tasks = frappe.db.sql(f"""
 		SELECT
 			task.name,
 			task.exp_start_date as start_date,
 			task.exp_end_date as end_date,
-			task.custom_start_time as start_time,
-			task.custom_end_time as end_time,
+			COALESCE(task.custom_start_time, '') as start_time,
+			COALESCE(task.custom_end_time, '') as end_time,
 			task.project,
 			task.subject,
 			task.status,
@@ -39,12 +40,13 @@ def get_tasks(month_start: str, month_end: str, user_filters: dict[str, str], ta
 			task.color,
 			task.completed_on
 		FROM `tabTask` as task
-		JOIN `tabUser Item` as user_item ON task.name = user_item.parent
-		WHERE user_item.parenttype = 'Task'
-		AND user_item.parentfield = 'users'
-		AND task.exp_start_date <= "{month_end}"
+		LEFT JOIN `tabUser Item` as user_item ON task.name = user_item.parent
+			AND user_item.parenttype = 'Task'
+			AND user_item.parentfield = 'users'
+		WHERE task.exp_start_date <= "{month_end}"
 		AND task.exp_end_date >= "{month_start}"
 		{cond}
+		AND user_item.user IS NOT NULL
 		""", as_dict=True)
 
 	# group tasks by user
