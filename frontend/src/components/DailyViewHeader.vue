@@ -1,19 +1,27 @@
 <template>
-  <div class="flex items-center justify-between sticky top-0 bg-white">
-    <div class="flex items-center bg-gray-50 rounded-md space-x-0.5">
-      <Button
-        icon="chevron-left"
-        variant="ghost"
-        @click="emit('addToWeek', -1)"
-      />
-      <span class="w-32 text-center font-medium text-base">
-        Week {{ weekOfMonth }} - {{ firstOfWeek?.format('MMMM') }},
-        {{ firstOfWeek?.format('YYYY') }}
-      </span>
-      <Button
-        icon="chevron-right"
-        variant="ghost"
-        @click="emit('addToWeek', 1)"
+  <div class="flex items-center justify-between sticky top-0 bg-white z-10">
+    <div class="flex items-center space-x-2">
+      <!-- Previous Day Button -->
+      <div class="flex items-center bg-gray-50 rounded-md space-x-0.5">
+        <Button
+          icon="chevron-left"
+          variant="ghost"
+          @click="emit('addToDay', -1)"
+        />
+        <span class="w-48 text-center font-medium text-base">
+          {{ selectedDay?.format('dddd, MMMM DD, YYYY') }}
+        </span>
+        <Button
+          icon="chevron-right"
+          variant="ghost"
+          @click="emit('addToDay', 1)"
+        />
+      </div>
+      <!-- Date Picker -->
+      <DatePicker
+        v-model="pickerDate"
+        placeholder="Select Date"
+        :formatter="(value) => dayjs(value).format('YYYY-MM-DD')"
       />
     </div>
     <!-- Filters -->
@@ -23,16 +31,8 @@
         :key="key"
         class="max-w-36 w-36"
       >
-        <FormControl
-          v-if="!['status', 'priority', 'project'].includes(key)"
-          type="autocomplete"
-          :placeholder="toTitleCase(key)"
-          :options="value.options"
-          v-model="value.model"
-          :disabled="!value.options.length"
-        />
         <Link
-          v-else-if="key === 'project'"
+          v-if="key === 'project'"
           doctype="Project"
           v-model="filters.project.model"
           placeholder="Select Project"
@@ -62,34 +62,43 @@
 </template>
 
 <script setup lang="ts">
+import { reactive, watch, ref } from 'vue'
+import { FormControl, DatePicker } from 'frappe-ui'
 import { Dayjs } from 'dayjs'
-import { FormControl } from 'frappe-ui'
-import { computed, reactive, watch } from 'vue'
+import { dayjs } from '../utils'
 import { priority, status } from '../data'
 import Link from './Link.vue'
-export type FilterField =
-  | 'status'
-  | 'priority'
-  | 'project'
+
+export type FilterField = 'status' | 'priority' | 'project'
 
 const props = defineProps({
-  firstOfWeek: Dayjs,
-})
-
-const weekOfMonth = computed(() => {
-  const start = props.firstOfWeek.startOf('month').startOf('week')
-  return props.firstOfWeek.diff(start, 'week') + 1
+  selectedDay: Dayjs,
 })
 
 const emit = defineEmits<{
-  (e: 'addToWeek', change: number): void
+  (e: 'addToDay', change: number): void
   (e: 'updateFilters', newFilters: { [K in FilterField]: string }): void
+  (e: 'updateSelectedDay', newDay: Dayjs): void
 }>()
+
+const pickerDate = ref(props.selectedDay?.format('YYYY-MM-DD'))
+
+watch(pickerDate, (newDate) => {
+  if (newDate) {
+    emit('updateSelectedDay', dayjs(newDate))
+  }
+})
+
+watch(() => props.selectedDay, (newDay) => {
+  if (newDay) {
+    pickerDate.value = newDay.format('YYYY-MM-DD')
+  }
+})
 
 const filters: {
   [K in FilterField]: {
-    options: string[]
-    model?: { value: string } | null
+    options?: string[]
+    model?: { value: string } | string | null
   }
 } = reactive({
   project: { model: null },

@@ -28,13 +28,13 @@
     <MonthViewTable
       ref="monthViewTable"
       :firstOfMonth="firstOfMonth"
-      :employees="employees.data || []"
+      :users="users.data || []"
       :task-filters="taskFilters"
     />
     <TaskCreationDialog
       v-model="showTaskCreationDialog"
       v-if="showTaskCreationDialog"
-      :employees="employees.data"
+      :users="users.data"
       @create="
         () => {
           showTaskCreationDialog = false
@@ -44,7 +44,7 @@
     />
     <TaskAssignmentDialog
       v-if="showTaskAssignmentDialog"
-      :employees="employees.data"
+      :users="users.data"
       v-model="showTaskAssignmentDialog"
     />
   </div>
@@ -60,9 +60,6 @@ import TaskCreationDialog from '../components/TaskCreationDialog.vue'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 
 const firstOfMonth = ref(dayjs().date(1).startOf('D'))
-const employeeFilters = reactive({
-  status: 'Active',
-})
 const showTaskCreationDialog = ref(false)
 const showTaskAssignmentDialog = ref(false)
 
@@ -72,35 +69,29 @@ const addToMonth = (change) => {
   firstOfMonth.value = firstOfMonth.value.add(change, 'M')
 }
 
-const isCompanySelected = ref(false)
 const taskFilters = reactive({
   status: null,
   priority: null,
   project: '',
 })
+
 const updateFilters = (newFilters) => {
-  isCompanySelected.value = !!newFilters.company
-  if (!isCompanySelected.value) return //here company toast
-  let employeeUpdated = false
   Object.entries(newFilters).forEach(([key, value]) => {
     if (['status', 'priority', 'project'].includes(key)) {
       if (value) taskFilters[key] = value
       else delete taskFilters[key]
-      return
     }
-
-    if (value) employeeFilters[key] = value
-    else delete employeeFilters[key]
-    employeeUpdated = true
   })
-  if (employeeUpdated) employees.fetch()
 }
 
-const employees = createListResource({
-  doctype: 'Employee',
-  fields: ['name', 'employee_name', 'designation', 'image'],
-  cache: ['Employee'],
-  filters: employeeFilters,
+const users = createListResource({
+  doctype: 'User',
+  fields: ['name', 'full_name', 'user_image'],
+  cache: ['User'],
+  filters: {
+    enabled: 1,
+    user_type: 'System User',
+  },
   pageLength: 99999,
   auto: true,
   onError(error) {

@@ -5,7 +5,7 @@
     :class="loading && 'animate-pulse pointer-events-none'"
   >
     <table class="border-separate border-spacing-0">
-      <!-- first row -->
+      <!-- Header Row -->
       <thead>
         <tr class="sticky top-0 bg-white z-10">
           <!-- User Search -->
@@ -20,14 +20,14 @@
             />
           </th>
 
-          <!-- Day/Date Row -->
+          <!-- Hour Columns -->
           <th
-            v-for="(day, idx) in daysOfMonth"
-            :key="idx"
+            v-for="hour in hours"
+            :key="hour"
             class="font-medium border-b min-w-32"
-            :class="{ 'border-l': idx }"
+            :class="{ 'border-l': true }"
           >
-            {{ day.dayName }} {{ dayjs(day.date).format('DD') }}
+            {{ hour }}:00
           </th>
         </tr>
       </thead>
@@ -56,97 +56,65 @@
             </div>
           </td>
 
-          <!-- Tasks -->
+          <!-- Task Cells by Hour -->
           <td
             v-if="
               !userSearch?.length ||
               userSearch?.some((item) => item.value === user?.name)
             "
-            v-for="(day, colIdx) in daysOfMonth"
-            :key="colIdx"
-            class="p-1.5 z-[1] border-t"
+            v-for="hour in hours"
+            :key="hour"
+            class="p-1.5 z-[1] border-t border-l align-top"
             :class="{
-              'border-l': rowIdx + 1,
-              'align-top': events.data?.[user.name]?.[day.date],
-              'align-middle bg-gray-50':
-                events.data?.[user.name]?.[day.date]?.holiday,
-              'align-middle bg-pink-50':
-                events.data?.[user.name]?.[day.date]?.leave,
               'bg-gray-50':
                 dropCell.user === user.name &&
-                dropCell.date === day.date &&
-                !isHolidayOrLeave(user.name, day.date),
+                dropCell.hour === hour,
             }"
             @mouseenter="
               () => {
                 hoveredCell.user = user.name
-                hoveredCell.date = day.date
+                hoveredCell.hour = hour
               }
             "
             @mouseleave="
               () => {
                 hoveredCell.user = ''
-                hoveredCell.date = ''
+                hoveredCell.hour = null
               }
             "
             @dragover.prevent
             @dragenter="
               () => {
                 dropCell.user = user.name
-                dropCell.date = day.date
+                dropCell.hour = hour
               }
             "
             @drop="
               () => {
-                if (!isHolidayOrLeave(user.name, day.date)) {
-                  loading = true
-                  swapShift.submit()
-                }
+                loading = true
+                swapShift.submit()
               }
             "
           >
-            <!-- Holiday -->
-            <div
-              v-if="events.data?.[user.name]?.[day.date]?.holiday"
-              class="blocked-cell"
-            >
-              <div
-                class="w-32"
-                v-html="
-                  events.data[user.name][day.date].weekly_off
-                    ? '<strong>WO</strong>'
-                    : events.data[user.name][day.date].description
-                "
-              ></div>
-            </div>
-
-            <!-- Leave -->
-            <div
-              v-else-if="events.data?.[user.name]?.[day.date]?.leave"
-              class="blocked-cell"
-            >
-              {{ events.data[user.name][day.date].leave_type }}
-            </div>
-
             <!-- Tasks -->
             <div
-              v-else
               class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-36"
             >
               <div
-                v-for="task in events.data?.[user.name]?.[day.date]"
+                v-for="task in getTasksForHour(user.name, hour)"
+                :key="task.name"
                 @mouseenter="
-                  onTaskMouseEnter(task, user.name, day.date, $event)
+                  onTaskMouseEnter(task, user.name, hour, $event)
                 "
                 @mouseleave="onTaskMouseLeave()"
                 class="rounded border-2 p-2 cursor-pointer space-y-1.5"
                 :class="[
                   dropCell.user === user.name &&
-                    dropCell.date === day.date &&
+                    dropCell.hour === hour &&
                     dropCell.task === task.name &&
                     'scale-105',
                   hoveredCell.user === user.name &&
-                    hoveredCell.date === day.date &&
+                    hoveredCell.hour === hour &&
                     hoveredCell.task === task.name &&
                     dropCell.user &&
                     'opacity-0',
@@ -161,13 +129,18 @@
                     showTaskAssignmentDialog = true
                   }
                 "
+                draggable="true"
+                @dragstart="
+                  () => {
+                    hoveredCell.user = user.name
+                    hoveredCell.hour = hour
+                    hoveredCell.task = task.name
+                  }
+                "
               >
                 <div class="text-xs pointer-events-none truncate">
                   {{ task['subject'] }}
                 </div>
-                <!-- <div class="truncate pointer-events-none text-xs">
-                  {{ task['project'] }}
-                </div> -->
                 <div class="truncate pointer-events-none text-xs font-bold">
                   {{ task['project_name'] ?? '' }}
                 </div>
@@ -177,6 +150,14 @@
                   <div class="flex items-center space-x-1">
                     <span>
                       {{ task['status'] }}
+                    </span>
+                  </div>
+                  <div
+                    class="flex items-center space-x-1 text-xs"
+                    v-if="task.start_time && task.end_time"
+                  >
+                    <span>
+                      {{ task.start_time }} - {{ task.end_time }}
                     </span>
                   </div>
                   <div
@@ -198,14 +179,14 @@
                 </div>
               </div>
 
-              <!-- Add Task -->
+              <!-- Add Task Button -->
               <Button
                 variant="outline"
                 icon="plus"
                 class="border-2 active:bg-white w-full"
                 :class="
                   hoveredCell.user === user.name &&
-                  hoveredCell.date === day.date &&
+                  hoveredCell.hour === hour &&
                   !dropCell.user
                     ? 'visible'
                     : 'invisible'
@@ -215,7 +196,7 @@
                     selectedTask.task = ''
                     selectedTask.subject = ''
                     selectedTask.user = {
-                      label: `${user.name}: ${user.full_name}`,
+                      label: user.full_name,
                       value: user.name,
                     }
                     showTaskAssignmentDialog = true
@@ -253,7 +234,7 @@ import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 import TaskHoverPopover from '../components/TaskHoverPopover.vue'
 
 const props = defineProps({
-  firstOfMonth: {
+  selectedDay: {
     required: true,
   },
   users: {
@@ -270,98 +251,100 @@ const userSearch = ref()
 const userSearchOptions = computed(() => {
   return props.users.map((user) => ({
     value: user.name,
-    label: `${user.name}: ${user.full_name}`,
+    label: user.full_name,
   }))
 })
-const daysOfMonth = computed(() => {
-  const daysOfMonth = []
-  for (let i = 1; i <= props.firstOfMonth.daysInMonth(); i++) {
-    const date = props.firstOfMonth.date(i)
-    daysOfMonth.push({
-      dayName: date.format('ddd'),
-      date: date.format('YYYY-MM-DD'),
-    })
-  }
-  return daysOfMonth
-})
+
+// Generate hours array (00 to 23)
+const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
 
 const hoveredCell = ref({
   user: '',
   user_display: '',
-  date: '',
+  hour: null,
   task: '',
   subject: '',
   shift_status: '',
   priority: '',
   project: '',
-  project_name: '',
-  color: '',
 })
 
 const selectedTask = ref({
-  task: '',
+  task: null,
   subject: '',
   user: null,
 })
 
-const dropCell = ref({ user: '', date: '', task: '' })
-const loading = ref(false)
-const isHolidayOrLeave = (user, day) =>
-  events.data?.[user]?.[day]?.holiday ||
-  events.data?.[user]?.[day]?.leave
+const dropCell = ref({ user: '', hour: null, task: '' })
 
+const loading = ref(false)
+
+const tableContainer = ref(null)
+
+const hoverPosition = ref({ x: 0, y: 0 })
+
+// RESOURCES
 const events = createResource({
   url: 'planner.api.tasks.get_events',
+  params: {
+    month_start: props.selectedDay?.format('YYYY-MM-DD'),
+    month_end: props.selectedDay?.format('YYYY-MM-DD'),
+    task_filters: props.taskFilters,
+  },
   auto: true,
-  makeParams() {
-    return {
-      month_start: props.firstOfMonth.format('YYYY-MM-DD'),
-      month_end: props.firstOfMonth.endOf('month').format('YYYY-MM-DD'),
-      //   employee_filters: props.employeeFilters,
-      task_filters: props.taskFilters,
-    }
-  },
-  onSuccess() {
-    loading.value = false
-  },
-  onError(error) {
-    raiseToast('error', error)
-  },
-  transform: (data) => {
+  transform(data) {
     const mappedEvents = {}
     for (const user in data) {
       mapEventsToDates(data, mappedEvents, user)
     }
     return mappedEvents
   },
+  onError(error) {
+    console.log(error)
+    raiseToast('error', error)
+    loading.value = false
+  },
 })
 
-const hoverPosition = ref({ top: 0, left: 0 })
-const tableContainer = ref(null)
+const swapShift = createResource({
+  url: 'planner.api.tasks.update_task',
+  onSuccess() {
+    events.reload()
+    loading.value = false
+    hoveredCell.value = {
+      user: '',
+      user_display: '',
+      hour: null,
+      task: '',
+      subject: '',
+      shift_status: '',
+      priority: '',
+      project: '',
+    }
+    dropCell.value = { user: '', hour: null, task: '' }
+  },
+  onError(error) {
+    raiseToast('error', error)
+    loading.value = false
+  },
+})
 
-function onTaskMouseEnter(task, userName, date, event) {
+function onTaskMouseEnter(task, userName, hour, event) {
   hoveredCell.value.task = task.name
   hoveredCell.value.subject = task.subject
   hoveredCell.value.shift_status = task.status
-  hoveredCell.value.priority = task.priority || ''
-  hoveredCell.value.project = task.project || ''
-  hoveredCell.value.project_name = task.project_name || ''
-  hoveredCell.value.color = task.color || colors[task.color][50]
+  hoveredCell.value.priority = task.priority
+  hoveredCell.value.project = task.project_name
+  hoveredCell.value.hour = hour
   hoveredCell.value.user = userName
   hoveredCell.value.user_display =
     props.users.find((u) => u.name === userName)?.full_name ||
     userName
-  hoveredCell.value.date = date
 
-  const rect = event.currentTarget.getBoundingClientRect()
-  const containerRect = tableContainer.value.getBoundingClientRect()
+  const rect = event.target.getBoundingClientRect()
   hoverPosition.value = {
-    top: rect.bottom - containerRect.top,
-    left:
-      rect.left -
-      containerRect.left +
-      rect.width / 2 +
-      tableContainer.value.scrollLeft,
+    x: rect.left + window.scrollX,
+    y: rect.top + window.scrollY,
   }
 }
 
@@ -371,103 +354,110 @@ function onTaskMouseLeave() {
   hoveredCell.value.shift_status = ''
   hoveredCell.value.priority = ''
   hoveredCell.value.project = ''
-  hoveredCell.value.color = ''
 }
 
-const mapEventsToDates = (data, mappedEvents, user) => {
-  mappedEvents[user] = {}
-  for (let d = 1; d <= props.firstOfMonth.daysInMonth(); d++) {
-    const date = props.firstOfMonth.date(d)
-    const key = date.format('YYYY-MM-DD')
+watch(
+  [() => props.selectedDay, () => props.taskFilters],
+  ([selectedDay, taskFilters]) => {
+    events.update({
+      params: {
+        month_start: selectedDay.format('YYYY-MM-DD'),
+        month_end: selectedDay.format('YYYY-MM-DD'),
+        task_filters: taskFilters,
+      },
+    })
+    events.reload()
+  },
+)
 
-    for (const event of Object.values(data[user])) {
-      let result
-      if ('holiday' in event) {
-        result = handleHoliday(event, date)
-        if (result) {
-          mappedEvents[user][key] = result
-          break
-        }
-      } else if ('leave' in event) {
-        result = handleLeave(event, date)
-        if (result) {
-          mappedEvents[user][key] = result
-          break
-        }
-      } else {
-        handleShifts(event, date, mappedEvents, user, key)
-      }
+const mapEventsToDates = (data, mappedEvents, user) => {
+  const dateString = props.selectedDay.format('YYYY-MM-DD')
+
+  for (const event of data[user]) {
+    if (!mappedEvents[user]) {
+      mappedEvents[user] = {}
+    }
+
+    if (event.leave) {
+      handleShifts(event, dateString, mappedEvents, user, 'leave')
+    } else if (event.holiday) {
+      handleShifts(event, dateString, mappedEvents, user, 'holiday')
+    } else {
+      handleShifts(event, dateString, mappedEvents, user)
     }
   }
 }
 
 const handleShifts = (event, date, mappedEvents, user, key) => {
-  if (
-    dayjs(event.start_date).isSameOrBefore(date) &&
-    (dayjs(event.end_date).isSameOrAfter(date) || !event.end_date)
-  ) {
-    if (!Array.isArray(mappedEvents[user][key]))
-      mappedEvents[user][key] = []
-    mappedEvents[user][key].push({
-      name: event.name,
-      subject: event.subject,
-      project: event.project,
-      project_name: event.project_name,
-      priority: event.priority,
-      status: event.status,
-      color: event.color.toLowerCase() || 'blue',
-      start_date: event.start_date,
-      end_date: event.end_date,
-      completed_on: event.status === 'Completed' ? event.completed_on : null,
-    })
-  }
-}
+  const startDate = dayjs(event.from_date || event.holiday_date || event.start_date)
+  const endDate = dayjs(event.to_date || event.holiday_date || event.end_date)
+  const targetDate = dayjs(date)
 
-const handleLeave = (event, date) => {
-  if (
-    dayjs(event.from_date).isSameOrBefore(date) &&
-    dayjs(event.to_date).isSameOrAfter(date)
-  )
-    return {
-      leave: event.leave,
-      leave_type: event.leave_type,
+  if (targetDate.isBetween(startDate, endDate, null, '[]')) {
+    if (!mappedEvents[user][date]) {
+      if (key === 'leave') {
+        mappedEvents[user][date] = { leave: event.leave_type }
+      } else if (key === 'holiday') {
+        mappedEvents[user][date] = {
+          holiday: event.holiday,
+          description: event.description,
+          weekly_off: event.weekly_off,
+        }
+      } else {
+        mappedEvents[user][date] = []
+      }
     }
-}
 
-const handleHoliday = (event, date) => {
-  if (date.isSame(event.holiday_date)) {
-    return {
-      holiday: event.holiday,
-      description: event.description,
-      weekly_off: event.weekly_off,
+    if (!key && Array.isArray(mappedEvents[user][date])) {
+      mappedEvents[user][date].push(event)
     }
   }
 }
 
-watch(
-  () => [props.firstOfMonth, props.taskFilters],
-  () => {
-    loading.value = true
-    events.fetch()
-  },
-  { deep: true },
-)
+const getTasksForHour = (userName, hour) => {
+  const dateString = props.selectedDay.format('YYYY-MM-DD')
+  const userTasks = events.data?.[userName]?.[dateString]
 
-defineExpose({
-  events,
-})
+  if (!userTasks || !Array.isArray(userTasks)) {
+    return []
+  }
+
+  return userTasks.filter((task) => {
+    if (!task.start_time || !task.end_time) {
+      // If no time specified, show in first hour (00)
+      return hour === '00'
+    }
+
+    const taskStartHour = parseInt(task.start_time.split(':')[0])
+    const taskEndHour = parseInt(task.end_time.split(':')[0])
+    const currentHour = parseInt(hour)
+
+    // Task spans this hour
+    return currentHour >= taskStartHour && currentHour < taskEndHour
+  })
+}
+
+defineExpose({ events })
 </script>
 
-<style scoped>
-.blocked-cell {
-  @apply text-sm text-gray-500 text-center p-2;
+<style lang="scss" scoped>
+.table-container {
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 2.5px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
 }
 </style>
-
-<!-- .table-container {
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-.table-container::-webkit-scrollbar {
-  display: none;
-} -->

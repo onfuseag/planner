@@ -4,13 +4,13 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5">
-            Employee <span class="text-ink-red-3">*</span>
+            Assign To <span class="text-ink-red-3">*</span>
           </label>
           <Autocomplete2
-            :options="_employees"
-            v-model="form.employees"
+            :options="_users"
+            v-model="form.users"
             :multiple="true"
-            placeholder="Select Employee"
+            placeholder="Select Users"
           />
         </div>
         <!-- Project -->
@@ -50,6 +50,18 @@
             :formatter="(date) => dayjs(date).format(dateFormat)"
           />
         </div>
+        <FormControl
+          type="time"
+          label="Start Time"
+          v-model="form.start_time"
+          placeholder="09:00"
+        />
+        <FormControl
+          type="time"
+          label="End Time"
+          v-model="form.end_time"
+          placeholder="17:00"
+        />
 
         <FormControl
           type="select"
@@ -120,7 +132,7 @@ import { projects, priority, status } from '../data'
 import Link from './Link.vue'
 import Autocomplete2 from './Autocomplete2.vue'
 const props = defineProps({
-  employees: Array,
+  users: Array,
   taskName: String,
 })
 
@@ -129,13 +141,15 @@ const emit = defineEmits(['create'])
 const show = defineModel()
 
 const form = reactive({
-  employees: null,
+  users: null,
   subject: '',
   status: 'Open',
   project: '',
   priority: 'Low',
   start_date: '',
   end_date: '',
+  start_time: '',
+  end_time: '',
   description: '',
 })
 
@@ -161,7 +175,7 @@ function createTask() {
 
 function validateForm() {
   if (
-    !form.employees ||
+    !form.users ||
     !form.subject ||
     !form.start_date ||
     !form.end_date ||
@@ -179,13 +193,15 @@ function validateForm() {
 }
 
 function resetState() {
-  form.employees = ''
+  form.users = ''
   form.subject = ''
   form.status = ''
   form.project = ''
   form.priority = ''
   form.start_date = ''
   form.end_date = ''
+  form.start_time = ''
+  form.end_time = ''
   form.description = ''
 }
 
@@ -205,11 +221,10 @@ const newTask = createResource({
 })
 
 // All select options
-const _employees = computed(() => {
-  return props.employees.map((employee) => ({
-    label: `${employee.name}: ${employee.employee_name}`,
-    value: employee.name,
-    employee_name: employee.employee_name,
+const _users = computed(() => {
+  return props.users.map((user) => ({
+    label: user.full_name,
+    value: user.name,
   }))
 })
 

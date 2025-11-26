@@ -74,15 +74,27 @@
             :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
           />
         </div>
+        <FormControl
+          type="time"
+          label="Start Time"
+          v-model="form.start_time"
+          placeholder="09:00"
+        />
+        <FormControl
+          type="time"
+          label="End Time"
+          v-model="form.end_time"
+          placeholder="17:00"
+        />
         <div class="w-full col-span-2">
           <label class="block text-xs text-ink-gray-5 mb-1.5">
-            Employees <span class="text-ink-red-3">*</span>
+            Assign To <span class="text-ink-red-3">*</span>
           </label>
           <Autocomplete2
-            :options="_employees"
-            v-model="form.employees"
+            :options="_users"
+            v-model="form.users"
             :multiple="true"
-            placeholder="Select Employee"
+            placeholder="Select Users"
           />
         </div>
         <div v-if="form.status === 'Completed'">
@@ -144,10 +156,10 @@ import { raiseToast, dayjs, goToBlank, dateFormat } from '../utils'
 import Autocomplete2 from './Autocomplete2.vue'
 import Link from './Link.vue'
 const props = defineProps({
-  employees: Array,
+  users: Array,
   taskName: String,
   taskSubject: String,
-  selectedEmployee: {
+  selectedUser: {
     type: Object || null,
     default: null,
   },
@@ -164,8 +176,10 @@ const form = reactive({
   priority: 'Medium',
   start_date: '',
   end_date: '',
+  start_time: '',
+  end_time: '',
   description: '',
-  employees: [],
+  users: [],
   completed_by: null,
   completed_on: '',
 })
@@ -179,35 +193,37 @@ const task = createResource({
     }
   },
   onSuccess(data) {
-    form.employees = getEmployeeData(data.employees)
+    form.users = getUserData(data.users)
     form.subject = data.subject
     form.status = data.status
     form.description = data.description
     form.priority = data.priority
     form.start_date = data.exp_start_date
     form.end_date = data.exp_end_date
+    form.start_time = data.start_time || ''
+    form.end_time = data.end_time || ''
     form.completed_on = data.completed_on
     form.project = data.project
   },
 })
 
-const getEmployeeData = (employees) => {
-  employees = employees.map((emp) => emp.employee)
-  if (!employees) return
-  const data = props.employees
-    .filter((emp) => employees.includes(emp.name))
-    .map((emp) => ({
-      label: `${emp.name}: ${emp.employee_name}`,
-      value: emp.name,
+const getUserData = (users) => {
+  users = users.map((usr) => usr.user)
+  if (!users) return
+  const data = props.users
+    .filter((usr) => users.includes(usr.name))
+    .map((usr) => ({
+      label: usr.full_name,
+      value: usr.name,
     }))
   if (
-    props.selectedEmployee &&
-    props.selectedEmployee?.value !== '' &&
-    !data.some((emp) => emp.value === props.selectedEmployee.value)
+    props.selectedUser &&
+    props.selectedUser?.value !== '' &&
+    !data.some((usr) => usr.value === props.selectedUser.value)
   ) {
     data.push({
-      label: props.selectedEmployee.label,
-      value: props.selectedEmployee.value,
+      label: props.selectedUser.label,
+      value: props.selectedUser.value,
     })
   }
   return data
@@ -218,10 +234,10 @@ const getProject = (project) => {
   return projects.data?.filter((proj) => proj.value === project)[0]
 }
 
-const _employees = computed(() => {
-  return props.employees.map((employee) => ({
-    label: `${employee.name}: ${employee.employee_name}`,
-    value: employee.name,
+const _users = computed(() => {
+  return props.users.map((user) => ({
+    label: user.full_name,
+    value: user.name,
   }))
 })
 
@@ -229,17 +245,17 @@ onMounted(() => {
   if (props.taskName && props.taskSubject) {
     form.task = props.taskName
   }
-  // if (props.selectedEmployee) {
-  //   form.employees.push({
-  //     label: props.selectedEmployee.label,
-  //     value: props.selectedEmployee.value,
+  // if (props.selectedUser) {
+  //   form.users.push({
+  //     label: props.selectedUser.label,
+  //     value: props.selectedUser.value,
   //   })
   // }
 })
 
 function validateForm() {
   if (
-    form.employees.length === 0 ||
+    form.users.length === 0 ||
     !form.subject ||
     !form.start_date ||
     !form.end_date ||
@@ -269,7 +285,9 @@ const submitTask = async (close) => {
         priority: form.priority,
         exp_start_date: form.start_date,
         exp_end_date: form.end_date,
-        employees: form.employees || [],
+        start_time: form.start_time || null,
+        end_time: form.end_time || null,
+        users: form.users || [],
         description: form.description,
         completed_on: form.completed_on || null,
       },

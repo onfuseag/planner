@@ -1,18 +1,14 @@
 import frappe
 from frappe.utils import add_days, date_diff
 
-from erpnext.setup.doctype.employee.employee import get_holiday_list_for_employee
-
 
 @frappe.whitelist()
-def get_events(month_start, month_end, employee_filters={}, task_filters={}):
-
-	holidays = get_holidays(month_start, month_end, employee_filters)
-	tasks = get_tasks(month_start, month_end, employee_filters,task_filters)
-	leaves = get_leaves(month_start, month_end, employee_filters)
+def get_events(month_start, month_end, user_filters={}, task_filters={}):
+	"""Get events grouped by user instead of employee"""
+	tasks = get_tasks(month_start, month_end, user_filters, task_filters)
 	events = {}
 
-	for even in [holidays, tasks, leaves]:
+	for even in [tasks]:
 		for key, value in even.items():
 			if key in events:
 				events[key].extend(value)
@@ -21,100 +17,60 @@ def get_events(month_start, month_end, employee_filters={}, task_filters={}):
 	return events
 
 
-def get_holidays(month_start: str, month_end: str, employee_filters: dict[str, str]) :
-	holidays = {}
-	holiday_lists = {}
-
-	for employee in frappe.get_list("Employee", filters=employee_filters, pluck="name"):
-		if not (holiday_list := get_holiday_list_for_employee(employee, raise_exception=False)):
-			continue
-		if holiday_list not in holiday_lists:
-			holiday_lists[holiday_list] = frappe.get_all(
-				"Holiday",
-				filters={"parent": holiday_list, "holiday_date": ["between", [month_start, month_end]]},
-				fields=["name as holiday", "holiday_date", "description", "weekly_off"],
-			)
-		holidays[employee] = holiday_lists[holiday_list].copy()
-
-	return holidays
-
-
-def get_tasks(month_start: str, month_end: str, employee_filters: dict[str, str],task_filters):
-
+def get_tasks(month_start: str, month_end: str, user_filters: dict[str, str], task_filters):
+	"""Get tasks grouped by user instead of employee"""
 	cond = "AND task.status != 'Template' "
 
 	for key, value in task_filters.items():
 		cond += f"AND task.{key} = '{value}' "
-	
+
 	tasks = frappe.db.sql(f"""
-		SELECT task.name, task.exp_start_date as start_date, task.exp_end_date as end_date, task.project, task.subject, task.status, employee_item.employee, task.color, task.completed_on
+		SELECT
+			task.name,
+			task.exp_start_date as start_date,
+			task.exp_end_date as end_date,
+			task.custom_start_time as start_time,
+			task.custom_end_time as end_time,
+			task.project,
+			task.subject,
+			task.status,
+			user_item.user,
+			task.color,
+			task.completed_on
 		FROM `tabTask` as task
-		JOIN `tabEmployee Item` as employee_item ON task.name = employee_item.parent
-		WHERE employee_item.parenttype = 'Task'
-		AND employee_item.parentfield = 'employees'
+		JOIN `tabUser Item` as user_item ON task.name = user_item.parent
+		WHERE user_item.parenttype = 'Task'
+		AND user_item.parentfield = 'users'
 		AND task.exp_start_date <= "{month_end}"
 		AND task.exp_end_date >= "{month_start}"
 		{cond}
 		""", as_dict=True)
-		
-	# group tasks by employee
-	employee_tasks = {}
+
+	# group tasks by user
+	user_tasks = {}
 	for task in tasks:
 		# Get the project name
 		if task.project:
-			task.project_name =  frappe.db.get_value('Project', task.project, 'project_name')
-		
-		if task.employee not in employee_tasks:
-			employee_tasks[task.employee] = []
-		employee_tasks[task.employee].append(task)
-		if(not task.get('color')):
+			task.project_name = frappe.db.get_value('Project', task.project, 'project_name')
+
+		# Get user full name
+		user_full_name = frappe.db.get_value('User', task.user, 'full_name')
+		task.user_full_name = user_full_name
+
+		if task.user not in user_tasks:
+			user_tasks[task.user] = []
+		user_tasks[task.user].append(task)
+
+		if not task.get('color'):
 			task.color = "#EFF6FE"
-		
+
 		if task.status == "Completed":
 			task.color = "#dcfae7"
-		
+
 		if task.status == "Overdue":
 			task.color = "#fdf0f0"
 
-	return employee_tasks
-
-
-def get_leaves(month_start, month_end, employee_filters):
-	LeaveApplication = frappe.qb.DocType("Leave Application")
-	Employee = frappe.qb.DocType("Employee")
-
-	query = (
-		frappe.qb.select(
-			LeaveApplication.name.as_("leave"),
-			LeaveApplication.employee,
-			LeaveApplication.leave_type,
-			LeaveApplication.from_date,
-			LeaveApplication.to_date,
-		)
-		.from_(LeaveApplication)
-		.left_join(Employee)
-		.on(LeaveApplication.employee == Employee.name)
-		.where(
-			(LeaveApplication.docstatus == 1)
-			& (LeaveApplication.status == "Approved")
-			& (LeaveApplication.from_date <= month_end)
-			& (LeaveApplication.to_date >= month_start)
-		)
-	)
-
-	for filter in employee_filters:
-		query = query.where(Employee[filter] == employee_filters[filter])
-
-	return group_by_employee(query.run(as_dict=True))
-
-	
-def group_by_employee(events: list[dict]) -> dict[str, list[dict]]:
-	grouped_events = {}
-	for event in events:
-		grouped_events.setdefault(event["employee"], []).append(
-			{k: v for k, v in event.items() if k != "employee"}
-		)
-	return grouped_events
+	return user_tasks
 
 @frappe.whitelist()
 def create_task(task_doc):
@@ -122,14 +78,16 @@ def create_task(task_doc):
 	new_task.subject = task_doc.get('subject')
 	new_task.exp_start_date = task_doc.get('start_date')
 	new_task.exp_end_date = task_doc.get('end_date')
+	new_task.custom_start_time = task_doc.get('start_time')
+	new_task.custom_end_time = task_doc.get('end_time')
 	new_task.description = task_doc.get('description')
 	new_task.status = task_doc.get('status')
 	new_task.priority = task_doc.get('priority')
-	new_task.project = task_doc.get('project',None)
+	new_task.project = task_doc.get('project', None)
 
-	employees = [e.get('value') for e in task_doc.get('employees')]
-	for employee in employees:
-		new_task.append("employees", {"employee": employee})
+	users = [u.get('value') for u in task_doc.get('users')]
+	for user in users:
+		new_task.append("users", {"user": user})
 
 	new_task.save()
 
@@ -149,14 +107,16 @@ def update_task(task_doc):
 	task = frappe.get_doc("Task", task_doc.get('name'))
 	task.exp_start_date = task_doc.get('exp_start_date')
 	task.exp_end_date = task_doc.get('exp_end_date')
+	task.custom_start_time = task_doc.get('start_time')
+	task.custom_end_time = task_doc.get('end_time')
 	task.description = task_doc.get('description')
 	task.status = task_doc.get('status')
 	task.priority = task_doc.get('priority')
-	task.project = task_doc.get('project',None)
-	task.completed_on = task_doc.get('completed_on',None)
-	employees = [e.get('value') for e in task_doc.get('employees')]
-	task.employees = []
-	for employee in employees:
-		task.append("employees", {"employee": employee})
+	task.project = task_doc.get('project', None)
+	task.completed_on = task_doc.get('completed_on', None)
+	users = [u.get('value') for u in task_doc.get('users')]
+	task.users = []
+	for user in users:
+		task.append("users", {"user": user})
 
 	task.save()
