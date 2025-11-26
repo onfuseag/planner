@@ -22,7 +22,8 @@ def get_tasks(month_start: str, month_end: str, user_filters: dict[str, str], ta
 	cond = "AND task.status != 'Template' "
 
 	for key, value in task_filters.items():
-		cond += f"AND task.{key} = '{value}' "
+		if value:  # Only add filter if value is not empty/null
+			cond += f"AND task.{key} = '{value}' "
 
 	tasks = frappe.db.sql(f"""
 		SELECT

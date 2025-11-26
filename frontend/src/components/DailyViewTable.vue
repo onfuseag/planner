@@ -286,23 +286,28 @@ const hoverPosition = ref({ x: 0, y: 0 })
 // RESOURCES
 const events = createResource({
   url: 'planner.api.tasks.get_events',
-  params: {
-    month_start: props.selectedDay?.format('YYYY-MM-DD'),
-    month_end: props.selectedDay?.format('YYYY-MM-DD'),
-    task_filters: props.taskFilters,
-  },
   auto: true,
+  makeParams() {
+    return {
+      month_start: props.selectedDay?.format('YYYY-MM-DD'),
+      month_end: props.selectedDay?.format('YYYY-MM-DD'),
+      task_filters: props.taskFilters,
+    }
+  },
+  onSuccess() {
+    loading.value = false
+  },
+  onError(error) {
+    console.log(error)
+    raiseToast('error', error)
+    loading.value = false
+  },
   transform(data) {
     const mappedEvents = {}
     for (const user in data) {
       mapEventsToDates(data, mappedEvents, user)
     }
     return mappedEvents
-  },
-  onError(error) {
-    console.log(error)
-    raiseToast('error', error)
-    loading.value = false
   },
 })
 
@@ -357,17 +362,12 @@ function onTaskMouseLeave() {
 }
 
 watch(
-  [() => props.selectedDay, () => props.taskFilters],
-  ([selectedDay, taskFilters]) => {
-    events.update({
-      params: {
-        month_start: selectedDay.format('YYYY-MM-DD'),
-        month_end: selectedDay.format('YYYY-MM-DD'),
-        task_filters: taskFilters,
-      },
-    })
-    events.reload()
+  () => [props.selectedDay, props.taskFilters],
+  () => {
+    loading.value = true
+    events.fetch()
   },
+  { deep: true },
 )
 
 const mapEventsToDates = (data, mappedEvents, user) => {
