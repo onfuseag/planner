@@ -12,13 +12,24 @@ def get_events(month_start, month_end, task_filters={}):
 	# Merge tasks, holidays, and leaves
 	events = {}
 
-	# First, add all tasks
+	# First, group tasks by user and date
 	for user, user_tasks in tasks.items():
 		if user not in events:
 			events[user] = {}
-		# user_tasks is already a dict of {date: [tasks]}
-		for date, task_list in user_tasks.items():
-			events[user][date] = task_list
+		# user_tasks is a list of tasks, need to group by date
+		for task in user_tasks:
+			# Get the date range for this task
+			start_date = task.start_date
+			end_date = task.end_date
+
+			# Add task to each date in its range
+			current_date = start_date
+			while current_date <= end_date:
+				date_str = str(current_date)
+				if date_str not in events[user]:
+					events[user][date_str] = []
+				events[user][date_str].append(task)
+				current_date = add_days(current_date, 1)
 
 	# Add holidays
 	for user, user_holidays in holidays.items():
