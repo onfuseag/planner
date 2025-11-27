@@ -11,32 +11,42 @@ def get_events(month_start, month_end, task_filters={}):
 
 	# Merge tasks, holidays, and leaves
 	events = {}
-	for user in set(list(tasks.keys()) + list(holidays.keys()) + list(leaves.keys())):
-		events[user] = {}
 
-		# Add tasks
-		if user in tasks:
-			events[user].update(tasks[user])
+	# First, add all tasks
+	for user, user_tasks in tasks.items():
+		if user not in events:
+			events[user] = {}
+		# user_tasks is already a dict of {date: [tasks]}
+		for date, task_list in user_tasks.items():
+			events[user][date] = task_list
 
-		# Add holidays
-		if user in holidays:
-			for date, holiday_data in holidays[user].items():
-				if date not in events[user]:
-					events[user][date] = []
-				if isinstance(events[user][date], list):
-					events[user][date] = {'tasks': events[user][date], 'holiday': holiday_data}
-				else:
-					events[user][date]['holiday'] = holiday_data
+	# Add holidays
+	for user, user_holidays in holidays.items():
+		if user not in events:
+			events[user] = {}
+		for date, holiday_data in user_holidays.items():
+			if date not in events[user]:
+				events[user][date] = {'tasks': [], 'holiday': holiday_data}
+			elif isinstance(events[user][date], list):
+				# If it's a list of tasks, convert to new structure
+				events[user][date] = {'tasks': events[user][date], 'holiday': holiday_data}
+			else:
+				# Already a dict, just add holiday
+				events[user][date]['holiday'] = holiday_data
 
-		# Add leaves
-		if user in leaves:
-			for date, leave_data in leaves[user].items():
-				if date not in events[user]:
-					events[user][date] = []
-				if isinstance(events[user][date], list):
-					events[user][date] = {'tasks': events[user][date], 'leave': leave_data}
-				elif 'tasks' in events[user][date]:
-					events[user][date]['leave'] = leave_data
+	# Add leaves
+	for user, user_leaves in leaves.items():
+		if user not in events:
+			events[user] = {}
+		for date, leave_data in user_leaves.items():
+			if date not in events[user]:
+				events[user][date] = {'tasks': [], 'leave': leave_data}
+			elif isinstance(events[user][date], list):
+				# If it's a list of tasks, convert to new structure
+				events[user][date] = {'tasks': events[user][date], 'leave': leave_data}
+			else:
+				# Already a dict, just add leave
+				events[user][date]['leave'] = leave_data
 
 	return events
 
