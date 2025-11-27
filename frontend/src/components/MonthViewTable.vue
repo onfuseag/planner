@@ -355,8 +355,8 @@ function onTaskMouseEnter(task, userName, date, event) {
 
   const rect = event.currentTarget.getBoundingClientRect()
   hoverPosition.value = {
-    x: rect.left + rect.width / 2,
-    y: rect.top,
+    x: rect.left + rect.width / 2 + window.scrollX,
+    y: rect.top + window.scrollY,
   }
 }
 
