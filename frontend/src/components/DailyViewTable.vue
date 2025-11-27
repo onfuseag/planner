@@ -332,9 +332,83 @@ const events = createResource({
   },
   transform(data) {
     const mappedEvents = {}
-    for (const user in data) {
-      mapEventsToDates(data, mappedEvents, user)
+
+    // Handle new response structure with separate tasks, holidays, leaves
+    const tasks = data.tasks || data
+    const holidays = data.holidays || {}
+    const leaves = data.leaves || {}
+
+    // Process tasks
+    for (const user in tasks) {
+      if (!mappedEvents[user]) {
+        mappedEvents[user] = {}
+      }
+
+      const dateString = props.selectedDay.format('YYYY-MM-DD')
+
+      // Add tasks for this user on this date
+      for (const task of tasks[user]) {
+        const startDate = dayjs(task.start_date)
+        const endDate = dayjs(task.end_date)
+        const targetDate = dayjs(dateString)
+
+        if (targetDate.isBetween(startDate, endDate, null, '[]')) {
+          if (!mappedEvents[user][dateString]) {
+            mappedEvents[user][dateString] = []
+          }
+          if (Array.isArray(mappedEvents[user][dateString])) {
+            mappedEvents[user][dateString].push(task)
+          }
+        }
+      }
     }
+
+    // Process holidays
+    for (const user in holidays) {
+      if (!mappedEvents[user]) {
+        mappedEvents[user] = {}
+      }
+      const dateString = props.selectedDay.format('YYYY-MM-DD')
+      if (holidays[user][dateString]) {
+        if (!mappedEvents[user][dateString]) {
+          mappedEvents[user][dateString] = {
+            tasks: [],
+            holiday: holidays[user][dateString]
+          }
+        } else if (Array.isArray(mappedEvents[user][dateString])) {
+          mappedEvents[user][dateString] = {
+            tasks: mappedEvents[user][dateString],
+            holiday: holidays[user][dateString]
+          }
+        } else {
+          mappedEvents[user][dateString].holiday = holidays[user][dateString]
+        }
+      }
+    }
+
+    // Process leaves
+    for (const user in leaves) {
+      if (!mappedEvents[user]) {
+        mappedEvents[user] = {}
+      }
+      const dateString = props.selectedDay.format('YYYY-MM-DD')
+      if (leaves[user][dateString]) {
+        if (!mappedEvents[user][dateString]) {
+          mappedEvents[user][dateString] = {
+            tasks: [],
+            leave: leaves[user][dateString]
+          }
+        } else if (Array.isArray(mappedEvents[user][dateString])) {
+          mappedEvents[user][dateString] = {
+            tasks: mappedEvents[user][dateString],
+            leave: leaves[user][dateString]
+          }
+        } else {
+          mappedEvents[user][dateString].leave = leaves[user][dateString]
+        }
+      }
+    }
+
     return mappedEvents
   },
 })

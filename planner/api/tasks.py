@@ -9,61 +9,12 @@ def get_events(month_start, month_end, task_filters={}):
 	holidays = get_holidays_for_users(month_start, month_end)
 	leaves = get_leaves_for_users(month_start, month_end)
 
-	# Merge tasks, holidays, and leaves
-	events = {}
-
-	# First, group tasks by user and date
-	for user, user_tasks in tasks.items():
-		if user not in events:
-			events[user] = {}
-		# user_tasks is a list of tasks, need to group by date
-		for task in user_tasks:
-			# Get the date range for this task
-			start_date = task.get('start_date')
-			end_date = task.get('end_date')
-
-			# Skip tasks without dates
-			if not start_date or not end_date:
-				continue
-
-			# Add task to each date in its range
-			current_date = start_date
-			while current_date <= end_date:
-				date_str = str(current_date)
-				if date_str not in events[user]:
-					events[user][date_str] = []
-				events[user][date_str].append(task)
-				current_date = add_days(current_date, 1)
-
-	# Add holidays
-	for user, user_holidays in holidays.items():
-		if user not in events:
-			events[user] = {}
-		for date, holiday_data in user_holidays.items():
-			if date not in events[user]:
-				events[user][date] = {'tasks': [], 'holiday': holiday_data}
-			elif isinstance(events[user][date], list):
-				# If it's a list of tasks, convert to new structure
-				events[user][date] = {'tasks': events[user][date], 'holiday': holiday_data}
-			else:
-				# Already a dict, just add holiday
-				events[user][date]['holiday'] = holiday_data
-
-	# Add leaves
-	for user, user_leaves in leaves.items():
-		if user not in events:
-			events[user] = {}
-		for date, leave_data in user_leaves.items():
-			if date not in events[user]:
-				events[user][date] = {'tasks': [], 'leave': leave_data}
-			elif isinstance(events[user][date], list):
-				# If it's a list of tasks, convert to new structure
-				events[user][date] = {'tasks': events[user][date], 'leave': leave_data}
-			else:
-				# Already a dict, just add leave
-				events[user][date]['leave'] = leave_data
-
-	return events
+	# Return tasks as-is (original format), but add metadata for holidays/leaves
+	return {
+		'tasks': tasks,
+		'holidays': holidays,
+		'leaves': leaves
+	}
 
 
 @frappe.whitelist()

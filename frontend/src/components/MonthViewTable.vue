@@ -335,9 +335,107 @@ const events = createResource({
   },
   transform: (data) => {
     const mappedEvents = {}
-    for (const user in data) {
-      mapEventsToDates(data, mappedEvents, user)
+
+    // Handle new response structure with separate tasks, holidays, leaves
+    const tasks = data.tasks || data
+    const holidays = data.holidays || {}
+    const leaves = data.leaves || {}
+
+    // Get all dates in the month
+    const monthStart = props.firstOfMonth.startOf('month')
+    const monthEnd = props.firstOfMonth.endOf('month')
+    const daysInMonth = monthEnd.diff(monthStart, 'day') + 1
+
+    // Process tasks
+    for (const user in tasks) {
+      if (!mappedEvents[user]) {
+        mappedEvents[user] = {}
+      }
+
+      for (let d = 0; d < daysInMonth; d++) {
+        const date = monthStart.add(d, 'day')
+        const key = date.format('YYYY-MM-DD')
+
+        // Add tasks for this user on this date
+        for (const task of tasks[user]) {
+          if (
+            dayjs(task.start_date).isSameOrBefore(date) &&
+            (dayjs(task.end_date).isSameOrAfter(date) || !task.end_date)
+          ) {
+            if (!Array.isArray(mappedEvents[user][key])) {
+              mappedEvents[user][key] = []
+            }
+            mappedEvents[user][key].push({
+              name: task.name,
+              subject: task.subject,
+              project: task.project,
+              project_name: task.project_name,
+              priority: task.priority,
+              status: task.status,
+              color: task.color?.toLowerCase() || 'blue',
+              start_date: task.start_date,
+              end_date: task.end_date,
+              completed_on: task.status === 'Completed' ? task.completed_on : null,
+            })
+          }
+        }
+      }
     }
+
+    // Process holidays
+    for (const user in holidays) {
+      if (!mappedEvents[user]) {
+        mappedEvents[user] = {}
+      }
+      for (let d = 0; d < daysInMonth; d++) {
+        const date = monthStart.add(d, 'day')
+        const key = date.format('YYYY-MM-DD')
+
+        if (holidays[user][key]) {
+          if (!mappedEvents[user][key]) {
+            mappedEvents[user][key] = {
+              tasks: [],
+              holiday: holidays[user][key]
+            }
+          } else if (Array.isArray(mappedEvents[user][key])) {
+            mappedEvents[user][key] = {
+              tasks: mappedEvents[user][key],
+              holiday: holidays[user][key]
+            }
+          } else {
+            mappedEvents[user][key].holiday = holidays[user][key]
+          }
+        }
+      }
+    }
+
+    // Process leaves
+    for (const user in leaves) {
+      if (!mappedEvents[user]) {
+        mappedEvents[user] = {}
+      }
+      for (let d = 0; d < daysInMonth; d++) {
+        const date = monthStart.add(d, 'day')
+        const key = date.format('YYYY-MM-DD')
+
+        if (leaves[user][key]) {
+          if (!mappedEvents[user][key]) {
+            mappedEvents[user][key] = {
+              tasks: [],
+              leave: leaves[user][key]
+            }
+          } else if (Array.isArray(mappedEvents[user][key])) {
+            mappedEvents[user][key] = {
+              tasks: mappedEvents[user][key],
+              leave: leaves[user][key]
+            }
+          } else {
+            mappedEvents[user][key].leave = leaves[user][key]
+          }
+        }
+      }
+    }
+
     return mappedEvents
   },
 })
