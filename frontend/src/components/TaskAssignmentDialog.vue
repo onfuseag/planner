@@ -193,7 +193,7 @@ const task = createResource({
     }
   },
   onSuccess(data) {
-    form.users = getUserData(data.users)
+    form.users = data.assigned_users || []
     form.subject = data.subject
     form.status = data.status
     form.description = data.description
@@ -207,32 +207,6 @@ const task = createResource({
   },
 })
 
-const getUserData = (users) => {
-  users = users.map((usr) => usr.user)
-  if (!users) return
-  const data = props.users
-    .filter((usr) => users.includes(usr.name))
-    .map((usr) => ({
-      label: usr.full_name,
-      value: usr.name,
-    }))
-  if (
-    props.selectedUser &&
-    props.selectedUser?.value !== '' &&
-    !data.some((usr) => usr.value === props.selectedUser.value)
-  ) {
-    data.push({
-      label: props.selectedUser.label,
-      value: props.selectedUser.value,
-    })
-  }
-  return data
-}
-
-const getProject = (project) => {
-  if (!project) return
-  return projects.data?.filter((proj) => proj.value === project)[0]
-}
 
 const _users = computed(() => {
   return props.users.map((user) => ({

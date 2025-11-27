@@ -1,53 +1,88 @@
 import frappe
+from erpnext.setup.doctype.employee.employee import get_holiday_list_for_employee
 from frappe.utils import add_days, date_diff
 
 
 @frappe.whitelist()
-def get_events(month_start, month_end, user_filters={}, task_filters={}):
-	"""Get events grouped by user instead of employee"""
-	tasks = get_tasks(month_start, month_end, user_filters, task_filters)
-	events = {}
-
-	for even in [tasks]:
-		for key, value in even.items():
-			if key in events:
-				events[key].extend(value)
-			else:
-				events[key] = value
-	return events
+def get_events(month_start, month_end, task_filters={}):
+	tasks = get_tasks(month_start, month_end, task_filters)
+	return tasks
 
 
-def get_tasks(month_start: str, month_end: str, user_filters: dict[str, str], task_filters):
-	"""Get tasks grouped by user instead of employee"""
+@frappe.whitelist()
+def get_daily_events(date, task_filters={}):
+	"""
+	Get tasks for a specific day (used by daily view)
+	"""
+	tasks = get_tasks(date, date, task_filters)
+	return tasks
+
+
+def get_holidays(month_start: str, month_end: str, employee_filters: dict[str, str]) :
+	holidays = {}
+	holiday_lists = {}
+
+	for employee in frappe.get_list("Employee", filters=employee_filters, pluck="name"):
+		if not (holiday_list := get_holiday_list_for_employee(employee, raise_exception=False)):
+			continue
+		if holiday_list not in holiday_lists:
+			holiday_lists[holiday_list] = frappe.get_all(
+				"Holiday",
+				filters={"parent": holiday_list, "holiday_date": ["between", [month_start, month_end]]},
+				fields=["name as holiday", "holiday_date", "description", "weekly_off"],
+			)
+		holidays[employee] = holiday_lists[holiday_list].copy()
+
+	return holidays
+
+
+def get_tasks(month_start: str, month_end: str, task_filters):
+	"""
+	Fetch tasks assigned to users via ToDo List doctype
+	Groups tasks by the allocated_to user
+	"""
 	cond = "AND task.status != 'Template' "
 
 	for key, value in task_filters.items():
-		if value:  # Only add filter if value is not empty/null
+		if value and value != '':  # Skip null/empty values
 			cond += f"AND task.{key} = '{value}' "
 
-	# Try to fetch tasks with User Item first
+	# Query tasks through ToDo assignments
 	tasks = frappe.db.sql(f"""
 		SELECT
 			task.name,
 			task.exp_start_date as start_date,
 			task.exp_end_date as end_date,
-			COALESCE(task.custom_start_time, '') as start_time,
-			COALESCE(task.custom_end_time, '') as end_time,
 			task.project,
 			task.subject,
 			task.status,
-			user_item.user,
+			todo.allocated_to as user,
 			task.color,
-			task.completed_on
+			task.completed_on,
+			task.priority,
+			task.custom_start_time as start_time,
+			task.custom_end_time as end_time
 		FROM `tabTask` as task
-		LEFT JOIN `tabUser Item` as user_item ON task.name = user_item.parent
-			AND user_item.parenttype = 'Task'
-			AND user_item.parentfield = 'users'
-		WHERE task.exp_start_date <= "{month_end}"
+		JOIN `tabToDo` as todo ON task.name = todo.reference_name
+		WHERE todo.reference_type = 'Task'
+		AND todo.status = 'Open'
+		AND task.exp_start_date <= "{month_end}"
 		AND task.exp_end_date >= "{month_start}"
 		{cond}
-		AND user_item.user IS NOT NULL
 		""", as_dict=True)
+
+	# Debug logging
+	import json
+	frappe.log_error(
+		title="get_tasks Debug",
+		message=json.dumps({
+			'month_start': month_start,
+			'month_end': month_end,
+			'task_filters': task_filters,
+			'result_count': len(tasks),
+			'tasks': [{'name': t.name, 'user': t.user, 'start': str(t.start_date), 'end': str(t.end_date)} for t in tasks]
+		}, indent=2, default=str)
+	)
 
 	# group tasks by user
 	user_tasks = {}
@@ -55,10 +90,6 @@ def get_tasks(month_start: str, month_end: str, user_filters: dict[str, str], ta
 		# Get the project name
 		if task.project:
 			task.project_name = frappe.db.get_value('Project', task.project, 'project_name')
-
-		# Get user full name
-		user_full_name = frappe.db.get_value('User', task.user, 'full_name')
-		task.user_full_name = user_full_name
 
 		if task.user not in user_tasks:
 			user_tasks[task.user] = []
@@ -75,24 +106,76 @@ def get_tasks(month_start: str, month_end: str, user_filters: dict[str, str], ta
 
 	return user_tasks
 
+
+def get_leaves(month_start, month_end, employee_filters):
+	LeaveApplication = frappe.qb.DocType("Leave Application")
+	Employee = frappe.qb.DocType("Employee")
+
+	query = (
+		frappe.qb.select(
+			LeaveApplication.name.as_("leave"),
+			LeaveApplication.employee,
+			LeaveApplication.leave_type,
+			LeaveApplication.from_date,
+			LeaveApplication.to_date,
+		)
+		.from_(LeaveApplication)
+		.left_join(Employee)
+		.on(LeaveApplication.employee == Employee.name)
+		.where(
+			(LeaveApplication.docstatus == 1)
+			& (LeaveApplication.status == "Approved")
+			& (LeaveApplication.from_date <= month_end)
+			& (LeaveApplication.to_date >= month_start)
+		)
+	)
+
+	for filter in employee_filters:
+		query = query.where(Employee[filter] == employee_filters[filter])
+
+	return group_by_employee(query.run(as_dict=True))
+
+
+def group_by_employee(events: list[dict]) -> dict[str, list[dict]]:
+	grouped_events = {}
+	for event in events:
+		grouped_events.setdefault(event["employee"], []).append(
+			{k: v for k, v in event.items() if k != "employee"}
+		)
+	return grouped_events
+
 @frappe.whitelist()
 def create_task(task_doc):
+	from frappe.desk.form import assign_to
+
 	new_task = frappe.new_doc('Task')
 	new_task.subject = task_doc.get('subject')
 	new_task.exp_start_date = task_doc.get('start_date')
 	new_task.exp_end_date = task_doc.get('end_date')
-	new_task.custom_start_time = task_doc.get('start_time')
-	new_task.custom_end_time = task_doc.get('end_time')
 	new_task.description = task_doc.get('description')
 	new_task.status = task_doc.get('status')
 	new_task.priority = task_doc.get('priority')
 	new_task.project = task_doc.get('project', None)
 
-	users = [u.get('value') for u in task_doc.get('users')]
-	for user in users:
-		new_task.append("users", {"user": user})
+	# Add time fields if provided
+	if task_doc.get('start_time'):
+		new_task.custom_start_time = task_doc.get('start_time')
+	if task_doc.get('end_time'):
+		new_task.custom_end_time = task_doc.get('end_time')
 
 	new_task.save()
+
+	# Assign to users using Frappe's native assignment system
+	users = [u.get('value') for u in task_doc.get('users', [])]
+	if users:
+		assign_to.add({
+			"assign_to": users,
+			"doctype": "Task",
+			"name": new_task.name,
+			"description": new_task.subject,
+		})
+
+	return new_task.name
 
 
 
@@ -101,25 +184,143 @@ def get_default_company():
 	return frappe.defaults.get_user_default("Company")
 
 @frappe.whitelist()
+def get_users_with_tasks(month_start, month_end):
+	"""
+	Get all users who have tasks assigned via ToDo in the given date range
+	"""
+	users = frappe.db.sql("""
+		SELECT DISTINCT
+			user.name,
+			user.full_name,
+			user.user_image as image,
+			user.email
+		FROM `tabUser` as user
+		JOIN `tabToDo` as todo ON user.name = todo.allocated_to
+		JOIN `tabTask` as task ON todo.reference_name = task.name
+		WHERE todo.reference_type = 'Task'
+		AND todo.status = 'Open'
+		AND task.exp_start_date <= %(month_end)s
+		AND task.exp_end_date >= %(month_start)s
+		AND user.enabled = 1
+		ORDER BY user.full_name
+	""", {"month_start": month_start, "month_end": month_end}, as_dict=True)
+
+	# Debug logging
+	import json
+	frappe.log_error(
+		title="get_users_with_tasks Debug",
+		message=json.dumps({
+			'month_start': month_start,
+			'month_end': month_end,
+			'result_count': len(users),
+			'users': [u.name for u in users]
+		}, indent=2)
+	)
+
+	return users
+
+
+@frappe.whitelist()
+def get_users_with_daily_tasks(date):
+	"""
+	Get all users who have tasks on a specific day (for daily view)
+	"""
+	return get_users_with_tasks(date, date)
+
+
+@frappe.whitelist()
+def get_all_enabled_users():
+	"""
+	Get all enabled users in the system (for task assignment dropdowns)
+	"""
+	users = frappe.db.sql("""
+		SELECT
+			user.name,
+			user.full_name,
+			user.user_image as image,
+			user.email
+		FROM `tabUser` as user
+		WHERE user.enabled = 1
+		AND user.name NOT IN ('Administrator', 'Guest')
+		AND user.user_type = 'System User'
+		ORDER BY user.full_name
+	""", as_dict=True)
+
+	return users
+
+@frappe.whitelist()
 def get_task(name):
 	task = frappe.get_doc("Task", name)
-	return task.as_dict()
+	task_dict = task.as_dict()
+
+	# Get current ToDo assignments for this task
+	assignments = frappe.get_all(
+		"ToDo",
+		filters={
+			"reference_type": "Task",
+			"reference_name": name,
+			"status": "Open"
+		},
+		fields=["allocated_to", "name"]
+	)
+
+	# Add assigned users to the response
+	task_dict["assigned_users"] = [
+		{
+			"value": a.allocated_to,
+			"label": frappe.db.get_value("User", a.allocated_to, "full_name") or a.allocated_to
+		}
+		for a in assignments
+	]
+
+	return task_dict
 
 @frappe.whitelist()
 def update_task(task_doc):
+	from frappe.desk.form import assign_to
+
 	task = frappe.get_doc("Task", task_doc.get('name'))
 	task.exp_start_date = task_doc.get('exp_start_date')
 	task.exp_end_date = task_doc.get('exp_end_date')
-	task.custom_start_time = task_doc.get('start_time')
-	task.custom_end_time = task_doc.get('end_time')
 	task.description = task_doc.get('description')
 	task.status = task_doc.get('status')
 	task.priority = task_doc.get('priority')
 	task.project = task_doc.get('project', None)
 	task.completed_on = task_doc.get('completed_on', None)
-	users = [u.get('value') for u in task_doc.get('users')]
-	task.users = []
-	for user in users:
-		task.append("users", {"user": user})
+
+	# Update time fields if provided
+	if task_doc.get('start_time') is not None:
+		task.custom_start_time = task_doc.get('start_time')
+	if task_doc.get('end_time') is not None:
+		task.custom_end_time = task_doc.get('end_time')
 
 	task.save()
+
+	# Update assignments using Frappe's native assignment system
+	users = [u.get('value') for u in task_doc.get('users', [])]
+
+	# Get current assignments
+	current_assignments = frappe.get_all(
+		"ToDo",
+		filters={
+			"reference_type": "Task",
+			"reference_name": task.name,
+			"status": "Open"
+		},
+		pluck="allocated_to"
+	)
+
+	# Remove users who are no longer assigned
+	for user in current_assignments:
+		if user not in users:
+			assign_to.remove("Task", task.name, user)
+
+	# Add new users
+	new_users = [u for u in users if u not in current_assignments]
+	if new_users:
+		assign_to.add({
+			"assign_to": new_users,
+			"doctype": "Task",
+			"name": task.name,
+			"description": task.subject,
+		})
