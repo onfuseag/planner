@@ -75,10 +75,8 @@
               'border-l': rowIdx + 1,
               'border-r': colIdx === daysOfWeek.length - 1,
               'align-top': events.data?.[user.name]?.[day.date],
-              'align-middle bg-gray-50':
-                events.data?.[user.name]?.[day.date]?.holiday,
-              'align-middle bg-pink-50':
-                events.data?.[user.name]?.[day.date]?.leave,
+              'bg-yellow-50': getHolidayForDay(user.name, day.date),
+              'bg-orange-50': getLeaveForDay(user.name, day.date),
               'bg-gray-50':
                 dropCell.user === user.name &&
                 dropCell.date === day.date &&
@@ -114,34 +112,39 @@
           >
             <!-- Holiday -->
             <div
-              v-if="events.data?.[user.name]?.[day.date]?.holiday"
-              class="blocked-cell"
+              v-if="getHolidayForDay(user.name, day.date)"
+              class="text-xs px-2 py-1 bg-yellow-100 border border-yellow-300 rounded text-center mb-2"
             >
+              <div class="font-semibold text-yellow-800">
+                {{ getHolidayForDay(user.name, day.date).description || 'Holiday' }}
+              </div>
               <div
-                class="w-32"
-                v-html="
-                  events.data[user.name][day.date].weekly_off
-                    ? '<strong>WO</strong>'
-                    : events.data[user.name][day.date].description
-                "
-              ></div>
+                v-if="getHolidayForDay(user.name, day.date).weekly_off"
+                class="text-yellow-700"
+              >
+                (Weekly Off)
+              </div>
             </div>
 
             <!-- Leave -->
             <div
-              v-else-if="events.data?.[user.name]?.[day.date]?.leave"
-              class="blocked-cell"
+              v-if="getLeaveForDay(user.name, day.date)"
+              class="text-xs px-2 py-1 bg-orange-100 border border-orange-300 rounded text-center mb-2"
             >
-              {{ events.data[user.name][day.date].leave_type }}
+              <div class="font-semibold text-orange-800">
+                On Leave
+              </div>
+              <div class="text-orange-700">
+                {{ getLeaveForDay(user.name, day.date).leave_type }}
+              </div>
             </div>
 
             <!-- Tasks -->
             <div
-              v-else
               class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-32"
             >
               <div
-                v-for="task in events.data?.[user.name]?.[day.date]"
+                v-for="task in getTasksForDay(user.name, day.date)"
                 @mouseenter="
                   (e) => onTaskMouseEnter(task, user.name, day.date, e)
                 "
@@ -356,11 +359,41 @@ const getUserTaskCount = (userName) => {
   let count = 0
   for (const dateKey in userEvents) {
     const dayData = userEvents[dateKey]
-    if (Array.isArray(dayData)) {
+    // Handle new structure with tasks array
+    if (dayData?.tasks && Array.isArray(dayData.tasks)) {
+      count += dayData.tasks.length
+    } else if (Array.isArray(dayData)) {
+      // Handle old structure (plain array)
       count += dayData.length
     }
   }
   return count
+}
+
+const getLeaveForDay = (userName, day) => {
+  const dayData = events.data?.[userName]?.[day]
+  return dayData?.leave || null
+}
+
+const getHolidayForDay = (userName, day) => {
+  const dayData = events.data?.[userName]?.[day]
+  return dayData?.holiday || null
+}
+
+const getTasksForDay = (userName, day) => {
+  const dayData = events.data?.[userName]?.[day]
+
+  // Handle new structure with tasks/holiday/leave
+  if (dayData?.tasks && Array.isArray(dayData.tasks)) {
+    return dayData.tasks
+  }
+
+  // Handle old structure (plain array)
+  if (Array.isArray(dayData)) {
+    return dayData
+  }
+
+  return []
 }
 
 const isHolidayOrLeave = (user, day) =>

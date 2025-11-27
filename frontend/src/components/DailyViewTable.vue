@@ -72,6 +72,8 @@
               'bg-gray-50':
                 dropCell.user === user.name &&
                 dropCell.hour === hour,
+              'bg-yellow-50': hour === '00' && getHolidayForDay(user.name),
+              'bg-orange-50': hour === '00' && getLeaveForDay(user.name),
             }"
             @mouseenter="
               () => {
@@ -99,6 +101,29 @@
               }
             "
           >
+            <!-- Holiday/Leave Indicator (only in first hour column) -->
+            <div v-if="hour === '00'" class="mb-2">
+              <div
+                v-if="getHolidayForDay(user.name)"
+                class="text-xs px-2 py-1 bg-yellow-100 border border-yellow-300 rounded"
+              >
+                <div class="font-semibold text-yellow-800">
+                  Holiday: {{ getHolidayForDay(user.name).description || 'Holiday' }}
+                </div>
+                <div v-if="getHolidayForDay(user.name).weekly_off" class="text-yellow-700">
+                  (Weekly Off)
+                </div>
+              </div>
+              <div
+                v-else-if="getLeaveForDay(user.name)"
+                class="text-xs px-2 py-1 bg-orange-100 border border-orange-300 rounded"
+              >
+                <div class="font-semibold text-orange-800">
+                  On Leave: {{ getLeaveForDay(user.name).leave_type }}
+                </div>
+              </div>
+            </div>
+
             <!-- Tasks -->
             <div
               class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-36"
@@ -427,20 +452,58 @@ const handleShifts = (event, date, mappedEvents, user, key) => {
 
 const getUserTaskCount = (userName) => {
   const dateString = props.selectedDay.format('YYYY-MM-DD')
-  const userTasks = events.data?.[userName]?.[dateString]
+  const dayData = events.data?.[userName]?.[dateString]
 
-  if (!userTasks || !Array.isArray(userTasks)) {
-    return 0
+  if (!dayData) return 0
+
+  // Handle new structure with tasks/holiday/leave
+  if (dayData.tasks && Array.isArray(dayData.tasks)) {
+    return dayData.tasks.length
   }
 
-  return userTasks.length
+  // Handle old structure (plain array)
+  if (Array.isArray(dayData)) {
+    return dayData.length
+  }
+
+  return 0
+}
+
+const getLeaveForDay = (userName) => {
+  const dateString = props.selectedDay.format('YYYY-MM-DD')
+  const dayData = events.data?.[userName]?.[dateString]
+
+  if (dayData?.leave) {
+    return dayData.leave
+  }
+  return null
+}
+
+const getHolidayForDay = (userName) => {
+  const dateString = props.selectedDay.format('YYYY-MM-DD')
+  const dayData = events.data?.[userName]?.[dateString]
+
+  if (dayData?.holiday) {
+    return dayData.holiday
+  }
+  return null
 }
 
 const getTasksForHour = (userName, hour) => {
   const dateString = props.selectedDay.format('YYYY-MM-DD')
-  const userTasks = events.data?.[userName]?.[dateString]
+  const dayData = events.data?.[userName]?.[dateString]
 
-  if (!userTasks || !Array.isArray(userTasks)) {
+  let userTasks = []
+
+  // Handle new structure with tasks/holiday/leave
+  if (dayData?.tasks && Array.isArray(dayData.tasks)) {
+    userTasks = dayData.tasks
+  } else if (Array.isArray(dayData)) {
+    // Handle old structure (plain array)
+    userTasks = dayData
+  }
+
+  if (!userTasks.length) {
     return []
   }
 

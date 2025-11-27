@@ -6,7 +6,39 @@ from frappe.utils import add_days, date_diff
 @frappe.whitelist()
 def get_events(month_start, month_end, task_filters={}):
 	tasks = get_tasks(month_start, month_end, task_filters)
-	return tasks
+	holidays = get_holidays_for_users(month_start, month_end)
+	leaves = get_leaves_for_users(month_start, month_end)
+
+	# Merge tasks, holidays, and leaves
+	events = {}
+	for user in set(list(tasks.keys()) + list(holidays.keys()) + list(leaves.keys())):
+		events[user] = {}
+
+		# Add tasks
+		if user in tasks:
+			events[user].update(tasks[user])
+
+		# Add holidays
+		if user in holidays:
+			for date, holiday_data in holidays[user].items():
+				if date not in events[user]:
+					events[user][date] = []
+				if isinstance(events[user][date], list):
+					events[user][date] = {'tasks': events[user][date], 'holiday': holiday_data}
+				else:
+					events[user][date]['holiday'] = holiday_data
+
+		# Add leaves
+		if user in leaves:
+			for date, leave_data in leaves[user].items():
+				if date not in events[user]:
+					events[user][date] = []
+				if isinstance(events[user][date], list):
+					events[user][date] = {'tasks': events[user][date], 'leave': leave_data}
+				elif 'tasks' in events[user][date]:
+					events[user][date]['leave'] = leave_data
+
+	return events
 
 
 @frappe.whitelist()
@@ -34,6 +66,124 @@ def get_holidays(month_start: str, month_end: str, employee_filters: dict[str, s
 		holidays[employee] = holiday_lists[holiday_list].copy()
 
 	return holidays
+
+
+def get_holidays_for_users(month_start: str, month_end: str):
+	"""
+	Get holidays for users who are employees
+	Maps users to their employee records and fetches holidays from holiday list
+	"""
+	import json
+	from frappe.utils import getdate
+
+	holidays_by_user = {}
+
+	# Get all users who are employees
+	user_employee_map = frappe.db.sql("""
+		SELECT user.name as user, emp.name as employee
+		FROM `tabUser` as user
+		JOIN `tabEmployee` as emp ON user.name = emp.user_id
+		WHERE user.enabled = 1
+		AND emp.status = 'Active'
+	""", as_dict=True)
+
+	# Build a map of user to employee
+	user_to_employee = {item['user']: item['employee'] for item in user_employee_map}
+
+	# Get holidays for each employee's holiday list
+	holiday_lists = {}
+	for user, employee in user_to_employee.items():
+		holiday_list = get_holiday_list_for_employee(employee, raise_exception=False)
+		if not holiday_list:
+			continue
+
+		if holiday_list not in holiday_lists:
+			holiday_lists[holiday_list] = frappe.get_all(
+				"Holiday",
+				filters={"parent": holiday_list, "holiday_date": ["between", [month_start, month_end]]},
+				fields=["holiday_date", "description", "weekly_off"],
+			)
+
+		# Map holidays to dates for this user
+		if user not in holidays_by_user:
+			holidays_by_user[user] = {}
+
+		for holiday in holiday_lists[holiday_list]:
+			date_str = str(holiday['holiday_date'])
+			holidays_by_user[user][date_str] = {
+				'description': holiday['description'],
+				'weekly_off': holiday['weekly_off']
+			}
+
+	return holidays_by_user
+
+
+def get_leaves_for_users(month_start: str, month_end: str):
+	"""
+	Get approved leaves for users who are employees
+	Maps users to their employee records and fetches approved leave applications
+	"""
+	from frappe.utils import getdate, add_days
+
+	leaves_by_user = {}
+
+	# Get all users who are employees
+	user_employee_map = frappe.db.sql("""
+		SELECT user.name as user, emp.name as employee
+		FROM `tabUser` as user
+		JOIN `tabEmployee` as emp ON user.name = emp.user_id
+		WHERE user.enabled = 1
+		AND emp.status = 'Active'
+	""", as_dict=True)
+
+	# Build a map of employee to user
+	employee_to_user = {item['employee']: item['user'] for item in user_employee_map}
+
+	if not employee_to_user:
+		return leaves_by_user
+
+	# Get all approved leave applications for these employees
+	leave_applications = frappe.db.sql("""
+		SELECT
+			employee,
+			leave_type,
+			from_date,
+			to_date
+		FROM `tabLeave Application`
+		WHERE docstatus = 1
+		AND status = 'Approved'
+		AND employee IN %(employees)s
+		AND from_date <= %(end_date)s
+		AND to_date >= %(start_date)s
+	""", {
+		'employees': list(employee_to_user.keys()),
+		'start_date': month_start,
+		'end_date': month_end
+	}, as_dict=True)
+
+	# Map leaves to users and dates
+	for leave in leave_applications:
+		user = employee_to_user.get(leave['employee'])
+		if not user:
+			continue
+
+		if user not in leaves_by_user:
+			leaves_by_user[user] = {}
+
+		# Add leave for each date in the range
+		current_date = getdate(leave['from_date'])
+		end_date = getdate(leave['to_date'])
+
+		while current_date <= end_date:
+			# Only include dates within the requested range
+			if getdate(month_start) <= current_date <= getdate(month_end):
+				date_str = str(current_date)
+				leaves_by_user[user][date_str] = {
+					'leave_type': leave['leave_type']
+				}
+			current_date = add_days(current_date, 1)
+
+	return leaves_by_user
 
 
 def get_tasks(month_start: str, month_end: str, task_filters):
