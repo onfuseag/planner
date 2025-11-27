@@ -19,6 +19,11 @@
           iconLeft="user-plus"
           @click="showTaskAssignmentDialog = true"
         />
+        <Button
+          icon="refresh-cw"
+          @click="refreshView"
+          :loading="isRefreshing"
+        />
       </div>
     </div>
     <WeekViewHeader
@@ -63,6 +68,7 @@ import { dayjs, raiseToast } from '../utils'
 const firstOfWeek = ref(dayjs().startOf('week'))
 const showTaskCreationDialog = ref(false)
 const showTaskAssignmentDialog = ref(false)
+const isRefreshing = ref(false)
 
 const weekViewTable = ref(null)
 
@@ -82,6 +88,21 @@ const updateFilters = (newFilters) => {
       else delete taskFilters[key]
     }
   })
+}
+
+const refreshView = async () => {
+  isRefreshing.value = true
+  try {
+    await users.reload()
+    if (weekViewTable.value) {
+      await weekViewTable.value.events.reload()
+    }
+  } catch (error) {
+    console.error(error)
+    raiseToast('error', 'Failed to refresh view')
+  } finally {
+    isRefreshing.value = false
+  }
 }
 
 const users = createListResource({

@@ -346,10 +346,15 @@ function onTaskMouseEnter(task, userName, hour, event) {
     props.users.find((u) => u.name === userName)?.full_name ||
     userName
 
-  const rect = event.target.getBoundingClientRect()
+  const rect = event.currentTarget.getBoundingClientRect()
+  const containerRect = tableContainer.value.getBoundingClientRect()
   hoverPosition.value = {
-    x: rect.left + window.scrollX,
-    y: rect.top + window.scrollY,
+    top: rect.bottom - containerRect.top,
+    left:
+      rect.left -
+      containerRect.left +
+      rect.width / 2 +
+      tableContainer.value.scrollLeft,
   }
 }
 

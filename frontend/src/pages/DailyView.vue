@@ -18,6 +18,11 @@
           iconLeft="user-plus"
           @click="showTaskAssignmentDialog = true"
         />
+        <Button
+          icon="refresh-cw"
+          @click="refreshView"
+          :loading="isRefreshing"
+        />
       </div>
     </div>
     <DailyViewHeader
@@ -63,11 +68,12 @@ import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 const selectedDay = ref(dayjs().startOf('D'))
 const showTaskCreationDialog = ref(false)
 const showTaskAssignmentDialog = ref(false)
+const isRefreshing = ref(false)
 
 const dailyViewTable = ref(null)
 
 const addToDay = (change) => {
-  selectedDay.value = selectedDay.value.add(change, 'D')
+  selectedDay.value = selectedDay.value.add(change, 'day')
 }
 
 const updateSelectedDay = (newDay) => {
@@ -87,6 +93,21 @@ const updateFilters = (newFilters) => {
       else delete taskFilters[key]
     }
   })
+}
+
+const refreshView = async () => {
+  isRefreshing.value = true
+  try {
+    await users.reload()
+    if (dailyViewTable.value) {
+      await dailyViewTable.value.events.reload()
+    }
+  } catch (error) {
+    console.error(error)
+    raiseToast('error', 'Failed to refresh view')
+  } finally {
+    isRefreshing.value = false
+  }
 }
 
 const users = createListResource({

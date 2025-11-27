@@ -18,6 +18,11 @@
           iconLeft="user-plus"
           @click="showTaskAssignmentDialog = true"
         />
+        <Button
+          icon="refresh-cw"
+          @click="refreshView"
+          :loading="isRefreshing"
+        />
       </div>
     </div>
     <MonthViewHeader
@@ -62,6 +67,7 @@ import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 const firstOfMonth = ref(dayjs().date(1).startOf('D'))
 const showTaskCreationDialog = ref(false)
 const showTaskAssignmentDialog = ref(false)
+const isRefreshing = ref(false)
 
 const monthViewTable = ref(null)
 
@@ -82,6 +88,21 @@ const updateFilters = (newFilters) => {
       else delete taskFilters[key]
     }
   })
+}
+
+const refreshView = async () => {
+  isRefreshing.value = true
+  try {
+    await users.reload()
+    if (monthViewTable.value) {
+      await monthViewTable.value.events.reload()
+    }
+  } catch (error) {
+    console.error(error)
+    raiseToast('error', 'Failed to refresh view')
+  } finally {
+    isRefreshing.value = false
+  }
 }
 
 const users = createListResource({
