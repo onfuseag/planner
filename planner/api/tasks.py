@@ -19,8 +19,12 @@ def get_events(month_start, month_end, task_filters={}):
 		# user_tasks is a list of tasks, need to group by date
 		for task in user_tasks:
 			# Get the date range for this task
-			start_date = task.start_date
-			end_date = task.end_date
+			start_date = task.get('start_date')
+			end_date = task.get('end_date')
+
+			# Skip tasks without dates
+			if not start_date or not end_date:
+				continue
 
 			# Add task to each date in its range
 			current_date = start_date

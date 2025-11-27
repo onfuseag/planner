@@ -460,7 +460,7 @@ const handleShifts = (event, date, mappedEvents, user, key) => {
       project_name: event.project_name,
       priority: event.priority,
       status: event.status,
-      color: event.color.toLowerCase() || 'blue',
+      color: event.color?.toLowerCase() || 'blue',
       start_date: event.start_date,
       end_date: event.end_date,
       completed_on: event.status === 'Completed' ? event.completed_on : null,
