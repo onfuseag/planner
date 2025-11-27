@@ -329,14 +329,9 @@ function onTaskMouseEnter(task, userName, date, event) {
   hoveredCell.value.date = date
 
   const rect = event.currentTarget.getBoundingClientRect()
-  const containerRect = tableContainer.value.getBoundingClientRect()
   hoverPosition.value = {
-    top: rect.bottom - containerRect.top,
-    left:
-      rect.left -
-      containerRect.left +
-      rect.width / 2 +
-      tableContainer.value.scrollLeft,
+    x: rect.left + rect.width / 2,
+    y: rect.top,
   }
 }
 

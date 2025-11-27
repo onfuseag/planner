@@ -6,7 +6,7 @@
         variant="ghost"
         @click="emit('addToWeek', -1)"
       />
-      <span class="w-40 text-center font-medium text-base">
+      <span class="w-56 text-center font-medium text-base">
         Week {{ weekOfMonth }} - {{ firstOfWeek?.format('MMMM') }},
         {{ firstOfWeek?.format('YYYY') }}
       </span>
