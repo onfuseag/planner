@@ -2,12 +2,7 @@
   <div
     v-if="visible"
     class="absolute z-50 pointer-events-none max-w-xs text-xs bg-white shadow-lg rounded p-2 space-y-1"
-    :style="{
-      top: position.top + 'px',
-      left: position.left + 'px',
-      transform: 'translate(-50%, -100%)',
-      marginTop: '-8px',
-    }"
+    :style="popoverStyle"
   >
     <div class="font-medium truncate" :title="data.subject">
       {{ data.subject }}
@@ -43,6 +38,27 @@ const props = defineProps({
 })
 
 const visible = computed(() => props.data && props.data.task)
+
+// Handle both position formats: {x, y} for Daily view and {top, left} for Month/Week views
+const popoverStyle = computed(() => {
+  // Check if it's Daily view format (x, y)
+  if ('x' in props.position && 'y' in props.position) {
+    // Daily view format
+    return {
+      top: props.position.y + 'px',
+      left: props.position.x + 'px',
+      transform: 'translate(20%, calc(-100% + 185px))',
+    }
+  } else {
+    // Month/Week view format (top, left)
+    return {
+      top: props.position.top + 'px',
+      left: props.position.left + 'px',
+      transform: 'translate(-50%, -100%)',
+      marginTop: '-8px',
+    }
+  }
+})
 </script>
 
 <style scoped></style>
