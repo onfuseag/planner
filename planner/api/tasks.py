@@ -91,6 +91,19 @@ def get_holidays_for_users(month_start: str, month_end: str):
 				'weekly_off': holiday['weekly_off']
 			}
 
+	# Debug logging
+	frappe.log_error(
+		title="get_holidays_for_users Debug",
+		message=json.dumps({
+			'month_start': month_start,
+			'month_end': month_end,
+			'users_with_employees': len(user_to_employee),
+			'holiday_lists_fetched': len(holiday_lists),
+			'users_with_holidays': len(holidays_by_user),
+			'sample_data': {user: list(holidays.keys()) for user, holidays in list(holidays_by_user.items())[:2]}
+		}, indent=2, default=str)
+	)
+
 	return holidays_by_user
 
 

@@ -70,9 +70,7 @@
             class="p-1.5 z-[1] border-t border-l align-top"
             :class="{
               'bg-gray-50':
-                dropCell.user === user.name &&
-                dropCell.hour === hour,
-              'bg-yellow-50': hour === '00' && getHolidayForDay(user.name),
+                (dropCell.user === user.name && dropCell.hour === hour) || (hour === '00' && getHolidayForDay(user.name)),
               'bg-orange-50': hour === '00' && getLeaveForDay(user.name),
             }"
             @mouseenter="
@@ -105,12 +103,12 @@
             <div v-if="hour === '00'" class="mb-2">
               <div
                 v-if="getHolidayForDay(user.name)"
-                class="text-xs px-2 py-1 bg-yellow-100 border border-yellow-300 rounded"
+                class="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded"
               >
-                <div class="font-semibold text-yellow-800">
+                <div class="font-semibold text-gray-800">
                   Holiday: {{ getHolidayForDay(user.name).description || 'Holiday' }}
                 </div>
-                <div v-if="getHolidayForDay(user.name).weekly_off" class="text-yellow-700">
+                <div v-if="getHolidayForDay(user.name).weekly_off" class="text-gray-700">
                   (Weekly Off)
                 </div>
               </div>

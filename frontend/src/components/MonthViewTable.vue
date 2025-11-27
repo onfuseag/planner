@@ -71,12 +71,8 @@
             :class="{
               'border-l': rowIdx + 1,
               'align-top': events.data?.[user.name]?.[day.date],
-              'bg-yellow-50': getHolidayForDay(user.name, day.date),
+              'bg-gray-50': getHolidayForDay(user.name, day.date) || (dropCell.user === user.name && dropCell.date === day.date && !getLeaveForDay(user.name, day.date)),
               'bg-orange-50': getLeaveForDay(user.name, day.date),
-              'bg-gray-50':
-                dropCell.user === user.name &&
-                dropCell.date === day.date &&
-                !(getHolidayForDay(user.name, day.date) || getLeaveForDay(user.name, day.date)),
             }"
             @mouseenter="
               () => {
@@ -109,14 +105,14 @@
             <!-- Holiday -->
             <div
               v-if="getHolidayForDay(user.name, day.date)"
-              class="text-xs px-2 py-1 bg-yellow-100 border border-yellow-300 rounded text-center mb-2"
+              class="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded text-center mb-2"
             >
-              <div class="font-semibold text-yellow-800">
+              <div class="font-semibold text-gray-800">
                 {{ getHolidayForDay(user.name, day.date).description || 'Holiday' }}
               </div>
               <div
                 v-if="getHolidayForDay(user.name, day.date).weekly_off"
-                class="text-yellow-700"
+                class="text-gray-700"
               >
                 (Weekly Off)
               </div>
