@@ -8,7 +8,7 @@
           variant="ghost"
           @click="emit('addToDay', -1)"
         />
-        <span class="w-48 text-center font-medium text-base">
+        <span class="w-56 text-center font-medium text-base">
           {{ selectedDay?.format('dddd, MMMM DD, YYYY') }}
         </span>
         <Button
