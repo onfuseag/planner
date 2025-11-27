@@ -52,6 +52,9 @@
                 <div class="truncate text-base font-medium">
                   {{ user.full_name }}
                 </div>
+                <div class="text-xs text-gray-500 font-normal">
+                  Assigned Tasks: {{ getUserTaskCount(user.name) }}
+                </div>
               </div>
             </div>
           </td>
@@ -251,7 +254,7 @@ const userSearch = ref()
 const userSearchOptions = computed(() => {
   return props.users.map((user) => ({
     value: user.name,
-    label: user.full_name,
+    label: `${user.name}: ${user.full_name}`,
   }))
 })
 
@@ -422,6 +425,17 @@ const handleShifts = (event, date, mappedEvents, user, key) => {
   }
 }
 
+const getUserTaskCount = (userName) => {
+  const dateString = props.selectedDay.format('YYYY-MM-DD')
+  const userTasks = events.data?.[userName]?.[dateString]
+
+  if (!userTasks || !Array.isArray(userTasks)) {
+    return 0
+  }
+
+  return userTasks.length
+}
+
 const getTasksForHour = (userName, hour) => {
   const dateString = props.selectedDay.format('YYYY-MM-DD')
   const userTasks = events.data?.[userName]?.[dateString]
@@ -436,12 +450,18 @@ const getTasksForHour = (userName, hour) => {
       return hour === '00'
     }
 
-    const taskStartHour = parseInt(task.start_time.split(':')[0])
-    const taskEndHour = parseInt(task.end_time.split(':')[0])
+    const [startHour, startMinute] = task.start_time.split(':').map(Number)
+    const [endHour, endMinute] = task.end_time.split(':').map(Number)
     const currentHour = parseInt(hour)
 
-    // Task spans this hour
-    return currentHour >= taskStartHour && currentHour < taskEndHour
+    // Task spans this hour if:
+    // 1. Task starts in or before this hour AND
+    // 2. Task ends after this hour starts (including any minutes past the hour)
+    const taskStartsBeforeOrDuringThisHour = startHour <= currentHour
+    const taskEndsAfterThisHourStarts =
+      endHour > currentHour || (endHour === currentHour && endMinute > 0)
+
+    return taskStartsBeforeOrDuringThisHour && taskEndsAfterThisHourStarts
   })
 }
 

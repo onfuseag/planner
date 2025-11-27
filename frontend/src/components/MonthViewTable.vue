@@ -52,6 +52,9 @@
                 <div class="truncate text-base font-medium">
                   {{ user.full_name }}
                 </div>
+                <div class="text-xs text-gray-500 font-normal">
+                  Assigned Tasks: {{ getUserTaskCount(user.name) }}
+                </div>
               </div>
             </div>
           </td>
@@ -367,6 +370,20 @@ function onTaskMouseLeave() {
   hoveredCell.value.priority = ''
   hoveredCell.value.project = ''
   hoveredCell.value.color = ''
+}
+
+const getUserTaskCount = (userName) => {
+  const userEvents = events.data?.[userName]
+  if (!userEvents) return 0
+
+  let count = 0
+  for (const dateKey in userEvents) {
+    const dayData = userEvents[dateKey]
+    if (Array.isArray(dayData)) {
+      count += dayData.length
+    }
+  }
+  return count
 }
 
 const mapEventsToDates = (data, mappedEvents, user) => {
