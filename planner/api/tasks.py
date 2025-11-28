@@ -49,7 +49,6 @@ def get_holidays_for_users(month_start: str, month_end: str):
 	Get holidays for users who are employees
 	Maps users to their employee records and fetches holidays from holiday list
 	"""
-	import json
 	from frappe.utils import getdate
 
 	holidays_by_user = {}
@@ -90,21 +89,6 @@ def get_holidays_for_users(month_start: str, month_end: str):
 				'description': holiday['description'],
 				'weekly_off': holiday['weekly_off']
 			}
-
-	# Debug logging
-	frappe.log_error(
-		title="get_holidays_for_users Debug",
-		message=json.dumps({
-			'month_start': month_start,
-			'month_end': month_end,
-			'users_with_employees': len(user_to_employee),
-			'holiday_list_names': list(holiday_lists.keys()),
-			'holidays_in_each_list': {hl_name: len(hl_holidays) for hl_name, hl_holidays in holiday_lists.items()},
-			'first_few_holidays': {hl_name: [str(h['holiday_date']) for h in hl_holidays[:5]] for hl_name, hl_holidays in holiday_lists.items()},
-			'users_with_holidays': len(holidays_by_user),
-			'sample_user_holidays': {user: list(holidays.keys()) for user, holidays in list(holidays_by_user.items())[:2]}
-		}, indent=2, default=str)
-	)
 
 	return holidays_by_user
 
