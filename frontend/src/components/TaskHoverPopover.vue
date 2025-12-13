@@ -2,11 +2,7 @@
   <div
     v-if="visible"
     class="absolute z-50 pointer-events-none max-w-xs text-xs bg-white shadow-lg rounded p-2 space-y-1"
-    :style="{
-      top: position.top + 'px',
-      left: position.left + 'px',
-      transform: 'translate(20%, calc(-100% + 185px))',
-    }"
+    :style="popoverStyle"
   >
     <div class="font-medium truncate" :title="data.subject">
       {{ data.subject }}
@@ -14,15 +10,15 @@
     <div v-if="data.project_name" class="truncate">
       <span class="font-semibold">Project:</span> {{ data.project_name }}
     </div>
-    <div v-if="data.employee_display" class="truncate">
+    <div v-if="data.user_display" class="truncate">
       <span class="font-semibold">Assigned to:</span>
-      {{ data.employee_display }}
+      {{ data.user_display }}
     </div>
-    <div class="flex justify-between">
-      <span>{{ data.status }}</span>
-      <span v-if="data.priority"
-        ><span class="font-semibold">Priority:</span> {{ data.priority }}</span
-      >
+    <div class="truncate">
+      <span class="font-semibold">Status:</span> {{ data.shift_status }}
+    </div>
+    <div v-if="data.priority" class="truncate">
+      <span class="font-semibold">Priority:</span> {{ data.priority }}
     </div>
   </div>
 </template>
@@ -42,6 +38,15 @@ const props = defineProps({
 })
 
 const visible = computed(() => props.data && props.data.task)
+
+// Position the popover above the task with minimal gap
+const popoverStyle = computed(() => {
+  return {
+    top: props.position.y + 'px',
+    left: props.position.x + 'px',
+    transform: 'translate(-50%, calc(-100% - 4px))',
+  }
+})
 </script>
 
 <style scoped></style>

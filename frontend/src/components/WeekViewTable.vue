@@ -8,14 +8,14 @@
       <!-- first row -->
       <thead>
         <tr class="bg-white">
-          <!-- Employee Search -->
+          <!-- User Search -->
           <th
             class="p-2 border-b border-r min-w-72 max-w-72 w-72 sticky left-0 bg-surface-white"
           >
             <Autocomplete
-              :options="employeeSearchOptions"
-              v-model="employeeSearch"
-              placeholder="Search Employee"
+              :options="userSearchOptions"
+              v-model="userSearch"
+              placeholder="Search User"
               :multiple="true"
             />
           </th>
@@ -35,28 +35,28 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(employee, rowIdx) in employees" :key="employee.name">
-          <!-- Employees List -->
+        <tr v-for="(user, rowIdx) in users" :key="user.name">
+          <!-- Users List -->
           <td
             v-if="
-              !employeeSearch?.length ||
-              employeeSearch?.some((item) => item.value === employee?.name)
+              !userSearch?.length ||
+              userSearch?.some((item) => item.value === user?.name)
             "
             class="px-2 py-7 z-[1] border-r min-w-72 max-w-72 w-72 sticky left-0 bg-surface-white"
             :class="{ 'border-t': rowIdx }"
           >
-            <div class="flex" :class="!employee.designation && 'items-center'">
+            <div class="flex items-center">
               <Avatar
-                :label="employee.employee_name"
-                :image="employee.image"
+                :label="user.full_name"
+                :image="user.user_image"
                 size="2xl"
               />
               <div class="flex flex-col ml-2 my-0.5 truncate">
                 <div class="truncate text-base font-medium">
-                  {{ employee.employee_name }}
+                  {{ user.full_name }}
                 </div>
-                <div class="mt-auto text-xs text-gray-500 truncate">
-                  {{ employee.designation }}
+                <div class="text-xs text-gray-500 font-normal">
+                  Assigned Tasks: {{ getUserTaskCount(user.name) }}
                 </div>
               </div>
             </div>
@@ -65,8 +65,8 @@
           <!-- Tasks -->
           <td
             v-if="
-              !employeeSearch?.length ||
-              employeeSearch?.some((item) => item.value === employee?.name)
+              !userSearch?.length ||
+              userSearch?.some((item) => item.value === user?.name)
             "
             v-for="(day, colIdx) in daysOfWeek"
             :key="colIdx"
@@ -74,38 +74,32 @@
             :class="{
               'border-l': rowIdx + 1,
               'border-r': colIdx === daysOfWeek.length - 1,
-              'align-top': events.data?.[employee.name]?.[day.date],
-              'align-middle bg-gray-50':
-                events.data?.[employee.name]?.[day.date]?.holiday,
-              'align-middle bg-pink-50':
-                events.data?.[employee.name]?.[day.date]?.leave,
-              'bg-gray-50':
-                dropCell.employee === employee.name &&
-                dropCell.date === day.date &&
-                !isHolidayOrLeave(employee.name, day.date),
+              'align-top': events.data?.[user.name]?.[day.date],
+              'bg-gray-50': getHolidayForDay(user.name, day.date) || (dropCell.user === user.name && dropCell.date === day.date && !isHolidayOrLeave(user.name, day.date)),
+              'bg-orange-50': getLeaveForDay(user.name, day.date),
             }"
             @mouseenter="
               () => {
-                hoveredCell.employee = employee.name
+                hoveredCell.user = user.name
                 hoveredCell.date = day.date
               }
             "
             @mouseleave="
               () => {
-                hoveredCell.employee = ''
+                hoveredCell.user = ''
                 hoveredCell.date = ''
               }
             "
             @dragover.prevent
             @dragenter="
               () => {
-                dropCell.employee = employee.name
+                dropCell.user = user.name
                 dropCell.date = day.date
               }
             "
             @drop="
               () => {
-                if (!isHolidayOrLeave(employee.name, day.date)) {
+                if (!isHolidayOrLeave(user.name, day.date)) {
                   loading = true
                   swapShift.submit()
                 }
@@ -114,48 +108,53 @@
           >
             <!-- Holiday -->
             <div
-              v-if="events.data?.[employee.name]?.[day.date]?.holiday"
-              class="blocked-cell"
+              v-if="getHolidayForDay(user.name, day.date)"
+              class="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded text-center mb-2"
             >
+              <div class="font-semibold text-gray-800">
+                {{ getHolidayForDay(user.name, day.date).description || 'Holiday' }}
+              </div>
               <div
-                class="w-32"
-                v-html="
-                  events.data[employee.name][day.date].weekly_off
-                    ? '<strong>WO</strong>'
-                    : events.data[employee.name][day.date].description
-                "
-              ></div>
+                v-if="getHolidayForDay(user.name, day.date).weekly_off"
+                class="text-gray-700"
+              >
+                (Weekly Off)
+              </div>
             </div>
 
             <!-- Leave -->
             <div
-              v-else-if="events.data?.[employee.name]?.[day.date]?.leave"
-              class="blocked-cell"
+              v-if="getLeaveForDay(user.name, day.date)"
+              class="text-xs px-2 py-1 bg-orange-100 border border-orange-300 rounded text-center mb-2"
             >
-              {{ events.data[employee.name][day.date].leave_type }}
+              <div class="font-semibold text-orange-800">
+                On Leave
+              </div>
+              <div class="text-orange-700">
+                {{ getLeaveForDay(user.name, day.date).leave_type }}
+              </div>
             </div>
 
             <!-- Tasks -->
             <div
-              v-else
               class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-32"
             >
               <div
-                v-for="task in events.data?.[employee.name]?.[day.date]"
+                v-for="task in getTasksForDay(user.name, day.date)"
                 @mouseenter="
-                  (e) => onTaskMouseEnter(task, employee.name, day.date, e)
+                  (e) => onTaskMouseEnter(task, user.name, day.date, e)
                 "
                 @mouseleave="onTaskMouseLeave"
                 class="rounded border-2 p-2 cursor-pointer space-y-1.5"
                 :class="[
-                  dropCell.employee === employee.name &&
+                  dropCell.user === user.name &&
                     dropCell.date === day.date &&
                     dropCell.task === task.name &&
                     'scale-105',
-                  hoveredCell.employee === employee.name &&
+                  hoveredCell.user === user.name &&
                     hoveredCell.date === day.date &&
                     hoveredCell.task === task.name &&
-                    dropCell.employee &&
+                    dropCell.user &&
                     'opacity-0',
                 ]"
                 :style="{
@@ -205,15 +204,15 @@
                 </div>
               </div>
 
-              <!-- Add Shift -->
+              <!-- Add Task -->
               <Button
                 variant="outline"
                 icon="plus"
                 class="border-2 active:bg-white w-full"
                 :class="
-                  hoveredCell.employee === employee.name &&
+                  hoveredCell.user === user.name &&
                   hoveredCell.date === day.date &&
-                  !dropCell.employee
+                  !dropCell.user
                     ? 'visible'
                     : 'invisible'
                 "
@@ -221,9 +220,9 @@
                   () => {
                     selectedTask.task = ''
                     selectedTask.subject = ''
-                    selectedTask.employee = {
-                      label: `${employee.name}: ${employee.employee_name}`,
-                      value: employee.name,
+                    selectedTask.user = {
+                      label: `${user.name}: ${user.full_name}`,
+                      value: user.name,
                     }
                     showTaskAssignmentDialog = true
                   }
@@ -243,10 +242,10 @@
   <TaskAssignmentDialog
     v-if="showTaskAssignmentDialog"
     v-model="showTaskAssignmentDialog"
-    :employees="props.employees"
+    :users="props.users"
     :task-name="selectedTask.task"
     :task-subject="selectedTask.subject"
-    :selected-employee="selectedTask.employee"
+    :selected-user="selectedTask.user"
     @update="() => events.reload()"
   />
 </template>
@@ -263,7 +262,7 @@ const props = defineProps({
   firstOfWeek: {
     required: true,
   },
-  employees: {
+  users: {
     required: true,
   },
   taskFilters: {
@@ -273,11 +272,11 @@ const props = defineProps({
 
 const showTaskAssignmentDialog = ref(false)
 
-const employeeSearch = ref()
-const employeeSearchOptions = computed(() => {
-  return props.employees.map((employee) => ({
-    value: employee.name,
-    label: `${employee.name}: ${employee.employee_name}`,
+const userSearch = ref()
+const userSearchOptions = computed(() => {
+  return props.users.map((user) => ({
+    value: user.name,
+    label: `${user.name}: ${user.full_name}`,
   }))
 })
 const daysOfWeek = computed(() => {
@@ -293,8 +292,8 @@ const daysOfWeek = computed(() => {
 })
 
 const hoveredCell = ref({
-  employee: '',
-  employee_display: '',
+  user: '',
+  user_display: '',
   date: '',
   task: '',
   subject: '',
@@ -311,13 +310,13 @@ const tableContainer = ref(null)
 const selectedTask = ref({
   task: '',
   subject: '',
-  employee: null,
+  user: null,
 })
 
-const dropCell = ref({ employee: '', date: '', task: '' })
+const dropCell = ref({ user: '', date: '', task: '' })
 const loading = ref(false)
 
-function onTaskMouseEnter(task, employeeName, date, event) {
+function onTaskMouseEnter(task, userName, date, event) {
   hoveredCell.value.task = task.name
   hoveredCell.value.subject = task.subject
   hoveredCell.value.shift_status = task.status
@@ -325,21 +324,16 @@ function onTaskMouseEnter(task, employeeName, date, event) {
   hoveredCell.value.project = task.project || ''
   hoveredCell.value.project_name = task.project_name || ''
   hoveredCell.value.color = task.color || colors[task.color][50]
-  hoveredCell.value.employee = employeeName
-  hoveredCell.value.employee_display =
-    props.employees.find((emp) => emp.name === employeeName)?.employee_name ||
-    employeeName
+  hoveredCell.value.user = userName
+  hoveredCell.value.user_display =
+    props.users.find((u) => u.name === userName)?.full_name ||
+    userName
   hoveredCell.value.date = date
 
   const rect = event.currentTarget.getBoundingClientRect()
-  const containerRect = tableContainer.value.getBoundingClientRect()
   hoverPosition.value = {
-    top: rect.bottom - containerRect.top,
-    left:
-      rect.left -
-      containerRect.left +
-      rect.width / 2 +
-      tableContainer.value.scrollLeft,
+    x: rect.left + rect.width / 2 + window.scrollX,
+    y: rect.top + window.scrollY,
   }
 }
 
@@ -351,11 +345,56 @@ function onTaskMouseLeave() {
   hoveredCell.value.project = ''
   hoveredCell.value.project_name = ''
   hoveredCell.value.color = ''
-  hoveredCell.value.employee_display = ''
+  hoveredCell.value.user_display = ''
 }
-const isHolidayOrLeave = (employee, day) =>
-  events.data?.[employee]?.[day]?.holiday ||
-  events.data?.[employee]?.[day]?.leave
+
+const getUserTaskCount = (userName) => {
+  const userEvents = events.data?.[userName]
+  if (!userEvents) return 0
+
+  let count = 0
+  for (const dateKey in userEvents) {
+    const dayData = userEvents[dateKey]
+    // Handle new structure with tasks array
+    if (dayData?.tasks && Array.isArray(dayData.tasks)) {
+      count += dayData.tasks.length
+    } else if (Array.isArray(dayData)) {
+      // Handle old structure (plain array)
+      count += dayData.length
+    }
+  }
+  return count
+}
+
+const getLeaveForDay = (userName, day) => {
+  const dayData = events.data?.[userName]?.[day]
+  return dayData?.leave || null
+}
+
+const getHolidayForDay = (userName, day) => {
+  const dayData = events.data?.[userName]?.[day]
+  return dayData?.holiday || null
+}
+
+const getTasksForDay = (userName, day) => {
+  const dayData = events.data?.[userName]?.[day]
+
+  // Handle new structure with tasks/holiday/leave
+  if (dayData?.tasks && Array.isArray(dayData.tasks)) {
+    return dayData.tasks
+  }
+
+  // Handle old structure (plain array)
+  if (Array.isArray(dayData)) {
+    return dayData
+  }
+
+  return []
+}
+
+const isHolidayOrLeave = (user, day) =>
+  events.data?.[user]?.[day]?.holiday ||
+  events.data?.[user]?.[day]?.leave
 
 const events = createResource({
   url: 'planner.api.tasks.get_events',
@@ -376,55 +415,148 @@ const events = createResource({
   },
   transform: (data) => {
     const mappedEvents = {}
-    for (const employee in data) {
-      mapEventsToDates(data, mappedEvents, employee)
+
+    // Handle new response structure with separate tasks, holidays, leaves
+    const tasks = data.tasks || data
+    const holidays = data.holidays || {}
+    const leaves = data.leaves || {}
+
+    // Process tasks
+    for (const user in tasks) {
+      if (!mappedEvents[user]) {
+        mappedEvents[user] = {}
+      }
+
+      for (let d = 0; d < 7; d++) {
+        const date = props.firstOfWeek.add(d, 'day')
+        const key = date.format('YYYY-MM-DD')
+
+        // Add tasks for this user on this date
+        for (const task of tasks[user]) {
+          if (
+            dayjs(task.start_date).isSameOrBefore(date) &&
+            (dayjs(task.end_date).isSameOrAfter(date) || !task.end_date)
+          ) {
+            if (!Array.isArray(mappedEvents[user][key])) {
+              mappedEvents[user][key] = []
+            }
+            mappedEvents[user][key].push({
+              name: task.name,
+              subject: task.subject,
+              project: task.project,
+              project_name: task.project_name,
+              priority: task.priority,
+              status: task.status,
+              color: task.color?.toLowerCase() || 'blue',
+              start_date: task.start_date,
+              end_date: task.end_date,
+              completed_on: task.status === 'Completed' ? task.completed_on : null,
+            })
+          }
+        }
+      }
     }
+
+    // Process holidays
+    for (const user in holidays) {
+      if (!mappedEvents[user]) {
+        mappedEvents[user] = {}
+      }
+      for (let d = 0; d < 7; d++) {
+        const date = props.firstOfWeek.add(d, 'day')
+        const key = date.format('YYYY-MM-DD')
+
+        if (holidays[user][key]) {
+          if (!mappedEvents[user][key]) {
+            mappedEvents[user][key] = {
+              tasks: [],
+              holiday: holidays[user][key]
+            }
+          } else if (Array.isArray(mappedEvents[user][key])) {
+            mappedEvents[user][key] = {
+              tasks: mappedEvents[user][key],
+              holiday: holidays[user][key]
+            }
+          } else {
+            mappedEvents[user][key].holiday = holidays[user][key]
+          }
+        }
+      }
+    }
+
+    // Process leaves
+    for (const user in leaves) {
+      if (!mappedEvents[user]) {
+        mappedEvents[user] = {}
+      }
+      for (let d = 0; d < 7; d++) {
+        const date = props.firstOfWeek.add(d, 'day')
+        const key = date.format('YYYY-MM-DD')
+
+        if (leaves[user][key]) {
+          if (!mappedEvents[user][key]) {
+            mappedEvents[user][key] = {
+              tasks: [],
+              leave: leaves[user][key]
+            }
+          } else if (Array.isArray(mappedEvents[user][key])) {
+            mappedEvents[user][key] = {
+              tasks: mappedEvents[user][key],
+              leave: leaves[user][key]
+            }
+          } else {
+            mappedEvents[user][key].leave = leaves[user][key]
+          }
+        }
+      }
+    }
+
     return mappedEvents
   },
 })
 
-const mapEventsToDates = (data, mappedEvents, employee) => {
-  mappedEvents[employee] = {}
+const mapEventsToDates = (data, mappedEvents, user) => {
+  mappedEvents[user] = {}
   for (let d = 0; d < 7; d++) {
     const date = props.firstOfWeek.add(d, 'day')
     const key = date.format('YYYY-MM-DD')
 
-    for (const event of Object.values(data[employee])) {
+    for (const event of Object.values(data[user])) {
       let result
       if ('holiday' in event) {
         result = handleHoliday(event, date)
         if (result) {
-          mappedEvents[employee][key] = result
+          mappedEvents[user][key] = result
           break
         }
       } else if ('leave' in event) {
         result = handleLeave(event, date)
         if (result) {
-          mappedEvents[employee][key] = result
+          mappedEvents[user][key] = result
           break
         }
       } else {
-        handleShifts(event, date, mappedEvents, employee, key)
+        handleShifts(event, date, mappedEvents, user, key)
       }
     }
   }
 }
 
-const handleShifts = (event, date, mappedEvents, employee, key) => {
+const handleShifts = (event, date, mappedEvents, user, key) => {
   if (
     dayjs(event.start_date).isSameOrBefore(date) &&
     (dayjs(event.end_date).isSameOrAfter(date) || !event.end_date)
   ) {
-    if (!Array.isArray(mappedEvents[employee][key]))
-      mappedEvents[employee][key] = []
-    mappedEvents[employee][key].push({
+    if (!Array.isArray(mappedEvents[user][key]))
+      mappedEvents[user][key] = []
+    mappedEvents[user][key].push({
       name: event.name,
       subject: event.subject,
       project: event.project,
       project_name: event.project_name,
       priority: event.priority,
       status: event.status,
-      color: event.color.toLowerCase() || 'blue',
+      color: event.color?.toLowerCase() || 'blue',
       start_date: event.start_date,
       end_date: event.end_date,
       completed_on: event.status === 'Completed' ? event.completed_on : null,
@@ -454,7 +586,7 @@ const handleHoliday = (event, date) => {
 }
 
 watch(
-  () => [props.firstOfWeek, props.employeeFilters, props.taskFilters],
+  () => [props.firstOfWeek, props.taskFilters],
   () => {
     loading.value = true
     events.fetch()

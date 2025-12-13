@@ -3,10 +3,9 @@
     <!-- Top Section Above Header -->
     <div class="flex items-center">
       <FeatherIcon name="calendar" class="h-7 w-7 text-gray-500 mr-2.5" />
-      <span class="font-semibold text-2xl text-gray-500 mr-2"
-        >Task Manager:</span
-      >
-      <span class="font-semibold text-2xl">Week View</span>
+      <span class="font-semibold text-2xl text-gray-500 mr-2">Planner:</span>
+
+      <span class="font-semibold text-2xl">Daily View</span>
       <div class="ml-auto space-x-2.5">
         <Button
           label="Create Task"
@@ -26,14 +25,15 @@
         />
       </div>
     </div>
-    <WeekViewHeader
-      :firstOfWeek="firstOfWeek"
+    <DailyViewHeader
+      :selected-day="selectedDay"
       @updateFilters="updateFilters"
-      @addToWeek="addToWeek"
+      @addToDay="addToDay"
+      @updateSelectedDay="updateSelectedDay"
     />
-    <WeekViewTable
-      ref="weekViewTable"
-      :firstOfWeek="firstOfWeek"
+    <DailyViewTable
+      ref="dailyViewTable"
+      :selected-day="selectedDay"
       :users="users.data || []"
       :task-filters="taskFilters"
     />
@@ -44,7 +44,7 @@
       @create="
         () => {
           showTaskCreationDialog = false
-          $refs.weekViewTable.events.reload()
+          $refs.dailyViewTable.events.reload()
         }
       "
     />
@@ -57,23 +57,27 @@
 </template>
 
 <script setup>
-import { Button, FeatherIcon, createListResource } from 'frappe-ui'
-import { reactive, ref } from 'vue'
-import WeekViewHeader from '../components/WeekViewHeader.vue'
-import WeekViewTable from '../components/WeekViewTable.vue'
-import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
-import TaskCreationDialog from '../components/TaskCreationDialog.vue'
+import { ref, reactive } from 'vue'
+import { FeatherIcon, createListResource, Button } from 'frappe-ui'
 import { dayjs, raiseToast } from '../utils'
+import DailyViewHeader from '../components/DailyViewHeader.vue'
+import DailyViewTable from '../components/DailyViewTable.vue'
+import TaskCreationDialog from '../components/TaskCreationDialog.vue'
+import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 
-const firstOfWeek = ref(dayjs().startOf('week'))
+const selectedDay = ref(dayjs().startOf('D'))
 const showTaskCreationDialog = ref(false)
 const showTaskAssignmentDialog = ref(false)
 const isRefreshing = ref(false)
 
-const weekViewTable = ref(null)
+const dailyViewTable = ref(null)
 
-const addToWeek = (change) => {
-  firstOfWeek.value = firstOfWeek.value.add(change, 'week')
+const addToDay = (change) => {
+  selectedDay.value = selectedDay.value.add(change, 'day')
+}
+
+const updateSelectedDay = (newDay) => {
+  selectedDay.value = newDay.startOf('D')
 }
 
 const taskFilters = reactive({
@@ -81,6 +85,7 @@ const taskFilters = reactive({
   priority: null,
   project: '',
 })
+
 const updateFilters = (newFilters) => {
   Object.entries(newFilters).forEach(([key, value]) => {
     if (['status', 'priority', 'project'].includes(key)) {
@@ -94,8 +99,8 @@ const refreshView = async () => {
   isRefreshing.value = true
   try {
     await users.reload()
-    if (weekViewTable.value) {
-      await weekViewTable.value.events.reload()
+    if (dailyViewTable.value) {
+      await dailyViewTable.value.events.reload()
     }
   } catch (error) {
     console.error(error)

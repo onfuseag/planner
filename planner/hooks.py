@@ -125,9 +125,9 @@ after_migrate = "planner.install.after_install"
 # DocType Class
 # ---------------
 # Override standard doctype classes
-override_doctype_class = {
-	"Task": "planner.overrides.task.CustomTask",
-}
+# override_doctype_class = {
+# 	"Task": "planner.overrides.task.CustomTask",
+# }
 
 # Document Events
 # ---------------
