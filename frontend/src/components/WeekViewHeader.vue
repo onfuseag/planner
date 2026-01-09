@@ -1,19 +1,19 @@
 <template>
-  <div class="flex items-center justify-between sticky top-0 bg-white z-10">
+  <div class="flex items-center justify-between sticky top-0 bg-white">
     <div class="flex items-center bg-gray-50 rounded-md space-x-0.5">
       <Button
         icon="chevron-left"
         variant="ghost"
-        @click="emit('addToMonth', -1)"
+        @click="emit('addToWeek', -1)"
       />
-      <span class="w-32 text-center font-medium text-base">
-        {{ firstOfMonth?.format('MMMM') }},
-        {{ firstOfMonth?.format('YYYY') }}
+      <span class="w-56 text-center font-medium text-base">
+        Week {{ weekOfMonth }} - {{ firstOfWeek?.format('MMMM') }},
+        {{ firstOfWeek?.format('YYYY') }}
       </span>
       <Button
         icon="chevron-right"
         variant="ghost"
-        @click="emit('addToMonth', 1)"
+        @click="emit('addToWeek', 1)"
       />
     </div>
     <!-- Filters -->
@@ -62,27 +62,34 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
-import { FormControl } from 'frappe-ui'
 import { Dayjs } from 'dayjs'
+import { FormControl } from 'frappe-ui'
+import { computed, reactive, watch } from 'vue'
 import { priority, status } from '../data'
 import Link from './Link.vue'
-
-export type FilterField = 'status' | 'priority' | 'project'
+export type FilterField =
+  | 'status'
+  | 'priority'
+  | 'project'
 
 const props = defineProps({
-  firstOfMonth: Dayjs,
+  firstOfWeek: Dayjs,
+})
+
+const weekOfMonth = computed(() => {
+  const start = props.firstOfWeek.startOf('month').startOf('week')
+  return props.firstOfWeek.diff(start, 'week') + 1
 })
 
 const emit = defineEmits<{
-  (e: 'addToMonth', change: number): void
+  (e: 'addToWeek', change: number): void
   (e: 'updateFilters', newFilters: { [K in FilterField]: string }): void
 }>()
 
 const filters: {
   [K in FilterField]: {
-    options?: string[]
-    model?: { value: string } | string | null
+    options: string[]
+    model?: { value: string } | null
   }
 } = reactive({
   project: { model: null },

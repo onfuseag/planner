@@ -3,9 +3,10 @@
     <!-- Top Section Above Header -->
     <div class="flex items-center">
       <FeatherIcon name="calendar" class="h-7 w-7 text-gray-500 mr-2.5" />
-      <span class="font-semibold text-2xl text-gray-500 mr-2">Planner:</span>
-
-      <span class="font-semibold text-2xl">Month View</span>
+      <span class="font-semibold text-2xl text-gray-500 mr-2"
+        >Task Manager:</span
+      >
+      <span class="font-semibold text-2xl">Week View</span>
       <div class="ml-auto space-x-2.5">
         <Button
           label="Create Task"
@@ -25,14 +26,14 @@
         />
       </div>
     </div>
-    <MonthViewHeader
-      :firstOfMonth="firstOfMonth"
+    <WeekViewHeader
+      :firstOfWeek="firstOfWeek"
       @updateFilters="updateFilters"
-      @addToMonth="addToMonth"
+      @addToWeek="addToWeek"
     />
-    <MonthViewTable
-      ref="monthViewTable"
-      :firstOfMonth="firstOfMonth"
+    <WeekViewTable
+      ref="weekViewTable"
+      :firstOfWeek="firstOfWeek"
       :users="users.data || []"
       :task-filters="taskFilters"
     />
@@ -43,7 +44,7 @@
       @create="
         () => {
           showTaskCreationDialog = false
-          $refs.monthViewTable.events.reload()
+          $refs.weekViewTable.events.reload()
         }
       "
     />
@@ -56,23 +57,23 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { FeatherIcon, createListResource, Button } from 'frappe-ui'
-import { dayjs, raiseToast } from '../utils'
-import MonthViewHeader from '../components/MonthViewHeader.vue'
-import MonthViewTable from '../components/MonthViewTable.vue'
-import TaskCreationDialog from '../components/TaskCreationDialog.vue'
+import { Button, FeatherIcon, createListResource } from 'frappe-ui'
+import { reactive, ref } from 'vue'
+import WeekViewHeader from '../components/WeekViewHeader.vue'
+import WeekViewTable from '../components/WeekViewTable.vue'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
+import TaskCreationDialog from '../components/TaskCreationDialog.vue'
+import { dayjs, raiseToast } from '../utils'
 
-const firstOfMonth = ref(dayjs().date(1).startOf('D'))
+const firstOfWeek = ref(dayjs().startOf('week'))
 const showTaskCreationDialog = ref(false)
 const showTaskAssignmentDialog = ref(false)
 const isRefreshing = ref(false)
 
-const monthViewTable = ref(null)
+const weekViewTable = ref(null)
 
-const addToMonth = (change) => {
-  firstOfMonth.value = firstOfMonth.value.add(change, 'M')
+const addToWeek = (change) => {
+  firstOfWeek.value = firstOfWeek.value.add(change, 'week')
 }
 
 const taskFilters = reactive({
@@ -80,7 +81,6 @@ const taskFilters = reactive({
   priority: null,
   project: '',
 })
-
 const updateFilters = (newFilters) => {
   Object.entries(newFilters).forEach(([key, value]) => {
     if (['status', 'priority', 'project'].includes(key)) {
@@ -94,8 +94,8 @@ const refreshView = async () => {
   isRefreshing.value = true
   try {
     await users.reload()
-    if (monthViewTable.value) {
-      await monthViewTable.value.events.reload()
+    if (weekViewTable.value) {
+      await weekViewTable.value.events.reload()
     }
   } catch (error) {
     console.error(error)
