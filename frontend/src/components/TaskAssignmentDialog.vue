@@ -209,10 +209,22 @@ const task = createResource({
 
 
 const _users = computed(() => {
-  return props.users.map((user) => ({
+  const allUsers = props.users.map((user) => ({
     label: user.full_name,
     value: user.name,
   }))
+
+  // Get the values of currently assigned users
+  const assignedValues = new Set(form.users.map((u) => u.value))
+
+  // Sort: assigned users first, then others (preserving original order within groups)
+  return allUsers.sort((a, b) => {
+    const aAssigned = assignedValues.has(a.value)
+    const bAssigned = assignedValues.has(b.value)
+    if (aAssigned && !bAssigned) return -1
+    if (!aAssigned && bAssigned) return 1
+    return 0
+  })
 })
 
 onMounted(() => {
