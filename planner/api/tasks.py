@@ -394,7 +394,6 @@ def get_all_departments():
 			name,
 			department_name
 		FROM `tabDepartment`
-		WHERE disabled = 0
 		ORDER BY department_name
 	""", as_dict=True)
 

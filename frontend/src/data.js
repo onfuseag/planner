@@ -71,7 +71,6 @@ export const status = [
 export const departments = createListResource({
   doctype: 'Department',
   fields: ['name', 'department_name'],
-  filters: { disabled: 0 },
   cache: ['Departments'],
   pageLength: 99999,
   transform(data) {
