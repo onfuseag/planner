@@ -585,13 +585,33 @@ const getTasksForHour = (userName, hour) => {
       return hour === '00'
     }
 
+    const currentDate = props.selectedDay.format('YYYY-MM-DD')
+    const isStartDay = task.start_date === currentDate
+    const isEndDay = task.end_date === currentDate
+    const isMultiDay = task.start_date !== task.end_date
+
+    // For multi-day tasks on intermediate days, show in first hour (all day)
+    if (isMultiDay && !isStartDay && !isEndDay) {
+      return hour === '00'
+    }
+
     const [startHour, startMinute] = task.start_time.split(':').map(Number)
     const [endHour, endMinute] = task.end_time.split(':').map(Number)
     const currentHour = parseInt(hour)
 
-    // Task spans this hour if:
-    // 1. Task starts in or before this hour AND
-    // 2. Task ends after this hour starts (including any minutes past the hour)
+    // For multi-day tasks: only apply time constraints on start/end days
+    if (isMultiDay) {
+      if (isStartDay) {
+        // On start day: show from start_time until end of day
+        return startHour <= currentHour
+      }
+      if (isEndDay) {
+        // On end day: show from start of day until end_time
+        return endHour > currentHour || (endHour === currentHour && endMinute > 0)
+      }
+    }
+
+    // Single-day task or fallback: use both start and end time
     const taskStartsBeforeOrDuringThisHour = startHour <= currentHour
     const taskEndsAfterThisHourStarts =
       endHour > currentHour || (endHour === currentHour && endMinute > 0)
