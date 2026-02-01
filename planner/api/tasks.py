@@ -167,10 +167,19 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 	Groups tasks by the allocated_to user
 	"""
 	cond = "AND task.status != 'Template' "
+	join_employee = ""
+
+	# Handle department filter separately (requires Employee join)
+	department_filter = task_filters.pop('department', None) if isinstance(task_filters, dict) else None
 
 	for key, value in task_filters.items():
 		if value and value != '':  # Skip null/empty values
 			cond += f"AND task.{key} = '{value}' "
+
+	# If department filter is specified, join with Employee table
+	if department_filter and department_filter != '':
+		join_employee = "JOIN `tabEmployee` as emp ON todo.allocated_to = emp.user_id"
+		cond += f"AND emp.department = '{department_filter}' "
 
 	# Query tasks through ToDo assignments
 	tasks = frappe.db.sql(f"""
@@ -189,6 +198,7 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 			task.custom_end_time as end_time
 		FROM `tabTask` as task
 		JOIN `tabToDo` as todo ON task.name = todo.reference_name
+		{join_employee}
 		WHERE todo.reference_type = 'Task'
 		AND todo.status = 'Open'
 		AND task.exp_start_date <= "{month_end}"
@@ -372,6 +382,23 @@ def get_all_enabled_users():
 	""", as_dict=True)
 
 	return users
+
+
+@frappe.whitelist()
+def get_all_departments():
+	"""
+	Get all departments in the system (for department filter dropdown)
+	"""
+	departments = frappe.db.sql("""
+		SELECT
+			name,
+			department_name
+		FROM `tabDepartment`
+		WHERE disabled = 0
+		ORDER BY department_name
+	""", as_dict=True)
+
+	return departments
 
 @frappe.whitelist()
 def get_task(name):

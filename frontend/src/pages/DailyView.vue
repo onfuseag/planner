@@ -84,11 +84,12 @@ const taskFilters = reactive({
   status: null,
   priority: null,
   project: '',
+  department: '',
 })
 
 const updateFilters = (newFilters) => {
   Object.entries(newFilters).forEach(([key, value]) => {
-    if (['status', 'priority', 'project'].includes(key)) {
+    if (['status', 'priority', 'project', 'department'].includes(key)) {
       if (value) taskFilters[key] = value
       else delete taskFilters[key]
     }

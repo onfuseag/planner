@@ -67,3 +67,17 @@ export const status = [
   label: value,
   value,
 }))
+
+export const departments = createListResource({
+  doctype: 'Department',
+  fields: ['name', 'department_name'],
+  filters: { disabled: 0 },
+  cache: ['Departments'],
+  pageLength: 99999,
+  transform(data) {
+    return data.map((dept) => ({
+      label: dept.department_name,
+      value: dept.name,
+    }))
+  },
+})
