@@ -106,7 +106,13 @@
                 class="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded"
               >
                 <div class="font-semibold text-gray-800">
-                  Holiday: {{ getHolidayForDay(user.name).description || 'Holiday' }}
+                  <span>Holiday: </span>
+                  <span
+                    v-if="getHolidayForDay(user.name).description"
+                    class="[&_.ql-editor]:p-0 [&_.ql-editor]:inline"
+                    v-html="getHolidayForDay(user.name).description"
+                  ></span>
+                  <span v-else>Holiday</span>
                 </div>
                 <div v-if="getHolidayForDay(user.name).weekly_off" class="text-gray-700">
                   (Weekly Off)
