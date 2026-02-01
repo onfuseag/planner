@@ -1,4 +1,4 @@
-import { createListResource } from 'frappe-ui'
+import { createListResource, createResource } from 'frappe-ui'
 
 export const projects = createListResource({
   doctype: 'Project',
@@ -68,13 +68,11 @@ export const status = [
   value,
 }))
 
-export const departments = createListResource({
-  doctype: 'Department',
-  fields: ['name', 'department_name'],
+export const departments = createResource({
+  url: 'planner.api.tasks.get_all_departments',
   cache: ['Departments'],
-  pageLength: 99999,
   transform(data) {
-    return data.map((dept) => ({
+    return (data || []).map((dept) => ({
       label: dept.department_name,
       value: dept.name,
     }))
