@@ -585,36 +585,35 @@ const getTasksForHour = (userName, hour) => {
       return hour === '00'
     }
 
-    const currentDate = props.selectedDay.format('YYYY-MM-DD')
-    const isStartDay = task.start_date === currentDate
-    const isEndDay = task.end_date === currentDate
-    const isMultiDay = task.start_date !== task.end_date
+    const currentDate = props.selectedDay
+    const taskStartDate = dayjs(task.start_date)
+    const taskEndDate = dayjs(task.end_date)
+    const isStartDay = currentDate.isSame(taskStartDate, 'day')
+    const isEndDay = currentDate.isSame(taskEndDate, 'day')
+    const isMultiDay = !taskStartDate.isSame(taskEndDate, 'day')
 
-    // For multi-day tasks on intermediate days, show in first hour (all day)
-    if (isMultiDay && !isStartDay && !isEndDay) {
-      return hour === '00'
-    }
-
-    const [startHour, startMinute] = task.start_time.split(':').map(Number)
+    const [startHour] = task.start_time.split(':').map(Number)
     const [endHour, endMinute] = task.end_time.split(':').map(Number)
     const currentHour = parseInt(hour)
 
-    // For multi-day tasks: only apply time constraints on start/end days
+    // For multi-day tasks: handle each day type differently
     if (isMultiDay) {
       if (isStartDay) {
-        // On start day: show from start_time until end of day
-        return startHour <= currentHour
+        // On start day: show from start_time until end of day (hour 23)
+        return currentHour >= startHour
       }
       if (isEndDay) {
-        // On end day: show from start of day until end_time
-        return endHour > currentHour || (endHour === currentHour && endMinute > 0)
+        // On end day: show from start of day (hour 00) until end_time
+        return currentHour < endHour || (currentHour === endHour && endMinute > 0)
       }
+      // Intermediate day: show for all hours
+      return true
     }
 
-    // Single-day task or fallback: use both start and end time
-    const taskStartsBeforeOrDuringThisHour = startHour <= currentHour
+    // Single-day task: use both start and end time
+    const taskStartsBeforeOrDuringThisHour = currentHour >= startHour
     const taskEndsAfterThisHourStarts =
-      endHour > currentHour || (endHour === currentHour && endMinute > 0)
+      currentHour < endHour || (currentHour === endHour && endMinute > 0)
 
     return taskStartsBeforeOrDuringThisHour && taskEndsAfterThisHourStarts
   })
