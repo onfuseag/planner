@@ -13,4 +13,9 @@ dayjs.extend(isSameOrAfter)
 dayjs.extend(customParseFormat)
 dayjs.extend(isBetween)
 
+// Set Monday as the first day of the week (European standard)
+dayjs.updateLocale('en', {
+  weekStart: 1,
+})
+
 export default dayjs
