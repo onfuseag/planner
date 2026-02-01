@@ -137,7 +137,7 @@
 
             <!-- Tasks -->
             <div
-              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-32"
+              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0"
             >
               <div
                 v-for="task in getTasksForDay(user.name, day.date)"
