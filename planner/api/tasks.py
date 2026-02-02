@@ -167,19 +167,14 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 	Groups tasks by the allocated_to user
 	"""
 	cond = "AND task.status != 'Template' "
-	join_employee = ""
 
-	# Handle department filter separately (requires Employee join)
-	department_filter = task_filters.pop('department', None) if isinstance(task_filters, dict) else None
+	# Remove department from task_filters if present (department filters users, not tasks)
+	if isinstance(task_filters, dict):
+		task_filters.pop('department', None)
 
 	for key, value in task_filters.items():
 		if value and value != '':  # Skip null/empty values
 			cond += f"AND task.{key} = '{value}' "
-
-	# If department filter is specified, join with Employee table
-	if department_filter and department_filter != '':
-		join_employee = "JOIN `tabEmployee` as emp ON todo.allocated_to = emp.user_id"
-		cond += f"AND emp.department = '{department_filter}' "
 
 	# Query tasks through ToDo assignments
 	tasks = frappe.db.sql(f"""
@@ -198,7 +193,6 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 			task.custom_end_time as end_time
 		FROM `tabTask` as task
 		JOIN `tabToDo` as todo ON task.name = todo.reference_name
-		{join_employee}
 		WHERE todo.reference_type = 'Task'
 		AND todo.status = 'Open'
 		AND task.exp_start_date <= "{month_end}"
@@ -380,6 +374,45 @@ def get_all_enabled_users():
 		AND user.user_type = 'System User'
 		ORDER BY user.full_name
 	""", as_dict=True)
+
+	return users
+
+
+@frappe.whitelist()
+def get_users_for_planner(department=None):
+	"""
+	Get users for planner views, optionally filtered by department.
+	When department is specified, only returns users whose Employee belongs to that department.
+	"""
+	if department:
+		# Filter users by their Employee's department
+		users = frappe.db.sql("""
+			SELECT
+				user.name,
+				user.full_name,
+				user.user_image
+			FROM `tabUser` as user
+			JOIN `tabEmployee` as emp ON user.name = emp.user_id
+			WHERE user.enabled = 1
+			AND user.name NOT IN ('Administrator', 'Guest')
+			AND user.user_type = 'System User'
+			AND emp.status = 'Active'
+			AND emp.department = %(department)s
+			ORDER BY user.full_name
+		""", {'department': department}, as_dict=True)
+	else:
+		# Return all enabled system users
+		users = frappe.db.sql("""
+			SELECT
+				user.name,
+				user.full_name,
+				user.user_image
+			FROM `tabUser` as user
+			WHERE user.enabled = 1
+			AND user.name NOT IN ('Administrator', 'Guest')
+			AND user.user_type = 'System User'
+			ORDER BY user.full_name
+		""", as_dict=True)
 
 	return users
 

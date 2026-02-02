@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { Button, FeatherIcon, createListResource } from 'frappe-ui'
+import { Button, FeatherIcon, createResource } from 'frappe-ui'
 import { reactive, ref } from 'vue'
 import WeekViewHeader from '../components/WeekViewHeader.vue'
 import WeekViewTable from '../components/WeekViewTable.vue'
@@ -84,9 +84,13 @@ const taskFilters = reactive({
 })
 const updateFilters = (newFilters) => {
   Object.entries(newFilters).forEach(([key, value]) => {
-    if (['status', 'priority', 'project', 'department'].includes(key)) {
+    if (['status', 'priority', 'project'].includes(key)) {
       if (value) taskFilters[key] = value
       else delete taskFilters[key]
+    }
+    // Handle department filter separately (filters users, not tasks)
+    if (key === 'department') {
+      users.submit({ department: value || null })
     }
   })
 }
@@ -94,7 +98,7 @@ const updateFilters = (newFilters) => {
 const refreshView = async () => {
   isRefreshing.value = true
   try {
-    await users.reload()
+    await users.submit({ department: taskFilters.department || null })
     if (weekViewTable.value) {
       await weekViewTable.value.events.reload()
     }
@@ -106,15 +110,8 @@ const refreshView = async () => {
   }
 }
 
-const users = createListResource({
-  doctype: 'User',
-  fields: ['name', 'full_name', 'user_image'],
-  cache: ['User'],
-  filters: {
-    enabled: 1,
-    user_type: 'System User',
-  },
-  pageLength: 99999,
+const users = createResource({
+  url: 'planner.api.tasks.get_users_for_planner',
   auto: true,
   onError(error) {
     console.log(error)
