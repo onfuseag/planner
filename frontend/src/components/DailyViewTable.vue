@@ -106,7 +106,13 @@
                 class="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded"
               >
                 <div class="font-semibold text-gray-800">
-                  Holiday: {{ getHolidayForDay(user.name).description || 'Holiday' }}
+                  <span>Holiday: </span>
+                  <span
+                    v-if="getHolidayForDay(user.name).description"
+                    class="[&_.ql-editor]:p-0 [&_.ql-editor]:inline"
+                    v-html="getHolidayForDay(user.name).description"
+                  ></span>
+                  <span v-else>Holiday</span>
                 </div>
                 <div v-if="getHolidayForDay(user.name).weekly_off" class="text-gray-700">
                   (Weekly Off)
@@ -585,16 +591,35 @@ const getTasksForHour = (userName, hour) => {
       return hour === '00'
     }
 
-    const [startHour, startMinute] = task.start_time.split(':').map(Number)
+    const currentDate = props.selectedDay
+    const taskStartDate = dayjs(task.start_date)
+    const taskEndDate = dayjs(task.end_date)
+    const isStartDay = currentDate.isSame(taskStartDate, 'day')
+    const isEndDay = currentDate.isSame(taskEndDate, 'day')
+    const isMultiDay = !taskStartDate.isSame(taskEndDate, 'day')
+
+    const [startHour] = task.start_time.split(':').map(Number)
     const [endHour, endMinute] = task.end_time.split(':').map(Number)
     const currentHour = parseInt(hour)
 
-    // Task spans this hour if:
-    // 1. Task starts in or before this hour AND
-    // 2. Task ends after this hour starts (including any minutes past the hour)
-    const taskStartsBeforeOrDuringThisHour = startHour <= currentHour
+    // For multi-day tasks: handle each day type differently
+    if (isMultiDay) {
+      if (isStartDay) {
+        // On start day: show from start_time until end of day (hour 23)
+        return currentHour >= startHour
+      }
+      if (isEndDay) {
+        // On end day: show from start of day (hour 00) until end_time
+        return currentHour < endHour || (currentHour === endHour && endMinute > 0)
+      }
+      // Intermediate day: show for all hours
+      return true
+    }
+
+    // Single-day task: use both start and end time
+    const taskStartsBeforeOrDuringThisHour = currentHour >= startHour
     const taskEndsAfterThisHourStarts =
-      endHour > currentHour || (endHour === currentHour && endMinute > 0)
+      currentHour < endHour || (currentHour === endHour && endMinute > 0)
 
     return taskStartsBeforeOrDuringThisHour && taskEndsAfterThisHourStarts
   })

@@ -200,8 +200,8 @@ const task = createResource({
     form.priority = data.priority
     form.start_date = data.exp_start_date
     form.end_date = data.exp_end_date
-    form.start_time = data.custom_start_time || ''
-    form.end_time = data.custom_end_time || ''
+    form.start_time = data.start_time || ''
+    form.end_time = data.end_time || ''
     form.completed_on = data.completed_on
     form.project = data.project
   },
@@ -209,10 +209,22 @@ const task = createResource({
 
 
 const _users = computed(() => {
-  return props.users.map((user) => ({
+  const allUsers = props.users.map((user) => ({
     label: user.full_name,
     value: user.name,
   }))
+
+  // Get the values of currently assigned users
+  const assignedValues = new Set(form.users.map((u) => u.value))
+
+  // Sort: assigned users first, then others (preserving original order within groups)
+  return allUsers.sort((a, b) => {
+    const aAssigned = assignedValues.has(a.value)
+    const bAssigned = assignedValues.has(b.value)
+    if (aAssigned && !bAssigned) return -1
+    if (!aAssigned && bAssigned) return 1
+    return 0
+  })
 })
 
 onMounted(() => {

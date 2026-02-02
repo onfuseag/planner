@@ -31,8 +31,15 @@
         :key="key"
         class="max-w-36 w-36"
       >
+        <FormControl
+          v-if="key === 'department'"
+          type="autocomplete"
+          placeholder="Department"
+          :options="value.options"
+          v-model="value.model"
+        />
         <Link
-          v-if="key === 'project'"
+          v-else-if="key === 'project'"
           doctype="Project"
           v-model="filters.project.model"
           placeholder="Select Project"
@@ -62,14 +69,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch, ref } from 'vue'
+import { reactive, watch, ref, onMounted } from 'vue'
 import { FormControl, DatePicker } from 'frappe-ui'
 import { Dayjs } from 'dayjs'
 import { dayjs } from '../utils'
-import { priority, status } from '../data'
+import { priority, status, departments } from '../data'
 import Link from './Link.vue'
 
-export type FilterField = 'status' | 'priority' | 'project'
+export type FilterField = 'status' | 'priority' | 'project' | 'department'
 
 const props = defineProps({
   selectedDay: Dayjs,
@@ -97,13 +104,20 @@ watch(() => props.selectedDay, (newDay) => {
 
 const filters: {
   [K in FilterField]: {
-    options?: string[]
+    options?: any[]
     model?: { value: string } | string | null
   }
 } = reactive({
+  department: { options: [], model: null },
   project: { model: null },
   status: { options: status, model: null },
   priority: { options: priority, model: null },
+})
+
+onMounted(() => {
+  departments.fetch().then(() => {
+    filters.department.options = departments.data || []
+  })
 })
 
 watch(filters, (val) => {
@@ -111,6 +125,7 @@ watch(filters, (val) => {
     status: val.status.model || '',
     priority: val.priority.model || '',
     project: val?.project?.model || '',
+    department: val?.department?.model?.value || '',
   }
   emit('updateFilters', newFilters)
 })

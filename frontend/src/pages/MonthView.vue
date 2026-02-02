@@ -57,7 +57,7 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { FeatherIcon, createListResource, Button } from 'frappe-ui'
+import { FeatherIcon, createResource, Button } from 'frappe-ui'
 import { dayjs, raiseToast } from '../utils'
 import MonthViewHeader from '../components/MonthViewHeader.vue'
 import MonthViewTable from '../components/MonthViewTable.vue'
@@ -87,13 +87,17 @@ const updateFilters = (newFilters) => {
       if (value) taskFilters[key] = value
       else delete taskFilters[key]
     }
+    // Handle department filter separately (filters users, not tasks)
+    if (key === 'department') {
+      users.submit({ department: value || null })
+    }
   })
 }
 
 const refreshView = async () => {
   isRefreshing.value = true
   try {
-    await users.reload()
+    await users.submit({ department: null })
     if (monthViewTable.value) {
       await monthViewTable.value.events.reload()
     }
@@ -105,15 +109,8 @@ const refreshView = async () => {
   }
 }
 
-const users = createListResource({
-  doctype: 'User',
-  fields: ['name', 'full_name', 'user_image'],
-  cache: ['User'],
-  filters: {
-    enabled: 1,
-    user_type: 'System User',
-  },
-  pageLength: 99999,
+const users = createResource({
+  url: 'planner.api.tasks.get_users_for_planner',
   auto: true,
   onError(error) {
     console.log(error)
