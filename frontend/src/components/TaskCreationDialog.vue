@@ -208,8 +208,22 @@ function resetState() {
 const newTask = createResource({
   url: 'planner.api.tasks.create_task',
   makeParams() {
+    // Combine date and time into DateTime values for start_date and end_date
+    let startDateTime = form.start_date
+    let endDateTime = form.end_date
+    if (form.start_time) {
+      startDateTime = `${form.start_date} ${form.start_time}:00`
+    }
+    if (form.end_time) {
+      endDateTime = `${form.end_date} ${form.end_time}:00`
+    }
+
     return {
-      task_doc: form,
+      task_doc: {
+        ...form,
+        start_date: startDateTime,
+        end_date: endDateTime,
+      },
     }
   },
   onSuccess() {
