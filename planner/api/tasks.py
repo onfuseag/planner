@@ -189,8 +189,8 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 			task.color,
 			task.completed_on,
 			task.priority,
-			task.custom_start_time as start_time,
-			task.custom_end_time as end_time
+			task.start_time,
+			task.end_time
 		FROM `tabTask` as task
 		JOIN `tabToDo` as todo ON task.name = todo.reference_name
 		WHERE todo.reference_type = 'Task'
@@ -288,9 +288,9 @@ def create_task(task_doc):
 
 	# Add time fields if provided
 	if task_doc.get('start_time'):
-		new_task.custom_start_time = task_doc.get('start_time')
+		new_task.start_time = task_doc.get('start_time')
 	if task_doc.get('end_time'):
-		new_task.custom_end_time = task_doc.get('end_time')
+		new_task.end_time = task_doc.get('end_time')
 
 	new_task.save()
 
@@ -474,9 +474,9 @@ def update_task(task_doc):
 
 	# Update time fields if provided
 	if task_doc.get('start_time') is not None:
-		task.custom_start_time = task_doc.get('start_time')
+		task.start_time = task_doc.get('start_time')
 	if task_doc.get('end_time') is not None:
-		task.custom_end_time = task_doc.get('end_time')
+		task.end_time = task_doc.get('end_time')
 
 	task.save()
 
