@@ -352,12 +352,12 @@ const events = createResource({
 
       // Add tasks for this user on this date
       for (const task of tasks[user]) {
-        const startDate = dayjs(task.start_date)
-        const endDate = dayjs(task.end_date)
-        const targetDate = dayjs(dateString)
-
         // Use 'day' granularity to compare dates only, ignoring time component
-        if (targetDate.isBetween(startDate, endDate, 'day', '[]')) {
+        // Use isSameOrBefore/isSameOrAfter pattern (same as Weekly/Monthly views)
+        if (
+          dayjs(task.start_date).isSameOrBefore(dateString, 'day') &&
+          (dayjs(task.end_date).isSameOrAfter(dateString, 'day') || !task.end_date)
+        ) {
           if (!mappedEvents[user][dateString]) {
             mappedEvents[user][dateString] = []
           }
@@ -506,10 +506,13 @@ const mapEventsToDates = (data, mappedEvents, user) => {
 const handleShifts = (event, date, mappedEvents, user, key) => {
   const startDate = dayjs(event.from_date || event.holiday_date || event.start_date)
   const endDate = dayjs(event.to_date || event.holiday_date || event.end_date)
-  const targetDate = dayjs(date)
 
   // Use 'day' granularity to compare dates only, ignoring time component
-  if (targetDate.isBetween(startDate, endDate, 'day', '[]')) {
+  // Use isSameOrBefore/isSameOrAfter pattern (same as Weekly/Monthly views)
+  if (
+    startDate.isSameOrBefore(date, 'day') &&
+    (endDate.isSameOrAfter(date, 'day') || !endDate.isValid())
+  ) {
     if (!mappedEvents[user][date]) {
       if (key === 'leave') {
         mappedEvents[user][date] = { leave: event.leave_type }
