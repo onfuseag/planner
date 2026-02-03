@@ -189,6 +189,19 @@ function validateForm() {
     raiseToast('error', 'End Date should be greater than Start Date')
     return false
   }
+  // Validate that end time is not before start time when on the same day
+  if (
+    dayjs(form.start_date).isSame(dayjs(form.end_date), 'day') &&
+    form.start_time &&
+    form.end_time
+  ) {
+    const startDateTime = dayjs(`${form.start_date} ${form.start_time}`)
+    const endDateTime = dayjs(`${form.end_date} ${form.end_time}`)
+    if (endDateTime.isBefore(startDateTime) || endDateTime.isSame(startDateTime)) {
+      raiseToast('error', 'End Time must be after Start Time on the same day')
+      return false
+    }
+  }
   return true
 }
 
