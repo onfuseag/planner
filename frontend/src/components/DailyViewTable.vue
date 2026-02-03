@@ -356,7 +356,8 @@ const events = createResource({
         const endDate = dayjs(task.end_date)
         const targetDate = dayjs(dateString)
 
-        if (targetDate.isBetween(startDate, endDate, null, '[]')) {
+        // Use 'day' granularity to compare dates only, ignoring time component
+        if (targetDate.isBetween(startDate, endDate, 'day', '[]')) {
           if (!mappedEvents[user][dateString]) {
             mappedEvents[user][dateString] = []
           }
@@ -507,7 +508,8 @@ const handleShifts = (event, date, mappedEvents, user, key) => {
   const endDate = dayjs(event.to_date || event.holiday_date || event.end_date)
   const targetDate = dayjs(date)
 
-  if (targetDate.isBetween(startDate, endDate, null, '[]')) {
+  // Use 'day' granularity to compare dates only, ignoring time component
+  if (targetDate.isBetween(startDate, endDate, 'day', '[]')) {
     if (!mappedEvents[user][date]) {
       if (key === 'leave') {
         mappedEvents[user][date] = { leave: event.leave_type }
