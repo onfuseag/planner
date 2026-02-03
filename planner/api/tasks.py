@@ -178,6 +178,7 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 
 	# Query tasks through ToDo assignments
 	# exp_start_date and exp_end_date are DateTime fields containing both date and time
+	# Use DATE() to extract only the date part for comparison (ignoring time component)
 	tasks = frappe.db.sql(f"""
 		SELECT
 			task.name,
@@ -194,23 +195,10 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 		JOIN `tabToDo` as todo ON task.name = todo.reference_name
 		WHERE todo.reference_type = 'Task'
 		AND todo.status = 'Open'
-		AND task.exp_start_date <= "{month_end}"
-		AND task.exp_end_date >= "{month_start}"
+		AND DATE(task.exp_start_date) <= "{month_end}"
+		AND DATE(task.exp_end_date) >= "{month_start}"
 		{cond}
 		""", as_dict=True)
-
-	# Debug logging
-	import json
-	frappe.log_error(
-		title="get_tasks Debug",
-		message=json.dumps({
-			'month_start': month_start,
-			'month_end': month_end,
-			'task_filters': task_filters,
-			'result_count': len(tasks),
-			'tasks': [{'name': t.name, 'user': t.user, 'start': str(t.start_date), 'end': str(t.end_date)} for t in tasks]
-		}, indent=2, default=str)
-	)
 
 	# group tasks by user
 	user_tasks = {}
