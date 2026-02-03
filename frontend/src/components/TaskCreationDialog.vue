@@ -189,6 +189,19 @@ function validateForm() {
     raiseToast('error', 'End Date should be greater than Start Date')
     return false
   }
+  // Validate that end time is not before start time when on the same day
+  if (
+    dayjs(form.start_date).isSame(dayjs(form.end_date), 'day') &&
+    form.start_time &&
+    form.end_time
+  ) {
+    const startDateTime = dayjs(`${form.start_date} ${form.start_time}`)
+    const endDateTime = dayjs(`${form.end_date} ${form.end_time}`)
+    if (endDateTime.isBefore(startDateTime) || endDateTime.isSame(startDateTime)) {
+      raiseToast('error', 'End Time must be after Start Time on the same day')
+      return false
+    }
+  }
   return true
 }
 
@@ -208,8 +221,22 @@ function resetState() {
 const newTask = createResource({
   url: 'planner.api.tasks.create_task',
   makeParams() {
+    // Combine date and time into DateTime values for start_date and end_date
+    let startDateTime = form.start_date
+    let endDateTime = form.end_date
+    if (form.start_time) {
+      startDateTime = `${form.start_date} ${form.start_time}:00`
+    }
+    if (form.end_time) {
+      endDateTime = `${form.end_date} ${form.end_time}:00`
+    }
+
     return {
-      task_doc: form,
+      task_doc: {
+        ...form,
+        start_date: startDateTime,
+        end_date: endDateTime,
+      },
     }
   },
   onSuccess() {

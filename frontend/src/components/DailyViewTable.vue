@@ -352,11 +352,12 @@ const events = createResource({
 
       // Add tasks for this user on this date
       for (const task of tasks[user]) {
-        const startDate = dayjs(task.start_date)
-        const endDate = dayjs(task.end_date)
-        const targetDate = dayjs(dateString)
-
-        if (targetDate.isBetween(startDate, endDate, null, '[]')) {
+        // Use 'day' granularity to compare dates only, ignoring time component
+        // Use isSameOrBefore/isSameOrAfter pattern (same as Weekly/Monthly views)
+        if (
+          dayjs(task.start_date).isSameOrBefore(dateString, 'day') &&
+          (dayjs(task.end_date).isSameOrAfter(dateString, 'day') || !task.end_date)
+        ) {
           if (!mappedEvents[user][dateString]) {
             mappedEvents[user][dateString] = []
           }
@@ -505,9 +506,13 @@ const mapEventsToDates = (data, mappedEvents, user) => {
 const handleShifts = (event, date, mappedEvents, user, key) => {
   const startDate = dayjs(event.from_date || event.holiday_date || event.start_date)
   const endDate = dayjs(event.to_date || event.holiday_date || event.end_date)
-  const targetDate = dayjs(date)
 
-  if (targetDate.isBetween(startDate, endDate, null, '[]')) {
+  // Use 'day' granularity to compare dates only, ignoring time component
+  // Use isSameOrBefore/isSameOrAfter pattern (same as Weekly/Monthly views)
+  if (
+    startDate.isSameOrBefore(date, 'day') &&
+    (endDate.isSameOrAfter(date, 'day') || !endDate.isValid())
+  ) {
     if (!mappedEvents[user][date]) {
       if (key === 'leave') {
         mappedEvents[user][date] = { leave: event.leave_type }
@@ -586,20 +591,29 @@ const getTasksForHour = (userName, hour) => {
   }
 
   return userTasks.filter((task) => {
-    if (!task.start_time || !task.end_time) {
+    const currentDate = props.selectedDay
+    // exp_start_date and exp_end_date are DateTime fields containing both date and time
+    const taskStartDateTime = dayjs(task.start_date)
+    const taskEndDateTime = dayjs(task.end_date)
+
+    // Extract time components from DateTime fields
+    const startHour = taskStartDateTime.hour()
+    const startMinute = taskStartDateTime.minute()
+    const endHour = taskEndDateTime.hour()
+    const endMinute = taskEndDateTime.minute()
+
+    // Check if time is midnight (00:00) on both - treat as "no specific time"
+    const hasNoSpecificTime =
+      startHour === 0 && startMinute === 0 && endHour === 0 && endMinute === 0
+
+    if (hasNoSpecificTime) {
       // If no time specified, show in first hour (00)
       return hour === '00'
     }
 
-    const currentDate = props.selectedDay
-    const taskStartDate = dayjs(task.start_date)
-    const taskEndDate = dayjs(task.end_date)
-    const isStartDay = currentDate.isSame(taskStartDate, 'day')
-    const isEndDay = currentDate.isSame(taskEndDate, 'day')
-    const isMultiDay = !taskStartDate.isSame(taskEndDate, 'day')
-
-    const [startHour] = task.start_time.split(':').map(Number)
-    const [endHour, endMinute] = task.end_time.split(':').map(Number)
+    const isStartDay = currentDate.isSame(taskStartDateTime, 'day')
+    const isEndDay = currentDate.isSame(taskEndDateTime, 'day')
+    const isMultiDay = !taskStartDateTime.isSame(taskEndDateTime, 'day')
     const currentHour = parseInt(hour)
 
     // For multi-day tasks: handle each day type differently

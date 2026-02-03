@@ -177,6 +177,8 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 			cond += f"AND task.{key} = '{value}' "
 
 	# Query tasks through ToDo assignments
+	# exp_start_date and exp_end_date are DateTime fields containing both date and time
+	# Use DATE() to extract only the date part for comparison (ignoring time component)
 	tasks = frappe.db.sql(f"""
 		SELECT
 			task.name,
@@ -188,30 +190,15 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 			todo.allocated_to as user,
 			task.color,
 			task.completed_on,
-			task.priority,
-			task.start_time,
-			task.end_time
+			task.priority
 		FROM `tabTask` as task
 		JOIN `tabToDo` as todo ON task.name = todo.reference_name
 		WHERE todo.reference_type = 'Task'
 		AND todo.status = 'Open'
-		AND task.exp_start_date <= "{month_end}"
-		AND task.exp_end_date >= "{month_start}"
+		AND DATE(task.exp_start_date) <= "{month_end}"
+		AND DATE(task.exp_end_date) >= "{month_start}"
 		{cond}
 		""", as_dict=True)
-
-	# Debug logging
-	import json
-	frappe.log_error(
-		title="get_tasks Debug",
-		message=json.dumps({
-			'month_start': month_start,
-			'month_end': month_end,
-			'task_filters': task_filters,
-			'result_count': len(tasks),
-			'tasks': [{'name': t.name, 'user': t.user, 'start': str(t.start_date), 'end': str(t.end_date)} for t in tasks]
-		}, indent=2, default=str)
-	)
 
 	# group tasks by user
 	user_tasks = {}
@@ -279,18 +266,13 @@ def create_task(task_doc):
 
 	new_task = frappe.new_doc('Task')
 	new_task.subject = task_doc.get('subject')
+	# exp_start_date and exp_end_date are DateTime fields (contain both date and time)
 	new_task.exp_start_date = task_doc.get('start_date')
 	new_task.exp_end_date = task_doc.get('end_date')
 	new_task.description = task_doc.get('description')
 	new_task.status = task_doc.get('status')
 	new_task.priority = task_doc.get('priority')
 	new_task.project = task_doc.get('project', None)
-
-	# Add time fields if provided
-	if task_doc.get('start_time'):
-		new_task.start_time = task_doc.get('start_time')
-	if task_doc.get('end_time'):
-		new_task.end_time = task_doc.get('end_time')
 
 	new_task.save()
 
@@ -464,6 +446,7 @@ def update_task(task_doc):
 	from frappe.desk.form import assign_to
 
 	task = frappe.get_doc("Task", task_doc.get('name'))
+	# exp_start_date and exp_end_date are DateTime fields (contain both date and time)
 	task.exp_start_date = task_doc.get('exp_start_date')
 	task.exp_end_date = task_doc.get('exp_end_date')
 	task.description = task_doc.get('description')
@@ -471,12 +454,6 @@ def update_task(task_doc):
 	task.priority = task_doc.get('priority')
 	task.project = task_doc.get('project', None)
 	task.completed_on = task_doc.get('completed_on', None)
-
-	# Update time fields if provided
-	if task_doc.get('start_time') is not None:
-		task.start_time = task_doc.get('start_time')
-	if task_doc.get('end_time') is not None:
-		task.end_time = task_doc.get('end_time')
 
 	task.save()
 

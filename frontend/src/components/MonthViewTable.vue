@@ -357,9 +357,10 @@ const events = createResource({
 
         // Add tasks for this user on this date
         for (const task of tasks[user]) {
+          // Use 'day' granularity to compare dates only, ignoring time component
           if (
-            dayjs(task.start_date).isSameOrBefore(date) &&
-            (dayjs(task.end_date).isSameOrAfter(date) || !task.end_date)
+            dayjs(task.start_date).isSameOrBefore(date, 'day') &&
+            (dayjs(task.end_date).isSameOrAfter(date, 'day') || !task.end_date)
           ) {
             if (!Array.isArray(mappedEvents[user][key])) {
               mappedEvents[user][key] = []
@@ -544,9 +545,10 @@ const mapEventsToDates = (data, mappedEvents, user) => {
 }
 
 const handleShifts = (event, date, mappedEvents, user, key) => {
+  // Use 'day' granularity to compare dates only, ignoring time component
   if (
-    dayjs(event.start_date).isSameOrBefore(date) &&
-    (dayjs(event.end_date).isSameOrAfter(date) || !event.end_date)
+    dayjs(event.start_date).isSameOrBefore(date, 'day') &&
+    (dayjs(event.end_date).isSameOrAfter(date, 'day') || !event.end_date)
   ) {
     if (!Array.isArray(mappedEvents[user][key]))
       mappedEvents[user][key] = []

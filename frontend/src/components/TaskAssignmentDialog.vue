@@ -198,10 +198,16 @@ const task = createResource({
     form.status = data.status
     form.description = data.description
     form.priority = data.priority
-    form.start_date = data.exp_start_date
-    form.end_date = data.exp_end_date
-    form.start_time = data.start_time || ''
-    form.end_time = data.end_time || ''
+    // exp_start_date and exp_end_date are DateTime fields - extract date and time separately
+    const startDateTime = dayjs(data.exp_start_date)
+    const endDateTime = dayjs(data.exp_end_date)
+    form.start_date = startDateTime.format('YYYY-MM-DD')
+    form.end_date = endDateTime.format('YYYY-MM-DD')
+    // Extract time, but only if it's not midnight (00:00)
+    const startTime = startDateTime.format('HH:mm')
+    const endTime = endDateTime.format('HH:mm')
+    form.start_time = startTime !== '00:00' ? startTime : ''
+    form.end_time = endTime !== '00:00' ? endTime : ''
     form.completed_on = data.completed_on
     form.project = data.project
   },
@@ -257,22 +263,43 @@ function validateForm() {
     raiseToast('error', 'End Date should be greater than Start Date')
     return false
   }
+  // Validate that end time is not before start time when on the same day
+  if (
+    dayjs(form.start_date).isSame(dayjs(form.end_date), 'day') &&
+    form.start_time &&
+    form.end_time
+  ) {
+    const startDateTime = dayjs(`${form.start_date} ${form.start_time}`)
+    const endDateTime = dayjs(`${form.end_date} ${form.end_time}`)
+    if (endDateTime.isBefore(startDateTime) || endDateTime.isSame(startDateTime)) {
+      raiseToast('error', 'End Time must be after Start Time on the same day')
+      return false
+    }
+  }
   return true
 }
 
 const submitTask = async (close) => {
   if (!validateForm()) return
   try {
+    // Combine date and time into DateTime values for exp_start_date and exp_end_date
+    let startDateTime = form.start_date
+    let endDateTime = form.end_date
+    if (form.start_time) {
+      startDateTime = `${form.start_date} ${form.start_time}:00`
+    }
+    if (form.end_time) {
+      endDateTime = `${form.end_date} ${form.end_time}:00`
+    }
+
     await updateTask(
       {
         name: form.task || null,
         project: form.project || null,
         status: form.status,
         priority: form.priority,
-        exp_start_date: form.start_date,
-        exp_end_date: form.end_date,
-        start_time: form.start_time || null,
-        end_time: form.end_time || null,
+        exp_start_date: startDateTime,
+        exp_end_date: endDateTime,
         users: form.users || [],
         description: form.description,
         completed_on: form.completed_on || null,
