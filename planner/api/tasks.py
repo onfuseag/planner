@@ -364,6 +364,7 @@ def get_all_enabled_users():
 def get_users_for_planner(department=None):
 	"""
 	Get users for planner views, optionally filtered by department.
+	Only returns users with enabled accounts and active Employee records.
 	When department is specified, only returns users whose Employee belongs to that department.
 	"""
 	if department:
@@ -383,16 +384,18 @@ def get_users_for_planner(department=None):
 			ORDER BY user.full_name
 		""", {'department': department}, as_dict=True)
 	else:
-		# Return all enabled system users
+		# Return all enabled system users with active Employee records
 		users = frappe.db.sql("""
 			SELECT
 				user.name,
 				user.full_name,
 				user.user_image
 			FROM `tabUser` as user
+			JOIN `tabEmployee` as emp ON user.name = emp.user_id
 			WHERE user.enabled = 1
 			AND user.name NOT IN ('Administrator', 'Guest')
 			AND user.user_type = 'System User'
+			AND emp.status = 'Active'
 			ORDER BY user.full_name
 		""", as_dict=True)
 
