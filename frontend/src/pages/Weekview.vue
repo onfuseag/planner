@@ -90,6 +90,7 @@ const updateFilters = (newFilters) => {
     }
     // Handle department filter separately (filters users, not tasks)
     if (key === 'department') {
+      taskFilters.department = value || ''
       users.submit({ department: value || null })
     }
   })

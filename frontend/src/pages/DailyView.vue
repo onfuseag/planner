@@ -84,6 +84,7 @@ const taskFilters = reactive({
   status: null,
   priority: null,
   project: '',
+  department: '',
 })
 
 const updateFilters = (newFilters) => {
@@ -94,6 +95,7 @@ const updateFilters = (newFilters) => {
     }
     // Handle department filter separately (filters users, not tasks)
     if (key === 'department') {
+      taskFilters.department = value || ''
       users.submit({ department: value || null })
     }
   })
@@ -102,7 +104,7 @@ const updateFilters = (newFilters) => {
 const refreshView = async () => {
   isRefreshing.value = true
   try {
-    await users.submit({ department: null })
+    await users.submit({ department: taskFilters.department || null })
     if (dailyViewTable.value) {
       await dailyViewTable.value.events.reload()
     }
