@@ -194,6 +194,20 @@ const task = createResource({
   },
   onSuccess(data) {
     form.users = data.assigned_users || []
+
+    // If selectedUser is provided (clicked "+" on user row), add them if not already assigned
+    if (props.selectedUser) {
+      const isAlreadyAssigned = form.users.some(
+        (u) => u.value === props.selectedUser.value
+      )
+      if (!isAlreadyAssigned) {
+        form.users.push({
+          label: props.selectedUser.label,
+          value: props.selectedUser.value,
+        })
+      }
+    }
+
     form.subject = data.subject
     form.status = data.status
     form.description = data.description
@@ -201,11 +215,17 @@ const task = createResource({
     // exp_start_date and exp_end_date are DateTime fields - extract date and time separately
     const startDateTime = dayjs(data.exp_start_date)
     const endDateTime = dayjs(data.exp_end_date)
-    form.start_date = startDateTime.format('YYYY-MM-DD')
-    form.end_date = endDateTime.format('YYYY-MM-DD')
+    form.start_date = startDateTime.isValid() ? startDateTime.format('YYYY-MM-DD') : ''
+    form.end_date = endDateTime.isValid() ? endDateTime.format('YYYY-MM-DD') : ''
+
+    // Default end_date to today if empty or invalid
+    if (!form.end_date) {
+      form.end_date = dayjs().format('YYYY-MM-DD')
+    }
+
     // Extract time, but only if it's not midnight (00:00)
-    const startTime = startDateTime.format('HH:mm')
-    const endTime = endDateTime.format('HH:mm')
+    const startTime = startDateTime.isValid() ? startDateTime.format('HH:mm') : ''
+    const endTime = endDateTime.isValid() ? endDateTime.format('HH:mm') : ''
     form.start_time = startTime !== '00:00' ? startTime : ''
     form.end_time = endTime !== '00:00' ? endTime : ''
     form.completed_on = data.completed_on
@@ -235,14 +255,22 @@ const _users = computed(() => {
 
 onMounted(() => {
   if (props.taskName && props.taskSubject) {
+    // Editing existing task - don't set defaults
     form.task = props.taskName
+  } else {
+    // Creating new task - set defaults
+    // Default end_date to today if not already set
+    if (!form.end_date) {
+      form.end_date = dayjs().format('YYYY-MM-DD')
+    }
+    // Default user from selectedUser prop if provided
+    if (props.selectedUser && form.users.length === 0) {
+      form.users.push({
+        label: props.selectedUser.label,
+        value: props.selectedUser.value,
+      })
+    }
   }
-  // if (props.selectedUser) {
-  //   form.users.push({
-  //     label: props.selectedUser.label,
-  //     value: props.selectedUser.value,
-  //   })
-  // }
 })
 
 function validateForm() {
