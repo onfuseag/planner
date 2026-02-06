@@ -58,34 +58,22 @@
         />
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
-            >Start Date <span class="text-ink-red-3">*</span>
+            >Start Date & Time <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker
-            v-model="form.start_date"
-            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          <DateTimePicker
+            v-model="form.exp_start_date"
+            placeholder="Select start date & time"
           />
         </div>
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
-            >End Date <span class="text-ink-red-3">*</span>
+            >End Date & Time <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker
-            v-model="form.end_date"
-            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          <DateTimePicker
+            v-model="form.exp_end_date"
+            placeholder="Select end date & time"
           />
         </div>
-        <FormControl
-          type="time"
-          label="Start Time"
-          v-model="form.start_time"
-          placeholder="09:00"
-        />
-        <FormControl
-          type="time"
-          label="End Time"
-          v-model="form.end_time"
-          placeholder="17:00"
-        />
         <div class="w-full col-span-2">
           <label class="block text-xs text-ink-gray-5 mb-1.5">
             Assign To <span class="text-ink-red-3">*</span>
@@ -145,6 +133,7 @@
 import {
   Dialog,
   FormControl,
+  DateTimePicker,
   DatePicker,
   TextEditor,
   call,
@@ -174,10 +163,8 @@ const form = reactive({
   subject: '',
   status: 'Open',
   priority: 'Medium',
-  start_date: '',
-  end_date: '',
-  start_time: '',
-  end_time: '',
+  exp_start_date: '',
+  exp_end_date: '',
   description: '',
   users: [],
   completed_by: null,
@@ -194,20 +181,34 @@ const task = createResource({
   },
   onSuccess(data) {
     form.users = data.assigned_users || []
+
+    // If selectedUser is provided (clicked "+" on user row), add them if not already assigned
+    if (props.selectedUser) {
+      const isAlreadyAssigned = form.users.some(
+        (u) => u.value === props.selectedUser.value
+      )
+      if (!isAlreadyAssigned) {
+        form.users.push({
+          label: props.selectedUser.label,
+          value: props.selectedUser.value,
+        })
+      }
+    }
+
     form.subject = data.subject
     form.status = data.status
     form.description = data.description
     form.priority = data.priority
-    // exp_start_date and exp_end_date are DateTime fields - extract date and time separately
-    const startDateTime = dayjs(data.exp_start_date)
-    const endDateTime = dayjs(data.exp_end_date)
-    form.start_date = startDateTime.format('YYYY-MM-DD')
-    form.end_date = endDateTime.format('YYYY-MM-DD')
-    // Extract time, but only if it's not midnight (00:00)
-    const startTime = startDateTime.format('HH:mm')
-    const endTime = endDateTime.format('HH:mm')
-    form.start_time = startTime !== '00:00' ? startTime : ''
-    form.end_time = endTime !== '00:00' ? endTime : ''
+
+    // Set datetime fields directly
+    form.exp_start_date = data.exp_start_date || ''
+    form.exp_end_date = data.exp_end_date || ''
+
+    // Default exp_end_date to today if empty
+    if (!form.exp_end_date) {
+      form.exp_end_date = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    }
+
     form.completed_on = data.completed_on
     form.project = data.project
   },
@@ -235,22 +236,30 @@ const _users = computed(() => {
 
 onMounted(() => {
   if (props.taskName && props.taskSubject) {
+    // Editing existing task - don't set defaults
     form.task = props.taskName
+  } else {
+    // Creating new task - set defaults
+    // Default exp_end_date to today if not already set
+    if (!form.exp_end_date) {
+      form.exp_end_date = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    }
+    // Default user from selectedUser prop if provided
+    if (props.selectedUser && form.users.length === 0) {
+      form.users.push({
+        label: props.selectedUser.label,
+        value: props.selectedUser.value,
+      })
+    }
   }
-  // if (props.selectedUser) {
-  //   form.users.push({
-  //     label: props.selectedUser.label,
-  //     value: props.selectedUser.value,
-  //   })
-  // }
 })
 
 function validateForm() {
   if (
     form.users.length === 0 ||
     !form.subject ||
-    !form.start_date ||
-    !form.end_date ||
+    !form.exp_start_date ||
+    !form.exp_end_date ||
     !form.status ||
     !form.priority ||
     (form.status === 'Completed' && !form.completed_on) ||
@@ -259,22 +268,14 @@ function validateForm() {
     raiseToast('error', 'Please fill all the required fields')
     return false
   }
-  if (dayjs(form.start_date).isAfter(dayjs(form.end_date))) {
-    raiseToast('error', 'End Date should be greater than Start Date')
+  // Validate end datetime is after start datetime
+  if (dayjs(form.exp_start_date).isAfter(dayjs(form.exp_end_date))) {
+    raiseToast('error', 'End Date & Time should be after Start Date & Time')
     return false
   }
-  // Validate that end time is not before start time when on the same day
-  if (
-    dayjs(form.start_date).isSame(dayjs(form.end_date), 'day') &&
-    form.start_time &&
-    form.end_time
-  ) {
-    const startDateTime = dayjs(`${form.start_date} ${form.start_time}`)
-    const endDateTime = dayjs(`${form.end_date} ${form.end_time}`)
-    if (endDateTime.isBefore(startDateTime) || endDateTime.isSame(startDateTime)) {
-      raiseToast('error', 'End Time must be after Start Time on the same day')
-      return false
-    }
+  if (dayjs(form.exp_start_date).isSame(dayjs(form.exp_end_date))) {
+    raiseToast('error', 'End Date & Time must be after Start Date & Time')
+    return false
   }
   return true
 }
@@ -282,24 +283,14 @@ function validateForm() {
 const submitTask = async (close) => {
   if (!validateForm()) return
   try {
-    // Combine date and time into DateTime values for exp_start_date and exp_end_date
-    let startDateTime = form.start_date
-    let endDateTime = form.end_date
-    if (form.start_time) {
-      startDateTime = `${form.start_date} ${form.start_time}:00`
-    }
-    if (form.end_time) {
-      endDateTime = `${form.end_date} ${form.end_time}:00`
-    }
-
     await updateTask(
       {
         name: form.task || null,
         project: form.project || null,
         status: form.status,
         priority: form.priority,
-        exp_start_date: startDateTime,
-        exp_end_date: endDateTime,
+        exp_start_date: form.exp_start_date,
+        exp_end_date: form.exp_end_date,
         users: form.users || [],
         description: form.description,
         completed_on: form.completed_on || null,

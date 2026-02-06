@@ -539,17 +539,18 @@ const getUserTaskCount = (userName) => {
 
   if (!dayData) return 0
 
+  // Use a Set to count unique tasks by their name
+  const uniqueTaskNames = new Set()
+
   // Handle new structure with tasks/holiday/leave
   if (dayData.tasks && Array.isArray(dayData.tasks)) {
-    return dayData.tasks.length
+    dayData.tasks.forEach((task) => uniqueTaskNames.add(task.name))
+  } else if (Array.isArray(dayData)) {
+    // Handle old structure (plain array)
+    dayData.forEach((task) => uniqueTaskNames.add(task.name))
   }
 
-  // Handle old structure (plain array)
-  if (Array.isArray(dayData)) {
-    return dayData.length
-  }
-
-  return 0
+  return uniqueTaskNames.size
 }
 
 const getLeaveForDay = (userName) => {
