@@ -168,11 +168,17 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 	"""
 	cond = "AND task.status != 'Template' "
 
+	# Remove department from task_filters if present (department filters users, not tasks)
+	if isinstance(task_filters, dict):
+		task_filters.pop('department', None)
+
 	for key, value in task_filters.items():
 		if value and value != '':  # Skip null/empty values
 			cond += f"AND task.{key} = '{value}' "
 
 	# Query tasks through ToDo assignments
+	# exp_start_date and exp_end_date are DateTime fields containing both date and time
+	# Use DATE() to extract only the date part for comparison (ignoring time component)
 	tasks = frappe.db.sql(f"""
 		SELECT
 			task.name,
@@ -184,30 +190,15 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 			todo.allocated_to as user,
 			task.color,
 			task.completed_on,
-			task.priority,
-			task.custom_start_time as start_time,
-			task.custom_end_time as end_time
+			task.priority
 		FROM `tabTask` as task
 		JOIN `tabToDo` as todo ON task.name = todo.reference_name
 		WHERE todo.reference_type = 'Task'
 		AND todo.status = 'Open'
-		AND task.exp_start_date <= "{month_end}"
-		AND task.exp_end_date >= "{month_start}"
+		AND DATE(task.exp_start_date) <= "{month_end}"
+		AND DATE(task.exp_end_date) >= "{month_start}"
 		{cond}
 		""", as_dict=True)
-
-	# Debug logging
-	import json
-	frappe.log_error(
-		title="get_tasks Debug",
-		message=json.dumps({
-			'month_start': month_start,
-			'month_end': month_end,
-			'task_filters': task_filters,
-			'result_count': len(tasks),
-			'tasks': [{'name': t.name, 'user': t.user, 'start': str(t.start_date), 'end': str(t.end_date)} for t in tasks]
-		}, indent=2, default=str)
-	)
 
 	# group tasks by user
 	user_tasks = {}
@@ -275,18 +266,13 @@ def create_task(task_doc):
 
 	new_task = frappe.new_doc('Task')
 	new_task.subject = task_doc.get('subject')
+	# exp_start_date and exp_end_date are DateTime fields (contain both date and time)
 	new_task.exp_start_date = task_doc.get('start_date')
 	new_task.exp_end_date = task_doc.get('end_date')
 	new_task.description = task_doc.get('description')
 	new_task.status = task_doc.get('status')
 	new_task.priority = task_doc.get('priority')
 	new_task.project = task_doc.get('project', None)
-
-	# Add time fields if provided
-	if task_doc.get('start_time'):
-		new_task.custom_start_time = task_doc.get('start_time')
-	if task_doc.get('end_time'):
-		new_task.custom_end_time = task_doc.get('end_time')
 
 	new_task.save()
 
@@ -373,6 +359,64 @@ def get_all_enabled_users():
 
 	return users
 
+
+@frappe.whitelist()
+def get_users_for_planner(department=None):
+	"""
+	Get users for planner views, optionally filtered by department.
+	Only returns users with enabled accounts and active Employee records.
+	When department is specified, only returns users whose Employee belongs to that department.
+	"""
+	if department:
+		# Filter users by their Employee's department
+		users = frappe.db.sql("""
+			SELECT
+				user.name,
+				user.full_name,
+				user.user_image
+			FROM `tabUser` as user
+			JOIN `tabEmployee` as emp ON user.name = emp.user_id
+			WHERE user.enabled = 1
+			AND user.name NOT IN ('Administrator', 'Guest')
+			AND user.user_type = 'System User'
+			AND emp.status = 'Active'
+			AND emp.department = %(department)s
+			ORDER BY user.full_name
+		""", {'department': department}, as_dict=True)
+	else:
+		# Return all enabled system users with active Employee records
+		users = frappe.db.sql("""
+			SELECT
+				user.name,
+				user.full_name,
+				user.user_image
+			FROM `tabUser` as user
+			JOIN `tabEmployee` as emp ON user.name = emp.user_id
+			WHERE user.enabled = 1
+			AND user.name NOT IN ('Administrator', 'Guest')
+			AND user.user_type = 'System User'
+			AND emp.status = 'Active'
+			ORDER BY user.full_name
+		""", as_dict=True)
+
+	return users
+
+
+@frappe.whitelist()
+def get_all_departments():
+	"""
+	Get all departments in the system (for department filter dropdown)
+	"""
+	departments = frappe.db.sql("""
+		SELECT
+			name,
+			department_name
+		FROM `tabDepartment`
+		ORDER BY department_name
+	""", as_dict=True)
+
+	return departments
+
 @frappe.whitelist()
 def get_task(name):
 	task = frappe.get_doc("Task", name)
@@ -405,6 +449,7 @@ def update_task(task_doc):
 	from frappe.desk.form import assign_to
 
 	task = frappe.get_doc("Task", task_doc.get('name'))
+	# exp_start_date and exp_end_date are DateTime fields (contain both date and time)
 	task.exp_start_date = task_doc.get('exp_start_date')
 	task.exp_end_date = task_doc.get('exp_end_date')
 	task.description = task_doc.get('description')
@@ -412,12 +457,6 @@ def update_task(task_doc):
 	task.priority = task_doc.get('priority')
 	task.project = task_doc.get('project', None)
 	task.completed_on = task_doc.get('completed_on', None)
-
-	# Update time fields if provided
-	if task_doc.get('start_time') is not None:
-		task.custom_start_time = task_doc.get('start_time')
-	if task_doc.get('end_time') is not None:
-		task.custom_end_time = task_doc.get('end_time')
 
 	task.save()
 

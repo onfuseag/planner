@@ -58,34 +58,22 @@
         />
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
-            >Start Date <span class="text-ink-red-3">*</span>
+            >Start Date & Time <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker
-            v-model="form.start_date"
-            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          <DateTimePicker
+            v-model="form.exp_start_date"
+            placeholder="Select start date & time"
           />
         </div>
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
-            >End Date <span class="text-ink-red-3">*</span>
+            >End Date & Time <span class="text-ink-red-3">*</span>
           </label>
-          <DatePicker
-            v-model="form.end_date"
-            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+          <DateTimePicker
+            v-model="form.exp_end_date"
+            placeholder="Select end date & time"
           />
         </div>
-        <FormControl
-          type="time"
-          label="Start Time"
-          v-model="form.start_time"
-          placeholder="09:00"
-        />
-        <FormControl
-          type="time"
-          label="End Time"
-          v-model="form.end_time"
-          placeholder="17:00"
-        />
         <div class="w-full col-span-2">
           <label class="block text-xs text-ink-gray-5 mb-1.5">
             Assign To <span class="text-ink-red-3">*</span>
@@ -145,6 +133,7 @@
 import {
   Dialog,
   FormControl,
+  DateTimePicker,
   DatePicker,
   TextEditor,
   call,
@@ -174,10 +163,8 @@ const form = reactive({
   subject: '',
   status: 'Open',
   priority: 'Medium',
-  start_date: '',
-  end_date: '',
-  start_time: '',
-  end_time: '',
+  exp_start_date: '',
+  exp_end_date: '',
   description: '',
   users: [],
   completed_by: null,
@@ -194,14 +181,34 @@ const task = createResource({
   },
   onSuccess(data) {
     form.users = data.assigned_users || []
+
+    // If selectedUser is provided (clicked "+" on user row), add them if not already assigned
+    if (props.selectedUser) {
+      const isAlreadyAssigned = form.users.some(
+        (u) => u.value === props.selectedUser.value
+      )
+      if (!isAlreadyAssigned) {
+        form.users.push({
+          label: props.selectedUser.label,
+          value: props.selectedUser.value,
+        })
+      }
+    }
+
     form.subject = data.subject
     form.status = data.status
     form.description = data.description
     form.priority = data.priority
-    form.start_date = data.exp_start_date
-    form.end_date = data.exp_end_date
-    form.start_time = data.custom_start_time || ''
-    form.end_time = data.custom_end_time || ''
+
+    // Set datetime fields directly
+    form.exp_start_date = data.exp_start_date || ''
+    form.exp_end_date = data.exp_end_date || ''
+
+    // Default exp_end_date to today if empty
+    if (!form.exp_end_date) {
+      form.exp_end_date = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    }
+
     form.completed_on = data.completed_on
     form.project = data.project
   },
@@ -209,30 +216,50 @@ const task = createResource({
 
 
 const _users = computed(() => {
-  return props.users.map((user) => ({
+  const allUsers = props.users.map((user) => ({
     label: user.full_name,
     value: user.name,
   }))
+
+  // Get the values of currently assigned users
+  const assignedValues = new Set(form.users.map((u) => u.value))
+
+  // Sort: assigned users first, then others (preserving original order within groups)
+  return allUsers.sort((a, b) => {
+    const aAssigned = assignedValues.has(a.value)
+    const bAssigned = assignedValues.has(b.value)
+    if (aAssigned && !bAssigned) return -1
+    if (!aAssigned && bAssigned) return 1
+    return 0
+  })
 })
 
 onMounted(() => {
   if (props.taskName && props.taskSubject) {
+    // Editing existing task - don't set defaults
     form.task = props.taskName
+  } else {
+    // Creating new task - set defaults
+    // Default exp_end_date to today if not already set
+    if (!form.exp_end_date) {
+      form.exp_end_date = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    }
+    // Default user from selectedUser prop if provided
+    if (props.selectedUser && form.users.length === 0) {
+      form.users.push({
+        label: props.selectedUser.label,
+        value: props.selectedUser.value,
+      })
+    }
   }
-  // if (props.selectedUser) {
-  //   form.users.push({
-  //     label: props.selectedUser.label,
-  //     value: props.selectedUser.value,
-  //   })
-  // }
 })
 
 function validateForm() {
   if (
     form.users.length === 0 ||
     !form.subject ||
-    !form.start_date ||
-    !form.end_date ||
+    !form.exp_start_date ||
+    !form.exp_end_date ||
     !form.status ||
     !form.priority ||
     (form.status === 'Completed' && !form.completed_on) ||
@@ -241,8 +268,13 @@ function validateForm() {
     raiseToast('error', 'Please fill all the required fields')
     return false
   }
-  if (dayjs(form.start_date).isAfter(dayjs(form.end_date))) {
-    raiseToast('error', 'End Date should be greater than Start Date')
+  // Validate end datetime is after start datetime
+  if (dayjs(form.exp_start_date).isAfter(dayjs(form.exp_end_date))) {
+    raiseToast('error', 'End Date & Time should be after Start Date & Time')
+    return false
+  }
+  if (dayjs(form.exp_start_date).isSame(dayjs(form.exp_end_date))) {
+    raiseToast('error', 'End Date & Time must be after Start Date & Time')
     return false
   }
   return true
@@ -257,10 +289,8 @@ const submitTask = async (close) => {
         project: form.project || null,
         status: form.status,
         priority: form.priority,
-        exp_start_date: form.start_date,
-        exp_end_date: form.end_date,
-        start_time: form.start_time || null,
-        end_time: form.end_time || null,
+        exp_start_date: form.exp_start_date,
+        exp_end_date: form.exp_end_date,
         users: form.users || [],
         description: form.description,
         completed_on: form.completed_on || null,

@@ -111,9 +111,12 @@
               v-if="getHolidayForDay(user.name, day.date)"
               class="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded text-center mb-2"
             >
-              <div class="font-semibold text-gray-800">
-                {{ getHolidayForDay(user.name, day.date).description || 'Holiday' }}
-              </div>
+              <div
+                v-if="getHolidayForDay(user.name, day.date).description"
+                class="font-semibold text-gray-800 [&_.ql-editor]:p-0"
+                v-html="getHolidayForDay(user.name, day.date).description"
+              ></div>
+              <div v-else class="font-semibold text-gray-800">Holiday</div>
               <div
                 v-if="getHolidayForDay(user.name, day.date).weekly_off"
                 class="text-gray-700"
@@ -137,7 +140,7 @@
 
             <!-- Tasks -->
             <div
-              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-32"
+              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0"
             >
               <div
                 v-for="task in getTasksForDay(user.name, day.date)"
@@ -352,18 +355,19 @@ const getUserTaskCount = (userName) => {
   const userEvents = events.data?.[userName]
   if (!userEvents) return 0
 
-  let count = 0
+  // Use a Set to count unique tasks by their name
+  const uniqueTaskNames = new Set()
   for (const dateKey in userEvents) {
     const dayData = userEvents[dateKey]
     // Handle new structure with tasks array
     if (dayData?.tasks && Array.isArray(dayData.tasks)) {
-      count += dayData.tasks.length
+      dayData.tasks.forEach((task) => uniqueTaskNames.add(task.name))
     } else if (Array.isArray(dayData)) {
       // Handle old structure (plain array)
-      count += dayData.length
+      dayData.forEach((task) => uniqueTaskNames.add(task.name))
     }
   }
-  return count
+  return uniqueTaskNames.size
 }
 
 const getLeaveForDay = (userName, day) => {
@@ -433,9 +437,10 @@ const events = createResource({
 
         // Add tasks for this user on this date
         for (const task of tasks[user]) {
+          // Use 'day' granularity to compare dates only, ignoring time component
           if (
-            dayjs(task.start_date).isSameOrBefore(date) &&
-            (dayjs(task.end_date).isSameOrAfter(date) || !task.end_date)
+            dayjs(task.start_date).isSameOrBefore(date, 'day') &&
+            (dayjs(task.end_date).isSameOrAfter(date, 'day') || !task.end_date)
           ) {
             if (!Array.isArray(mappedEvents[user][key])) {
               mappedEvents[user][key] = []
@@ -543,9 +548,10 @@ const mapEventsToDates = (data, mappedEvents, user) => {
 }
 
 const handleShifts = (event, date, mappedEvents, user, key) => {
+  // Use 'day' granularity to compare dates only, ignoring time component
   if (
-    dayjs(event.start_date).isSameOrBefore(date) &&
-    (dayjs(event.end_date).isSameOrAfter(date) || !event.end_date)
+    dayjs(event.start_date).isSameOrBefore(date, 'day') &&
+    (dayjs(event.end_date).isSameOrAfter(date, 'day') || !event.end_date)
   ) {
     if (!Array.isArray(mappedEvents[user][key]))
       mappedEvents[user][key] = []
