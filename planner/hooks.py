@@ -80,8 +80,8 @@ website_route_rules = [
 # ------------
 
 # before_install = "planner.install.before_install"
-after_install = "planner.install.after_install"
-after_migrate = "planner.install.after_install"
+#after_install = "planner.install.after_install"
+#after_migrate = "planner.install.after_install"
 # Uninstallation
 # ------------
 
