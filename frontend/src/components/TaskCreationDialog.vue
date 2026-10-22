@@ -38,7 +38,7 @@
           </label>
           <DatePicker
             v-model="form.start_date"
-            :formatter="(date) => dayjs(date).format(dateFormat)"
+            :format="dateFormat"
           />
         </div>
         <div>
@@ -47,7 +47,7 @@
           </label>
           <DatePicker
             v-model="form.end_date"
-            :formatter="(date) => dayjs(date).format(dateFormat)"
+            :format="dateFormat"
           />
         </div>
         <FormControl
@@ -65,6 +65,7 @@
 
         <FormControl
           type="select"
+          class="[&_button]:w-full"
           label="Status"
           v-model="form.status"
           :options="status"
@@ -72,6 +73,7 @@
         />
         <FormControl
           type="select"
+          class="[&_button]:w-full"
           label="Priority"
           v-model="form.priority"
           :options="priority"

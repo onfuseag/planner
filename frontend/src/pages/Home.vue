@@ -22,12 +22,11 @@
     <KeepAlive>
       <component :is="viewComponent" />
     </KeepAlive>
-    <Toasts />
   </div>
 </template>
 
 <script setup lang="ts">
-import { Toasts, createResource } from 'frappe-ui'
+import { createResource } from 'frappe-ui'
 
 import Navbar from '../components/Navbar.vue'
 import MonthView from './MonthView.vue'

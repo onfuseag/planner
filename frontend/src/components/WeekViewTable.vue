@@ -114,9 +114,9 @@
             >
               <div
                 v-if="getHolidayForDay(user.name, day.date).description"
-                class="font-semibold text-gray-800 [&_.ql-editor]:p-0"
-                v-html="getHolidayForDay(user.name, day.date).description"
-              ></div>
+                class="font-semibold text-gray-800 [&_.ql-editor]:p-0">
+                {{ getHolidayForDay(user.name, day.date).description }}
+              </div>
               <div v-else class="font-semibold text-gray-800">Holiday</div>
               <div
                 v-if="getHolidayForDay(user.name, day.date).weekly_off"

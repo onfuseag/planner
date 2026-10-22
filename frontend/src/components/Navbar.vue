@@ -10,30 +10,33 @@
       <FeatherIcon name="chevron-right" class="h-4 w-4" />
       <span class="font-medium">Tasks</span>
     </div>
-    <Dropdown
-      class="ml-auto"
-      :options="[
-        {
-          label: 'Switch to Desk',
-          onClick: () => goTo('/app'),
-        },
-        {
-          label: 'Open Tasks',
-          onClick: () => goTo('/app/task'),
-        },
-        {
-          label: 'Log Out',
-          onClick: () => logout.submit(),
-        },
-      ]"
-    >
-      <Avatar
-        :label="props.user?.full_name"
-        :image="props.user?.user_image"
-        size="xl"
-        class="cursor-pointer"
-      />
-    </Dropdown>
+    <!-- Dropdown renders no root element of its own, so the spacing lives on a wrapper -->
+    <div class="ml-auto">
+      <Dropdown
+        align="end"
+        :options="[
+          {
+            label: 'Switch to Desk',
+            onClick: () => goTo('/app'),
+          },
+          {
+            label: 'Open Tasks',
+            onClick: () => goTo('/app/task'),
+          },
+          {
+            label: 'Log Out',
+            onClick: () => logout.submit(),
+          },
+        ]"
+      >
+        <Avatar
+          :label="props.user?.full_name"
+          :image="props.user?.user_image"
+          size="xl"
+          class="cursor-pointer"
+        />
+      </Dropdown>
+    </div>
   </div>
 </template>
 

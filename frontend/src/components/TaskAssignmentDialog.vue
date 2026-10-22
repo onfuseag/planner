@@ -44,6 +44,7 @@
         />
         <FormControl
           type="select"
+          class="[&_button]:w-full"
           label="Status"
           v-model="form.status"
           :options="status"
@@ -51,6 +52,7 @@
         />
         <FormControl
           type="select"
+          class="[&_button]:w-full"
           label="Priority"
           v-model="form.priority"
           :options="priority"
@@ -111,7 +113,7 @@
           </label>
           <DatePicker
             v-model="form.completed_on"
-            :formatter="(date) => dayjs(date).format(dateFormat).split('T')[0]"
+            :format="dateFormat"
           />
         </div>
         <div class="col-span-2">

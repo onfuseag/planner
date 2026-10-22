@@ -42,6 +42,7 @@
         <FormControl
           v-else
           type="select"
+          class="[&_button]:w-full"
           :placeholder="toTitleCase(key)"
           :options="value.options"
           v-model="value.model"

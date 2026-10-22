@@ -21,7 +21,7 @@
       <DatePicker
         v-model="pickerDate"
         placeholder="Select Date"
-        :formatter="(value) => dayjs(value).format('YYYY-MM-DD')"
+        format="YYYY-MM-DD"
       />
     </div>
     <!-- Filters -->
@@ -50,6 +50,7 @@
         <FormControl
           v-else
           type="select"
+          class="[&_button]:w-full"
           :placeholder="toTitleCase(key)"
           :options="value.options"
           v-model="value.model"

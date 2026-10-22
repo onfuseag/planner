@@ -5,29 +5,13 @@ export { default as dayjs } from './dayjs'
 
 export const raiseToast = (type, message) => {
   if (type === 'success')
-    return toast({
-      title: 'Success',
-      text: message,
-      icon: 'check-circle',
-      position: 'bottom-right',
-      iconClasses: 'text-green-500',
-    })
+    return toast.create({ message, type: 'success' })
 
-  const div = document.createElement('div')
-  div.innerHTML = message
-  // strip html tags
+  // strip html tags; DOMParser builds an inert document, so no scripts run and no images load
   const text =
-    div.textContent ||
-    div.innerText ||
+    new DOMParser().parseFromString(message, 'text/html').body.textContent ||
     'Failed to perform action. Please try again later.'
-  toast({
-    title: 'Error',
-    text: text,
-    icon: 'alert-circle',
-    position: 'bottom-right',
-    iconClasses: 'text-red-500',
-    timeout: 7,
-  })
+  toast.create({ message: text, type: 'error', duration: 7 })
 }
 
 export const goTo = (path) => {

@@ -110,9 +110,9 @@
                   <span>Holiday: </span>
                   <span
                     v-if="getHolidayForDay(user.name).description"
-                    class="[&_.ql-editor]:p-0 [&_.ql-editor]:inline"
-                    v-html="getHolidayForDay(user.name).description"
-                  ></span>
+                    class="[&_.ql-editor]:p-0 [&_.ql-editor]:inline">
+                    {{ getHolidayForDay(user.name).description }}
+                  </span>
                   <span v-else>Holiday</span>
                 </div>
                 <div v-if="getHolidayForDay(user.name).weekly_off" class="text-gray-700">

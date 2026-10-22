@@ -1,1 +1,14 @@
-@import 'frappe-ui/src/style.css';
+@import 'frappe-ui/style.css';
+
+/* frappe-ui portals dialogs and floating content (popovers, date pickers, selects,
+   menus) to <body>, mostly without a z-index, so the planner's sticky table cells
+   (z-[1] to z-20) paint over them. Layer them explicitly: page < dialog < popups,
+   so a popup opened from inside a dialog still shows above it. */
+.dialog-overlay {
+  z-index: 50;
+}
+
+/* reka-ui copies the content's z-index onto this wrapper as an inline style, hence !important */
+[data-reka-popper-content-wrapper] {
+  z-index: 100 !important;
+}
