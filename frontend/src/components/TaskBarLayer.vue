@@ -5,7 +5,7 @@
       v-for="bar in bars"
       :key="bar.task.name"
       :data-task="bar.task.name"
-      class="task-bar absolute pointer-events-auto cursor-pointer overflow-hidden border border-black/10 hover:border-black/30"
+      class="task-bar absolute pointer-events-auto cursor-pointer overflow-clip border border-black/10 hover:border-black/30"
       :class="[
         bar.clippedStart ? 'rounded-l-none border-l-0' : 'rounded-l',
         bar.clippedEnd ? 'rounded-r-none border-r-0' : 'rounded-r',
@@ -23,7 +23,13 @@
         :class="seg.kind === 'leave' ? 'off-leave' : 'off-day'"
         :style="{ left: `${seg.left}px`, width: `${seg.width}px` }"
       />
-      <div class="relative px-2 py-1 text-xs leading-4 text-gray-900">
+      <!-- sticky: when the table scrolls sideways the title stays beside the user column.
+           overflow-clip on the bar (unlike overflow-hidden) lets it stick to the table, and
+           inline-block keeps it narrower than the bar so it has room to slide along it. -->
+      <div
+        class="sticky inline-block max-w-full px-2 py-1 align-top text-xs leading-4 text-gray-900"
+        :style="{ left: `${stickyLeft}px` }"
+      >
         <div class="truncate font-medium">{{ bar.task.subject }}</div>
         <div class="flex items-center gap-1 truncate text-gray-700">
           <FeatherIcon
@@ -53,6 +59,8 @@ const props = defineProps({
   laneHeight: { type: Number, required: true },
   // optional second line; defaults to project · status (or completion date)
   subtitle: { type: Function, default: null },
+  // width of the table's sticky user column (w-72)
+  stickyLeft: { type: Number, default: 288 },
 })
 const emit = defineEmits(['open', 'enter', 'leave'])
 
