@@ -51,6 +51,12 @@ export const getTask = createListResource({
   },
 })
 
+export const views = [
+  { value: 'daily', label: 'Daily' },
+  { value: 'week', label: 'Week' },
+  { value: 'month', label: 'Month' },
+]
+
 export const priority = ['Low', 'Medium', 'High', 'Urgent'].map((value) => ({
   label: value,
   value,

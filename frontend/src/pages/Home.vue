@@ -1,24 +1,6 @@
 <template>
   <div v-if="user.data" class="min-h-screen">
     <Navbar :user="user.data" />
-    <div class="px-12 py-4 flex justify-end">
-      <div class="inline-flex bg-gray-100 rounded-md p-1">
-        <button
-          v-for="view in views"
-          :key="view.value"
-          type="button"
-          class="px-3 py-1 text-sm font-medium rounded transition-none"
-          :class="
-            currentView === view.value
-              ? 'bg-gray-900 text-white'
-              : 'text-gray-700 hover:text-gray-900'
-          "
-          @click="currentView = view.value"
-        >
-          {{ view.label }}
-        </button>
-      </div>
-    </div>
     <KeepAlive>
       <component :is="viewComponent" />
     </KeepAlive>
@@ -33,16 +15,13 @@ import MonthView from './MonthView.vue'
 import Weekview from './Weekview.vue'
 import DailyView from './DailyView.vue'
 import { dateFormat } from '../utils'
-import { ref, computed, watch } from 'vue'
+import { views } from '../data'
+import { ref, computed, watch, provide } from 'vue'
 // RESOURCES
 
 const currentView = ref('month')
-
-const views = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'week', label: 'Week' },
-  { value: 'month', label: 'Month' },
-]
+// read and changed by the ViewSwitcher in each view's toolbar
+provide('currentView', currentView)
 
 const viewComponent = computed(() => {
   if (currentView.value === 'daily') return DailyView

@@ -6,7 +6,8 @@
       <span class="font-semibold text-2xl text-gray-500 mr-2">Planner:</span>
 
       <span class="font-semibold text-2xl">Month View</span>
-      <div class="ml-auto space-x-2.5">
+      <div class="ml-auto flex items-center gap-2.5">
+        <ViewSwitcher />
         <Button
           label="Create Task"
           variant="solid"
@@ -60,6 +61,7 @@ import { ref, reactive } from 'vue'
 import { FeatherIcon, createResource, Button } from 'frappe-ui'
 import { dayjs, raiseToast } from '../utils'
 import MonthViewHeader from '../components/MonthViewHeader.vue'
+import ViewSwitcher from '../components/ViewSwitcher.vue'
 import MonthViewTable from '../components/MonthViewTable.vue'
 import TaskCreationDialog from '../components/TaskCreationDialog.vue'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
