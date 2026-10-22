@@ -7,6 +7,9 @@
     <div class="font-medium truncate" :title="data.subject">
       {{ data.subject }}
     </div>
+    <div v-if="data.dates" class="truncate">
+      <span class="font-semibold">When:</span> {{ data.dates }}
+    </div>
     <div v-if="data.project_name" class="truncate">
       <span class="font-semibold">Project:</span> {{ data.project_name }}
     </div>

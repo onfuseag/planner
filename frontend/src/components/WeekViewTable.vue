@@ -4,7 +4,7 @@
     class="rounded-lg border w-full overflow-scroll table-container" style="max-height: calc(100vh - 250px)"
     :class="loading && 'animate-pulse pointer-events-none'"
   >
-    <table class="border-separate border-spacing-0 table-fixed w-full">
+    <table ref="tableEl" class="border-separate border-spacing-0 table-fixed w-full">
       <!-- first row -->
       <thead>
         <tr class="bg-white">
@@ -24,6 +24,7 @@
           <th
             v-for="(day, idx) in daysOfWeek"
             :key="idx"
+            :ref="(el) => (headerCells[idx] = el)"
             class="font-medium border-b min-w-32 sticky top-0 z-10 bg-white"
             :class="{
               'border-l': idx,
@@ -43,7 +44,7 @@
               !userSearch?.length ||
               userSearch?.some((item) => item.value === user?.name)
             "
-            class="px-2 py-7 z-[1] border-r min-w-72 max-w-72 w-72 sticky left-0 bg-surface-white"
+            class="px-2 py-7 z-[5] border-r min-w-72 max-w-72 w-72 sticky left-0 bg-surface-white"
             :class="{ 'border-t': rowIdx }"
           >
             <div class="flex items-center">
@@ -63,7 +64,7 @@
             </div>
           </td>
 
-          <!-- Tasks -->
+          <!-- Day cells: a label line, then the user's task bars (drawn once, from the first cell) -->
           <td
             v-if="
               !userSearch?.length ||
@@ -71,14 +72,15 @@
             "
             v-for="(day, colIdx) in daysOfWeek"
             :key="colIdx"
-            class="p-1.5 border-t"
+            class="group p-0 border-t align-top"
             :class="{
               'border-l': rowIdx + 1,
               'border-r': colIdx === daysOfWeek.length - 1,
-              'align-top': events.data?.[user.name]?.[day.date],
+              relative: colIdx === 0,
               'bg-gray-50': getHolidayForDay(user.name, day.date) || (dropCell.user === user.name && dropCell.date === day.date && !isHolidayOrLeave(user.name, day.date)),
               'bg-orange-50': getLeaveForDay(user.name, day.date),
             }"
+            :style="{ height: `${rowHeight(user.name)}px` }"
             @mouseenter="
               () => {
                 hoveredCell.user = user.name
@@ -107,132 +109,40 @@
               }
             "
           >
-            <!-- Holiday -->
             <div
-              v-if="getHolidayForDay(user.name, day.date)"
-              class="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded text-center mb-2"
+              class="flex items-center gap-1 px-1.5"
+              :style="{ height: `${DAY_LABEL_HEIGHT}px` }"
             >
-              <div
-                v-if="getHolidayForDay(user.name, day.date).description"
-                class="font-semibold text-gray-800 [&_.ql-editor]:p-0">
-                {{ getHolidayForDay(user.name, day.date).description }}
-              </div>
-              <div v-else class="font-semibold text-gray-800">Holiday</div>
-              <div
-                v-if="getHolidayForDay(user.name, day.date).weekly_off"
-                class="text-gray-700"
+              <span
+                v-if="cellLabel(user.name, day.date)"
+                class="truncate text-[11px] leading-4"
+                :class="cellLabel(user.name, day.date).cls"
+                :title="cellLabel(user.name, day.date).title || cellLabel(user.name, day.date).text"
               >
-                (Weekly Off)
-              </div>
-            </div>
-
-            <!-- Leave -->
-            <div
-              v-if="getLeaveForDay(user.name, day.date)"
-              class="text-xs px-2 py-1 bg-orange-100 border border-orange-300 rounded text-center mb-2"
-            >
-              <div class="font-semibold text-orange-800">
-                On Leave
-              </div>
-              <div class="text-orange-700">
-                {{ getLeaveForDay(user.name, day.date).leave_type }}
-              </div>
-            </div>
-
-            <!-- Tasks -->
-            <div
-              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0"
-            >
-              <div
-                v-for="task in getTasksForDay(user.name, day.date)"
-                @mouseenter="
-                  (e) => onTaskMouseEnter(task, user.name, day.date, e)
-                "
-                @mouseleave="onTaskMouseLeave"
-                class="rounded border-2 p-2 cursor-pointer space-y-1.5"
-                :class="[
-                  dropCell.user === user.name &&
-                    dropCell.date === day.date &&
-                    dropCell.task === task.name &&
-                    'scale-105',
-                  hoveredCell.user === user.name &&
-                    hoveredCell.date === day.date &&
-                    hoveredCell.task === task.name &&
-                    dropCell.user &&
-                    'opacity-0',
-                ]"
-                :style="{
-                  backgroundColor: task.color || colors[task.color][50],
-                }"
-                @click="
-                  () => {
-                    selectedTask.task = task.name
-                    selectedTask.subject = task.subject
-                    showTaskAssignmentDialog = true
-                  }
-                "
-              >
-                <div class="text-xs pointer-events-none truncate">
-                  {{ task['subject'] }}
-                </div>
-                <!-- <div class="truncate pointer-events-none text-xs">
-                  {{ task['project'] }}
-                </div> -->
-                <div class="truncate pointer-events-none text-xs font-bold">
-                  {{ task['project_name'] ?? '' }}
-                </div>
-                <div
-                  class="text-xs text-gray-500 pointer-events-none space-y-1.5"
-                >
-                  <div class="flex items-center space-x-1">
-                    <span>
-                      {{ task['status'] }}
-                    </span>
-                  </div>
-                  <div
-                    class="flex items-center space-x-1 text-xs"
-                    v-if="task.status === 'Completed'"
-                  >
-                    <FeatherIcon
-                      name="check"
-                      class="stroke-gray-600"
-                      :style="{
-                        height: '0.82rem',
-                        width: '0.82rem',
-                      }"
-                    />
-                    <span>
-                      {{ dayjs(task['completed_on']).format(dateFormat) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
+                {{ cellLabel(user.name, day.date).text }}
+              </span>
               <!-- Add Task -->
-              <Button
-                variant="outline"
-                icon="plus"
-                class="border-2 active:bg-white w-full"
-                :class="
-                  hoveredCell.user === user.name &&
-                  hoveredCell.date === day.date &&
-                  !dropCell.user
-                    ? 'visible'
-                    : 'invisible'
-                "
-                @click="
-                  () => {
-                    selectedTask.task = ''
-                    selectedTask.subject = ''
-                    selectedTask.user = {
-                      label: `${user.name}: ${user.full_name}`,
-                      value: user.name,
-                    }
-                    showTaskAssignmentDialog = true
-                  }
-                "
-              />
+              <button
+                type="button"
+                class="ml-auto flex h-4 w-4 shrink-0 items-center justify-center rounded text-gray-700 hover:bg-gray-200 hover:text-gray-900 invisible group-hover:visible"
+                title="Add task"
+                @click="openNewTask(user)"
+              >
+                <FeatherIcon name="plus" class="h-3.5 w-3.5" />
+              </button>
             </div>
+
+            <TaskBarLayer
+              v-if="colIdx === 0"
+              :bars="userLayouts[user.name]?.bars || []"
+              :edges="dayEdges"
+              :day-kinds="dayKinds(user.name)"
+              :top="DAY_LABEL_HEIGHT"
+              :lane-height="LANE_HEIGHT"
+              @open="openTask"
+              @enter="(task, e) => onTaskMouseEnter(task, user.name, task.start_date, e)"
+              @leave="onTaskMouseLeave"
+            />
           </td>
         </tr>
       </tbody>
@@ -257,9 +167,18 @@
 <script setup>
 import { Autocomplete, Avatar, createResource, FeatherIcon } from 'frappe-ui'
 import colors from 'tailwindcss/colors'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 import TaskHoverPopover from '../components/TaskHoverPopover.vue'
+import TaskBarLayer from '../components/TaskBarLayer.vue'
+import {
+  collectUserTasks,
+  layoutTaskBars,
+  dayLabel,
+  measureEdges,
+  DAY_LABEL_HEIGHT,
+  LANE_HEIGHT,
+} from '../utils/taskLanes'
 import { dateFormat, dayjs, raiseToast } from '../utils'
 
 const props = defineProps({
@@ -333,6 +252,7 @@ function onTaskMouseEnter(task, userName, date, event) {
     props.users.find((u) => u.name === userName)?.full_name ||
     userName
   hoveredCell.value.date = date
+  hoveredCell.value.dates = formatRange(task)
 
   const rect = event.currentTarget.getBoundingClientRect()
   hoverPosition.value = {
@@ -341,8 +261,16 @@ function onTaskMouseEnter(task, userName, date, event) {
   }
 }
 
+function formatRange(task) {
+  const start = dayjs(task.start_date)
+  const end = dayjs(task.end_date || task.start_date)
+  const fmt = (d) => d.format(dateFormat.value)
+  return start.isSame(end, 'day') ? fmt(start) : `${fmt(start)} → ${fmt(end)}`
+}
+
 function onTaskMouseLeave() {
   hoveredCell.value.task = ''
+  hoveredCell.value.dates = ''
   hoveredCell.value.subject = ''
   hoveredCell.value.shift_status = ''
   hoveredCell.value.priority = ''
@@ -351,6 +279,65 @@ function onTaskMouseLeave() {
   hoveredCell.value.color = ''
   hoveredCell.value.user_display = ''
 }
+
+// one continuous bar per task, stacked into lanes per user
+const userLayouts = computed(() => {
+  const layouts = {}
+  for (const user of props.users) {
+    layouts[user.name] = layoutTaskBars(
+      collectUserTasks(events.data?.[user.name]),
+      daysOfWeek.value,
+    )
+  }
+  return layouts
+})
+
+const rowHeight = (userName) =>
+  DAY_LABEL_HEIGHT +
+  Math.max(userLayouts.value[userName]?.laneCount || 0, 1) * LANE_HEIGHT +
+  6
+
+const dayKinds = (userName) =>
+  daysOfWeek.value.map((d) =>
+    getLeaveForDay(userName, d.date)
+      ? 'leave'
+      : getHolidayForDay(userName, d.date)
+        ? 'off'
+        : null,
+  )
+
+const cellLabel = (userName, day) =>
+  dayLabel(getHolidayForDay(userName, day), getLeaveForDay(userName, day))
+
+function openTask(task) {
+  selectedTask.value.task = task.name
+  selectedTask.value.subject = task.subject
+  showTaskAssignmentDialog.value = true
+}
+
+function openNewTask(user) {
+  selectedTask.value.task = ''
+  selectedTask.value.subject = ''
+  selectedTask.value.user = {
+    label: `${user.name}: ${user.full_name}`,
+    value: user.name,
+  }
+  showTaskAssignmentDialog.value = true
+}
+
+// day column edges, measured from the header so bars line up at any width
+const tableEl = ref(null)
+const headerCells = [] // filled by the header :ref callbacks; not reactive on purpose
+const dayEdges = ref([])
+const remeasure = () => (dayEdges.value = measureEdges(headerCells))
+let resizeObserver
+onMounted(() => {
+  remeasure()
+  resizeObserver = new ResizeObserver(remeasure)
+  if (tableEl.value) resizeObserver.observe(tableEl.value)
+})
+onBeforeUnmount(() => resizeObserver?.disconnect())
+watch(daysOfWeek, () => nextTick(remeasure))
 
 const getUserTaskCount = (userName) => {
   const userEvents = events.data?.[userName]
