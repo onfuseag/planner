@@ -42,6 +42,7 @@
         <FormControl
           v-else
           type="select"
+          class="[&_button]:w-full"
           :placeholder="toTitleCase(key)"
           :options="value.options"
           v-model="value.model"
@@ -96,15 +97,22 @@ onMounted(() => {
   })
 })
 
-watch(filters, (val) => {
-  const newFilters = {
-    status: val.status.model || '',
-    priority: val.priority.model || '',
-    project: val?.project?.model || '',
-    department: val?.department?.model?.value || '',
-  }
-  emit('updateFilters', newFilters)
-})
+watch(
+  () => [
+    filters.status.model,
+    filters.priority.model,
+    filters.project.model,
+    filters.department.model,
+  ],
+  () => {
+    emit('updateFilters', {
+      status: filters.status.model || '',
+      priority: filters.priority.model || '',
+      project: filters.project.model || '',
+      department: filters.department.model?.value || '',
+    })
+  },
+)
 
 const toTitleCase = (str: string) =>
   str

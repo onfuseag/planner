@@ -1,7 +1,7 @@
 <template>
   <div
     ref="tableContainer"
-    class="rounded-lg border max-h-[90%] w-full overflow-scroll table-container"
+    class="rounded-lg border w-full overflow-scroll table-container" style="max-height: calc(100vh - 250px)"
     :class="loading && 'animate-pulse pointer-events-none'"
   >
     <table class="border-separate border-spacing-0 table-fixed w-full">
@@ -10,7 +10,7 @@
         <tr class="bg-white">
           <!-- User Search -->
           <th
-            class="p-2 border-b border-r min-w-72 max-w-72 w-72 sticky left-0 bg-surface-white"
+            class="p-2 border-b border-r min-w-72 max-w-72 w-72 sticky top-0 left-0 z-20 bg-surface-white"
           >
             <Autocomplete
               :options="userSearchOptions"
@@ -24,10 +24,11 @@
           <th
             v-for="(day, idx) in daysOfWeek"
             :key="idx"
-            class="font-medium border-b min-w-32"
+            class="font-medium border-b min-w-32 sticky top-0 z-10 bg-white"
             :class="{
               'border-l': idx,
               'border-r': idx === daysOfWeek.length - 1,
+              'shadow-[inset_0_0_0_1.5px_#1e3a5f,0_0_6px_1px_rgba(30,58,95,0.25)]': day.date === dayjs().format('YYYY-MM-DD'),
             }"
           >
             {{ day.dayName }} {{ dayjs(day.date).format('DD') }}
@@ -113,9 +114,9 @@
             >
               <div
                 v-if="getHolidayForDay(user.name, day.date).description"
-                class="font-semibold text-gray-800 [&_.ql-editor]:p-0"
-                v-html="getHolidayForDay(user.name, day.date).description"
-              ></div>
+                class="font-semibold text-gray-800 [&_.ql-editor]:p-0">
+                {{ getHolidayForDay(user.name, day.date).description }}
+              </div>
               <div v-else class="font-semibold text-gray-800">Holiday</div>
               <div
                 v-if="getHolidayForDay(user.name, day.date).weekly_off"

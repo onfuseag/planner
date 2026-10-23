@@ -1,10 +1,25 @@
+import html
+
 import frappe
+from frappe import _
 from erpnext.setup.doctype.employee.employee import get_holiday_list_for_employee
-from frappe.utils import add_days, date_diff
+from frappe.utils import add_days, date_diff, strip_html_tags
+
+# Task columns the planner views are allowed to filter on
+ALLOWED_TASK_FILTERS = ("status", "priority", "project")
+
+# Roles allowed to use the planner, and roles allowed to see why someone is on leave
+PLANNER_ROLES = ("Projects User", "Projects Manager", "System Manager")
+HR_ROLES = ("HR User", "HR Manager", "System Manager")
+
+
+def check_planner_access():
+	frappe.only_for(PLANNER_ROLES)
 
 
 @frappe.whitelist()
-def get_events(month_start, month_end, task_filters={}):
+def get_events(month_start, month_end, task_filters=None):
+	check_planner_access()
 	tasks = get_tasks(month_start, month_end, task_filters)
 	holidays = get_holidays_for_users(month_start, month_end)
 	leaves = get_leaves_for_users(month_start, month_end)
@@ -18,10 +33,11 @@ def get_events(month_start, month_end, task_filters={}):
 
 
 @frappe.whitelist()
-def get_daily_events(date, task_filters={}):
+def get_daily_events(date, task_filters=None):
 	"""
 	Get tasks for a specific day (used by daily view)
 	"""
+	check_planner_access()
 	tasks = get_tasks(date, date, task_filters)
 	return tasks
 
@@ -86,7 +102,8 @@ def get_holidays_for_users(month_start: str, month_end: str):
 		for holiday in holiday_lists[holiday_list]:
 			date_str = str(holiday['holiday_date'])
 			holidays_by_user[user][date_str] = {
-				'description': holiday['description'],
+				# description is a Text Editor field; send plain text so the client never renders HTML
+				'description': html.unescape(strip_html_tags(holiday['description'] or '')).strip(),
 				'weekly_off': holiday['weekly_off']
 			}
 
@@ -136,6 +153,8 @@ def get_leaves_for_users(month_start: str, month_end: str):
 		'end_date': month_end
 	}, as_dict=True)
 
+	can_see_leave_type = bool(set(frappe.get_roles()) & set(HR_ROLES))
+
 	# Map leaves to users and dates
 	for leave in leave_applications:
 		user = employee_to_user.get(leave['employee'])
@@ -154,7 +173,7 @@ def get_leaves_for_users(month_start: str, month_end: str):
 			if getdate(month_start) <= current_date <= getdate(month_end):
 				date_str = str(current_date)
 				leaves_by_user[user][date_str] = {
-					'leave_type': leave['leave_type']
+					'leave_type': leave['leave_type'] if can_see_leave_type or user == frappe.session.user else _("On Leave")
 				}
 			current_date = add_days(current_date, 1)
 
@@ -166,15 +185,26 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 	Fetch tasks assigned to users via ToDo List doctype
 	Groups tasks by the allocated_to user
 	"""
+	from frappe.utils import getdate
+
+	params = {
+		"month_start": getdate(month_start),
+		"month_end": getdate(month_end),
+	}
 	cond = "AND task.status != 'Template' "
 
+	# Work on a copy: filters may arrive as a JSON string, and the caller's dict must not change
+	task_filters = dict(frappe.parse_json(task_filters) or {})
+
 	# Remove department from task_filters if present (department filters users, not tasks)
-	if isinstance(task_filters, dict):
-		task_filters.pop('department', None)
+	task_filters.pop('department', None)
 
 	for key, value in task_filters.items():
+		if key not in ALLOWED_TASK_FILTERS:
+			frappe.throw(_("Filtering tasks by {0} is not allowed").format(key), frappe.PermissionError)
 		if value and value != '':  # Skip null/empty values
-			cond += f"AND task.{key} = '{value}' "
+			cond += f"AND task.{key} = %({key})s "
+			params[key] = value
 
 	# Query tasks through ToDo assignments
 	# exp_start_date and exp_end_date are DateTime fields containing both date and time
@@ -195,10 +225,19 @@ def get_tasks(month_start: str, month_end: str, task_filters):
 		JOIN `tabToDo` as todo ON task.name = todo.reference_name
 		WHERE todo.reference_type = 'Task'
 		AND todo.status = 'Open'
-		AND DATE(task.exp_start_date) <= "{month_end}"
-		AND DATE(task.exp_end_date) >= "{month_start}"
+		AND DATE(task.exp_start_date) <= %(month_end)s
+		AND DATE(task.exp_end_date) >= %(month_start)s
 		{cond}
-		""", as_dict=True)
+		""", params, as_dict=True)
+
+	if tasks:
+		readable = set(frappe.get_list(
+			"Task",
+			filters={"name": ["in", list({task.name for task in tasks})]},
+			pluck="name",
+			limit_page_length=0,
+		))
+		tasks = [task for task in tasks if task.name in readable]
 
 	# group tasks by user
 	user_tasks = {}
@@ -262,6 +301,7 @@ def group_by_employee(events: list[dict]) -> dict[str, list[dict]]:
 
 @frappe.whitelist()
 def create_task(task_doc):
+	check_planner_access()
 	from frappe.desk.form import assign_to
 
 	new_task = frappe.new_doc('Task')
@@ -273,6 +313,9 @@ def create_task(task_doc):
 	new_task.status = task_doc.get('status')
 	new_task.priority = task_doc.get('priority')
 	new_task.project = task_doc.get('project', None)
+
+	if task_doc.get('elevator') is not None and "elevator" in frappe.get_installed_apps():
+		new_task.elevator = task_doc.get('elevator')
 
 	new_task.save()
 
@@ -299,6 +342,7 @@ def get_users_with_tasks(month_start, month_end):
 	"""
 	Get all users who have tasks assigned via ToDo in the given date range
 	"""
+	check_planner_access()
 	users = frappe.db.sql("""
 		SELECT DISTINCT
 			user.name,
@@ -316,18 +360,6 @@ def get_users_with_tasks(month_start, month_end):
 		ORDER BY user.full_name
 	""", {"month_start": month_start, "month_end": month_end}, as_dict=True)
 
-	# Debug logging
-	import json
-	frappe.log_error(
-		title="get_users_with_tasks Debug",
-		message=json.dumps({
-			'month_start': month_start,
-			'month_end': month_end,
-			'result_count': len(users),
-			'users': [u.name for u in users]
-		}, indent=2)
-	)
-
 	return users
 
 
@@ -344,6 +376,7 @@ def get_all_enabled_users():
 	"""
 	Get all enabled users in the system (for task assignment dropdowns)
 	"""
+	check_planner_access()
 	users = frappe.db.sql("""
 		SELECT
 			user.name,
@@ -367,6 +400,7 @@ def get_users_for_planner(department=None):
 	Only returns users with enabled accounts and active Employee records.
 	When department is specified, only returns users whose Employee belongs to that department.
 	"""
+	check_planner_access()
 	if department:
 		# Filter users by their Employee's department
 		users = frappe.db.sql("""
@@ -407,6 +441,7 @@ def get_all_departments():
 	"""
 	Get all departments in the system (for department filter dropdown)
 	"""
+	check_planner_access()
 	departments = frappe.db.sql("""
 		SELECT
 			name,
@@ -419,7 +454,9 @@ def get_all_departments():
 
 @frappe.whitelist()
 def get_task(name):
+	check_planner_access()
 	task = frappe.get_doc("Task", name)
+	task.check_permission("read")
 	task_dict = task.as_dict()
 
 	# Get current ToDo assignments for this task
@@ -442,10 +479,16 @@ def get_task(name):
 		for a in assignments
 	]
 
+	# Include elevator fields only if the elevator app is installed
+	if "elevator" in frappe.get_installed_apps():
+		task_dict["elevator"] = task.get("elevator") or None
+		task_dict["elevator_address"] = task.get("elevator_address") or ""
+
 	return task_dict
 
 @frappe.whitelist()
 def update_task(task_doc):
+	check_planner_access()
 	from frappe.desk.form import assign_to
 
 	task = frappe.get_doc("Task", task_doc.get('name'))
@@ -457,6 +500,9 @@ def update_task(task_doc):
 	task.priority = task_doc.get('priority')
 	task.project = task_doc.get('project', None)
 	task.completed_on = task_doc.get('completed_on', None)
+
+	if task_doc.get('elevator') is not None and "elevator" in frappe.get_installed_apps():
+		task.elevator = task_doc.get('elevator')
 
 	task.save()
 

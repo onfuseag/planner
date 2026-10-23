@@ -1,16 +1,17 @@
 <template>
   <div
     ref="tableContainer"
-    class="rounded-lg border max-h-[90%] max-w-[100%] overflow-scroll table-container"
+    class="rounded-lg border w-full overflow-scroll table-container"
+    style="max-height: calc(100vh - 250px)"
     :class="loading && 'animate-pulse pointer-events-none'"
   >
     <table class="border-separate border-spacing-0">
       <!-- Header Row -->
       <thead>
-        <tr class="sticky top-0 bg-white z-10">
+        <tr class="bg-white">
           <!-- User Search -->
           <th
-            class="p-2 border-b border-r min-w-72 max-w-72 sticky left-0 bg-surface-white"
+            class="p-2 border-b border-r min-w-72 max-w-72 w-72 sticky top-0 left-0 z-20 bg-surface-white"
           >
             <Autocomplete
               :options="userSearchOptions"
@@ -24,7 +25,7 @@
           <th
             v-for="hour in hours"
             :key="hour"
-            class="font-medium border-b min-w-32"
+            class="font-medium border-b min-w-32 sticky top-0 z-10 bg-white"
             :class="{ 'border-l': true }"
           >
             {{ hour }}:00
@@ -109,9 +110,9 @@
                   <span>Holiday: </span>
                   <span
                     v-if="getHolidayForDay(user.name).description"
-                    class="[&_.ql-editor]:p-0 [&_.ql-editor]:inline"
-                    v-html="getHolidayForDay(user.name).description"
-                  ></span>
+                    class="[&_.ql-editor]:p-0 [&_.ql-editor]:inline">
+                    {{ getHolidayForDay(user.name).description }}
+                  </span>
                   <span v-else>Holiday</span>
                 </div>
                 <div v-if="getHolidayForDay(user.name).weekly_off" class="text-gray-700">

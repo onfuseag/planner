@@ -3,11 +3,10 @@
     <!-- Top Section Above Header -->
     <div class="flex items-center">
       <FeatherIcon name="calendar" class="h-7 w-7 text-gray-500 mr-2.5" />
-      <span class="font-semibold text-2xl text-gray-500 mr-2"
-        >Task Manager:</span
-      >
+      <span class="font-semibold text-2xl text-gray-500 mr-2">Planner:</span>
       <span class="font-semibold text-2xl">Week View</span>
-      <div class="ml-auto space-x-2.5">
+      <div class="ml-auto flex items-center gap-2.5">
+        <ViewSwitcher />
         <Button
           label="Create Task"
           variant="solid"
@@ -60,6 +59,7 @@
 import { Button, FeatherIcon, createResource } from 'frappe-ui'
 import { reactive, ref } from 'vue'
 import WeekViewHeader from '../components/WeekViewHeader.vue'
+import ViewSwitcher from '../components/ViewSwitcher.vue'
 import WeekViewTable from '../components/WeekViewTable.vue'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 import TaskCreationDialog from '../components/TaskCreationDialog.vue'
@@ -90,8 +90,11 @@ const updateFilters = (newFilters) => {
     }
     // Handle department filter separately (filters users, not tasks)
     if (key === 'department') {
-      taskFilters.department = value || ''
-      users.submit({ department: value || null })
+      const newDept = value || ''
+      if (newDept !== taskFilters.department) {
+        taskFilters.department = newDept
+        users.submit({ department: value || null })
+      }
     }
   })
 }

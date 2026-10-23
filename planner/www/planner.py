@@ -7,4 +7,5 @@ def get_context():
 	frappe.db.commit()
 	context = frappe._dict()
 	context.csrf_token = csrf_token
+	context.is_elevator_installed = "elevator" in frappe.get_installed_apps()
 	return context

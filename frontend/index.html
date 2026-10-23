@@ -12,6 +12,7 @@
 
     <script>
       window.csrf_token = '{{ csrf_token }}'
+      window.is_elevator_installed = {{ is_elevator_installed | lower }}
     </script>
     <script type="module" src="./src/main.js"></script>
   </body>
