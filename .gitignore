@@ -6,5 +6,5 @@ tags
 node_modules
 __pycache__
 
-planner/public
+planner/public/frontend
 planner/www/planner.html

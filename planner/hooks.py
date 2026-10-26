@@ -12,6 +12,17 @@ fixtures = [
 
 required_apps = ["frappe/erpnext", "frappe/hrms"]
 
+# App tile on the Frappe desktop (/desk), opening the planner UI
+add_to_apps_screen = [
+	{
+		"name": "planner",
+		"logo": "/assets/planner/images/planner-app-icon.png",
+		"title": "Planner",
+		"route": "/planner",
+		"has_permission": "planner.api.check_app_permission",
+	}
+]
+
 
 
 # Includes in <head>
