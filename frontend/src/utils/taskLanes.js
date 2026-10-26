@@ -91,6 +91,7 @@ export function packLanes(bars) {
 // row geometry shared by the month and week tables (px)
 export const DAY_LABEL_HEIGHT = 22 // weekly off / holiday / leave label line at the top of a day cell
 export const LANE_HEIGHT = 48 // one stacked bar, including the gap below it
+export const ADD_BUTTON_HEIGHT = 30 // strip at the bottom of a row for the hover add-task button
 
 export function dayLabel(holiday, leave) {
   if (leave) return { text: 'On leave', title: `On leave · ${leave.leave_type}`, cls: 'text-orange-700 font-medium' }
@@ -108,4 +109,20 @@ export function measureEdges(cells) {
     const r = th.getBoundingClientRect()
     return { left: r.left - base, width: r.width }
   })
+}
+
+// index of the header cell under a viewport x position, or -1
+export function columnAt(cells, x) {
+  return cells.findIndex((th) => {
+    if (!th) return false
+    const r = th.getBoundingClientRect()
+    return x >= r.left && x < r.right
+  })
+}
+
+// columns a user's bars cover, for placing the add-task button out of their way
+export function coveredColumns(bars) {
+  const cols = new Set()
+  for (const bar of bars) for (let i = bar.startIdx; i <= bar.endIdx; i++) cols.add(i)
+  return cols
 }

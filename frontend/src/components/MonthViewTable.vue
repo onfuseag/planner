@@ -40,7 +40,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(user, rowIdx) in users" :key="user.name">
+        <tr
+          v-for="(user, rowIdx) in users"
+          :key="user.name"
+          @mouseleave="addCell = { user: '', col: -1 }"
+        >
           <!-- Users List -->
           <td
             v-if="
@@ -75,10 +79,9 @@
             "
             v-for="(day, colIdx) in daysOfMonth"
             :key="colIdx"
-            class="group p-0 border-t align-top"
+            class="relative p-0 border-t align-top"
             :class="{
               'border-l': rowIdx + 1,
-              relative: colIdx === 0,
               'bg-gray-50': getHolidayForDay(user.name, day.date) || (dropCell.user === user.name && dropCell.date === day.date && !getLeaveForDay(user.name, day.date)),
               'bg-orange-50': getLeaveForDay(user.name, day.date),
             }"
@@ -95,6 +98,7 @@
                 hoveredCell.date = ''
               }
             "
+            @mousemove="(e) => trackAddCell(user.name, colIdx, e)"
             @dragover.prevent
             @dragenter="
               () => {
@@ -123,16 +127,21 @@
               >
                 {{ cellLabel(user.name, day.date).text }}
               </span>
-              <!-- Add Task -->
-              <button
-                type="button"
-                class="ml-auto flex h-4 w-4 shrink-0 items-center justify-center rounded text-gray-700 hover:bg-gray-200 hover:text-gray-900 invisible group-hover:visible"
-                title="Add task"
-                @click="openNewTask(user)"
-              >
-                <FeatherIcon name="plus" class="h-3.5 w-3.5" />
-              </button>
             </div>
+
+            <!-- Add Task: centred in an empty cell; under the bars (in the strip kept free of them) when the cell has tasks -->
+            <button
+              type="button"
+              class="absolute left-1/2 z-[3] flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-900"
+              :class="[
+                addCell.user === user.name && addCell.col === colIdx ? 'visible' : 'invisible',
+                cellHasTasks(user.name, colIdx) ? 'bottom-1' : 'top-1/2 -translate-y-1/2',
+              ]"
+              title="Add task"
+              @click="openNewTask(user)"
+            >
+              <FeatherIcon name="plus" class="h-3.5 w-3.5" />
+            </button>
 
             <TaskBarLayer
               v-if="colIdx === 0"
@@ -181,6 +190,9 @@ import {
   measureEdges,
   DAY_LABEL_HEIGHT,
   LANE_HEIGHT,
+  ADD_BUTTON_HEIGHT,
+  columnAt,
+  coveredColumns,
 } from '../utils/taskLanes'
 
 const props = defineProps({
@@ -420,10 +432,17 @@ const userLayouts = computed(() => {
   return layouts
 })
 
+const busyColumns = computed(() => {
+  const busy = {}
+  for (const [user, layout] of Object.entries(userLayouts.value)) busy[user] = coveredColumns(layout.bars)
+  return busy
+})
+const cellHasTasks = (userName, colIdx) => !!busyColumns.value[userName]?.has(colIdx)
+
 const rowHeight = (userName) =>
   DAY_LABEL_HEIGHT +
   Math.max(userLayouts.value[userName]?.laneCount || 0, 1) * LANE_HEIGHT +
-  6
+  ADD_BUTTON_HEIGHT
 
 const dayKinds = (userName) =>
   daysOfMonth.value.map((d) =>
@@ -458,6 +477,15 @@ const tableEl = ref(null)
 const headerCells = [] // filled by the header :ref callbacks; not reactive on purpose
 const dayEdges = ref([])
 const remeasure = () => (dayEdges.value = measureEdges(headerCells))
+// which cell shows the add-task button: the one under the pointer, also when the
+// pointer is over a bar (bars live inside the row's first cell)
+const addCell = ref({ user: '', col: -1 })
+function trackAddCell(userName, colIdx, e) {
+  const col = e.target.closest?.('.task-bar') ? columnAt(headerCells, e.clientX) : colIdx
+  if (addCell.value.user !== userName || addCell.value.col !== col) {
+    addCell.value = { user: userName, col }
+  }
+}
 let resizeObserver
 onMounted(() => {
   remeasure()
