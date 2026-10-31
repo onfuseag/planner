@@ -1,16 +1,21 @@
 <template>
   <div
     ref="tableContainer"
-    class="rounded-lg border max-h-[90%] max-w-[100%] overflow-scroll table-container"
+    class="rounded-lg border w-full overflow-scroll table-container"
+    style="max-height: calc(100vh - 250px)"
     :class="loading && 'animate-pulse pointer-events-none'"
   >
-    <table class="border-separate border-spacing-0">
+    <table
+      ref="tableEl"
+      class="border-separate border-spacing-0 table-fixed"
+      :style="{ width: `${288 + hours.length * 128}px` }"
+    >
       <!-- Header Row -->
       <thead>
-        <tr class="sticky top-0 bg-white z-10">
+        <tr class="bg-white">
           <!-- User Search -->
           <th
-            class="p-2 border-b border-r min-w-72 max-w-72 sticky left-0 bg-surface-white"
+            class="p-2 border-b border-r min-w-72 max-w-72 w-72 sticky top-0 left-0 z-20 bg-surface-white"
           >
             <Autocomplete
               :options="userSearchOptions"
@@ -22,9 +27,10 @@
 
           <!-- Hour Columns -->
           <th
-            v-for="hour in hours"
+            v-for="(hour, idx) in hours"
             :key="hour"
-            class="font-medium border-b min-w-32"
+            :ref="(el) => (headerCells[idx] = el)"
+            class="font-medium border-b w-32 sticky top-0 z-10 bg-white"
             :class="{ 'border-l': true }"
           >
             {{ hour }}:00
@@ -32,7 +38,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(user, rowIdx) in users" :key="user.name">
+        <tr
+          v-for="(user, rowIdx) in users"
+          :key="user.name"
+          @mouseleave="addCell = { user: '', col: -1 }"
+        >
           <!-- Users List -->
           <td
             v-if="
@@ -59,20 +69,22 @@
             </div>
           </td>
 
-          <!-- Task Cells by Hour -->
+          <!-- Hour cells: the day's label on the first one, then the user's task bars (drawn once, from the first cell) -->
           <td
             v-if="
               !userSearch?.length ||
               userSearch?.some((item) => item.value === user?.name)
             "
-            v-for="hour in hours"
+            v-for="(hour, colIdx) in hours"
             :key="hour"
-            class="p-1.5 z-[1] border-t border-l align-top"
+            class="relative p-0 border-t border-l align-top"
             :class="{
+              'bg-orange-50': getLeaveForDay(user.name),
               'bg-gray-50':
-                (dropCell.user === user.name && dropCell.hour === hour) || (hour === '00' && getHolidayForDay(user.name)),
-              'bg-orange-50': hour === '00' && getLeaveForDay(user.name),
+                !getLeaveForDay(user.name) &&
+                (getHolidayForDay(user.name) || (dropCell.user === user.name && dropCell.hour === hour)),
             }"
+            :style="{ height: `${rowHeight(user.name)}px` }"
             @mouseenter="
               () => {
                 hoveredCell.user = user.name
@@ -85,6 +97,7 @@
                 hoveredCell.hour = null
               }
             "
+            @mousemove="(e) => trackAddCell(user.name, colIdx, e)"
             @dragover.prevent
             @dragenter="
               () => {
@@ -99,143 +112,46 @@
               }
             "
           >
-            <!-- Holiday/Leave Indicator (only in first hour column) -->
-            <div v-if="hour === '00'" class="mb-2">
-              <div
-                v-if="getHolidayForDay(user.name)"
-                class="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded"
-              >
-                <div class="font-semibold text-gray-800">
-                  <span>Holiday: </span>
-                  <span
-                    v-if="getHolidayForDay(user.name).description"
-                    class="[&_.ql-editor]:p-0 [&_.ql-editor]:inline"
-                    v-html="getHolidayForDay(user.name).description"
-                  ></span>
-                  <span v-else>Holiday</span>
-                </div>
-                <div v-if="getHolidayForDay(user.name).weekly_off" class="text-gray-700">
-                  (Weekly Off)
-                </div>
-              </div>
-              <div
-                v-else-if="getLeaveForDay(user.name)"
-                class="text-xs px-2 py-1 bg-orange-100 border border-orange-300 rounded"
-              >
-                <div class="font-semibold text-orange-800">
-                  On Leave: {{ getLeaveForDay(user.name).leave_type }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Tasks -->
             <div
-              class="flex flex-col space-y-1.5 translate-x-0 translate-y-0 max-w-40 min-w-36"
+              class="flex items-center gap-1 px-1.5"
+              :style="{ height: `${DAY_LABEL_HEIGHT}px` }"
             >
-              <div
-                v-for="task in getTasksForHour(user.name, hour)"
-                :key="task.name"
-                @mouseenter="
-                  onTaskMouseEnter(task, user.name, hour, $event)
-                "
-                @mouseleave="onTaskMouseLeave()"
-                class="rounded border-2 p-2 cursor-pointer space-y-1.5"
-                :class="[
-                  dropCell.user === user.name &&
-                    dropCell.hour === hour &&
-                    dropCell.task === task.name &&
-                    'scale-105',
-                  hoveredCell.user === user.name &&
-                    hoveredCell.hour === hour &&
-                    hoveredCell.task === task.name &&
-                    dropCell.user &&
-                    'opacity-0',
-                ]"
-                :style="{
-                  backgroundColor: task.color || colors[task.color][50],
-                }"
-                @click="
-                  () => {
-                    selectedTask.task = task.name
-                    selectedTask.subject = task.subject
-                    showTaskAssignmentDialog = true
-                  }
-                "
-                draggable="true"
-                @dragstart="
-                  () => {
-                    hoveredCell.user = user.name
-                    hoveredCell.hour = hour
-                    hoveredCell.task = task.name
-                  }
-                "
+              <span
+                v-if="colIdx === 0 && cellLabel(user.name)"
+                class="truncate text-[11px] leading-4"
+                :class="cellLabel(user.name).cls"
+                :title="cellLabel(user.name).title || cellLabel(user.name).text"
               >
-                <div class="text-xs pointer-events-none truncate">
-                  {{ task['subject'] }}
-                </div>
-                <div class="truncate pointer-events-none text-xs font-bold">
-                  {{ task['project_name'] ?? '' }}
-                </div>
-                <div
-                  class="text-xs text-gray-500 pointer-events-none space-y-1.5"
-                >
-                  <div class="flex items-center space-x-1">
-                    <span>
-                      {{ task['status'] }}
-                    </span>
-                  </div>
-                  <div
-                    class="flex items-center space-x-1 text-xs"
-                    v-if="task.start_time && task.end_time"
-                  >
-                    <span>
-                      {{ task.start_time }} - {{ task.end_time }}
-                    </span>
-                  </div>
-                  <div
-                    class="flex items-center space-x-1 text-xs"
-                    v-if="task.status === 'Completed'"
-                  >
-                    <FeatherIcon
-                      name="check"
-                      class="stroke-gray-600"
-                      :style="{
-                        height: '0.82rem',
-                        width: '0.82rem',
-                      }"
-                    />
-                    <span>
-                      {{ dayjs(task['completed_on']).format(dateFormat) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Add Task Button -->
-              <Button
-                variant="outline"
-                icon="plus"
-                class="border-2 active:bg-white w-full"
-                :class="
-                  hoveredCell.user === user.name &&
-                  hoveredCell.hour === hour &&
-                  !dropCell.user
-                    ? 'visible'
-                    : 'invisible'
-                "
-                @click="
-                  () => {
-                    selectedTask.task = ''
-                    selectedTask.subject = ''
-                    selectedTask.user = {
-                      label: user.full_name,
-                      value: user.name,
-                    }
-                    showTaskAssignmentDialog = true
-                  }
-                "
-              />
+                {{ cellLabel(user.name).text }}
+              </span>
             </div>
+
+            <!-- Add Task: centred in an empty cell; under the bars (in the strip kept free of them) when the cell has tasks -->
+            <button
+              type="button"
+              class="absolute left-1/2 z-[3] flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-900"
+              :class="[
+                addCell.user === user.name && addCell.col === colIdx ? 'visible' : 'invisible',
+                cellHasTasks(user.name, colIdx) ? 'bottom-1' : 'top-1/2 -translate-y-1/2',
+              ]"
+              title="Add task"
+              @click="openNewTask(user)"
+            >
+              <FeatherIcon name="plus" class="h-3.5 w-3.5" />
+            </button>
+
+            <TaskBarLayer
+              v-if="colIdx === 0"
+              :bars="userLayouts[user.name]?.bars || []"
+              :edges="hourEdges"
+              :day-kinds="dayKinds(user.name)"
+              :top="DAY_LABEL_HEIGHT"
+              :lane-height="LANE_HEIGHT"
+              :subtitle="barSubtitle"
+              @open="openTask"
+              @enter="(task, e) => onTaskMouseEnter(task, user.name, hours[0], e)"
+              @leave="onTaskMouseLeave"
+            />
           </td>
         </tr>
       </tbody>
@@ -258,12 +174,23 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import colors from 'tailwindcss/colors'
 import { Avatar, Autocomplete, createResource, FeatherIcon } from 'frappe-ui'
 import { dateFormat, dayjs, raiseToast } from '../utils'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
 import TaskHoverPopover from '../components/TaskHoverPopover.vue'
+import TaskBarLayer from '../components/TaskBarLayer.vue'
+import {
+  layoutHourBars,
+  dayLabel,
+  measureEdges,
+  DAY_LABEL_HEIGHT,
+  LANE_HEIGHT,
+  ADD_BUTTON_HEIGHT,
+  columnAt,
+  coveredColumns,
+} from '../utils/taskLanes'
 
 const props = defineProps({
   selectedDay: {
@@ -447,6 +374,8 @@ function onTaskMouseEnter(task, userName, hour, event) {
   hoveredCell.value.shift_status = task.status
   hoveredCell.value.priority = task.priority
   hoveredCell.value.project = task.project_name
+  hoveredCell.value.project_name = task.project_name
+  hoveredCell.value.dates = taskTimeRange(task)
   hoveredCell.value.hour = hour
   hoveredCell.value.user = userName
   hoveredCell.value.user_display =
@@ -466,6 +395,8 @@ function onTaskMouseLeave() {
   hoveredCell.value.shift_status = ''
   hoveredCell.value.priority = ''
   hoveredCell.value.project = ''
+  hoveredCell.value.project_name = ''
+  hoveredCell.value.dates = ''
 }
 
 watch(
@@ -533,6 +464,101 @@ const handleShifts = (event, date, mappedEvents, user, key) => {
   }
 }
 
+const tasksForDay = (userName) => {
+  const dayData = events.data?.[userName]?.[props.selectedDay.format('YYYY-MM-DD')]
+  return Array.isArray(dayData) ? dayData : dayData?.tasks || []
+}
+
+// one continuous bar per task across the hours it covers, stacked into lanes per user
+const userLayouts = computed(() => {
+  const layouts = {}
+  if (!props.selectedDay) return layouts
+  for (const user of props.users) {
+    layouts[user.name] = layoutHourBars(tasksForDay(user.name), props.selectedDay, hours.length)
+  }
+  return layouts
+})
+
+const busyColumns = computed(() => {
+  const busy = {}
+  for (const [user, layout] of Object.entries(userLayouts.value)) busy[user] = coveredColumns(layout.bars)
+  return busy
+})
+const cellHasTasks = (userName, colIdx) => !!busyColumns.value[userName]?.has(colIdx)
+
+const rowHeight = (userName) =>
+  DAY_LABEL_HEIGHT +
+  Math.max(userLayouts.value[userName]?.laneCount || 0, 1) * LANE_HEIGHT +
+  ADD_BUTTON_HEIGHT
+
+// a holiday or leave covers the whole day, so every hour of it is marked
+const dayKinds = (userName) => {
+  const kind = getLeaveForDay(userName) ? 'leave' : getHolidayForDay(userName) ? 'off' : null
+  return hours.map(() => kind)
+}
+
+const cellLabel = (userName) =>
+  dayLabel(getHolidayForDay(userName), getLeaveForDay(userName))
+
+const isAllDay = (start, end) =>
+  start.hour() === 0 && start.minute() === 0 && end.hour() === 0 && end.minute() === 0
+
+// time first: in a day view the hours matter more than the project
+function taskTimeRange(task) {
+  const start = dayjs(task.start_date)
+  const end = dayjs(task.end_date || task.start_date)
+  if (isAllDay(start, end)) {
+    return start.isSame(end, 'day') ? 'All day' : `${start.format('D MMM')} → ${end.format('D MMM')}`
+  }
+  if (start.isSame(end, 'day')) return `${start.format('HH:mm')}–${end.format('HH:mm')}`
+  return `${start.format('D MMM HH:mm')} → ${end.format('D MMM HH:mm')}`
+}
+
+const barSubtitle = (task) =>
+  [taskTimeRange(task), task.project_name, task.status].filter(Boolean).join(' · ')
+
+function openTask(task) {
+  selectedTask.value.task = task.name
+  selectedTask.value.subject = task.subject
+  showTaskAssignmentDialog.value = true
+}
+
+function openNewTask(user) {
+  selectedTask.value.task = ''
+  selectedTask.value.subject = ''
+  selectedTask.value.user = {
+    label: user.full_name,
+    value: user.name,
+  }
+  showTaskAssignmentDialog.value = true
+}
+
+// hour column edges, measured from the header so bars line up at any width
+const tableEl = ref(null)
+const headerCells = [] // filled by the header :ref callbacks; not reactive on purpose
+const hourEdges = ref([])
+const remeasure = () => (hourEdges.value = measureEdges(headerCells))
+// which cell shows the add-task button: the one under the pointer, also when the
+// pointer is over a bar (bars live inside the row's first cell)
+const addCell = ref({ user: '', col: -1 })
+function trackAddCell(userName, colIdx, e) {
+  const col = e.target.closest?.('.task-bar') ? columnAt(headerCells, e.clientX) : colIdx
+  if (addCell.value.user !== userName || addCell.value.col !== col) {
+    addCell.value = { user: userName, col }
+  }
+}
+let resizeObserver
+onMounted(() => {
+  remeasure()
+  resizeObserver = new ResizeObserver(remeasure)
+  if (tableEl.value) resizeObserver.observe(tableEl.value)
+})
+onBeforeUnmount(() => resizeObserver?.disconnect())
+watch(
+  () => props.selectedDay?.format('YYYY-MM-DD'),
+  () => nextTick(remeasure),
+)
+
 const getUserTaskCount = (userName) => {
   const dateString = props.selectedDay.format('YYYY-MM-DD')
   const dayData = events.data?.[userName]?.[dateString]
@@ -571,73 +597,6 @@ const getHolidayForDay = (userName) => {
     return dayData.holiday
   }
   return null
-}
-
-const getTasksForHour = (userName, hour) => {
-  const dateString = props.selectedDay.format('YYYY-MM-DD')
-  const dayData = events.data?.[userName]?.[dateString]
-
-  let userTasks = []
-
-  // Handle new structure with tasks/holiday/leave
-  if (dayData?.tasks && Array.isArray(dayData.tasks)) {
-    userTasks = dayData.tasks
-  } else if (Array.isArray(dayData)) {
-    // Handle old structure (plain array)
-    userTasks = dayData
-  }
-
-  if (!userTasks.length) {
-    return []
-  }
-
-  return userTasks.filter((task) => {
-    const currentDate = props.selectedDay
-    // exp_start_date and exp_end_date are DateTime fields containing both date and time
-    const taskStartDateTime = dayjs(task.start_date)
-    const taskEndDateTime = dayjs(task.end_date)
-
-    // Extract time components from DateTime fields
-    const startHour = taskStartDateTime.hour()
-    const startMinute = taskStartDateTime.minute()
-    const endHour = taskEndDateTime.hour()
-    const endMinute = taskEndDateTime.minute()
-
-    // Check if time is midnight (00:00) on both - treat as "no specific time"
-    const hasNoSpecificTime =
-      startHour === 0 && startMinute === 0 && endHour === 0 && endMinute === 0
-
-    if (hasNoSpecificTime) {
-      // If no time specified, show in first hour (00)
-      return hour === '00'
-    }
-
-    const isStartDay = currentDate.isSame(taskStartDateTime, 'day')
-    const isEndDay = currentDate.isSame(taskEndDateTime, 'day')
-    const isMultiDay = !taskStartDateTime.isSame(taskEndDateTime, 'day')
-    const currentHour = parseInt(hour)
-
-    // For multi-day tasks: handle each day type differently
-    if (isMultiDay) {
-      if (isStartDay) {
-        // On start day: show from start_time until end of day (hour 23)
-        return currentHour >= startHour
-      }
-      if (isEndDay) {
-        // On end day: show from start of day (hour 00) until end_time
-        return currentHour < endHour || (currentHour === endHour && endMinute > 0)
-      }
-      // Intermediate day: show for all hours
-      return true
-    }
-
-    // Single-day task: use both start and end time
-    const taskStartsBeforeOrDuringThisHour = currentHour >= startHour
-    const taskEndsAfterThisHourStarts =
-      currentHour < endHour || (currentHour === endHour && endMinute > 0)
-
-    return taskStartsBeforeOrDuringThisHour && taskEndsAfterThisHourStarts
-  })
 }
 
 defineExpose({ events })

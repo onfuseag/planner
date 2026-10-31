@@ -6,7 +6,8 @@
       <span class="font-semibold text-2xl text-gray-500 mr-2">Planner:</span>
 
       <span class="font-semibold text-2xl">Daily View</span>
-      <div class="ml-auto space-x-2.5">
+      <div class="ml-auto flex items-center gap-2.5">
+        <ViewSwitcher />
         <Button
           label="Create Task"
           variant="solid"
@@ -61,6 +62,7 @@ import { ref, reactive } from 'vue'
 import { FeatherIcon, createResource, Button } from 'frappe-ui'
 import { dayjs, raiseToast } from '../utils'
 import DailyViewHeader from '../components/DailyViewHeader.vue'
+import ViewSwitcher from '../components/ViewSwitcher.vue'
 import DailyViewTable from '../components/DailyViewTable.vue'
 import TaskCreationDialog from '../components/TaskCreationDialog.vue'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
@@ -95,8 +97,11 @@ const updateFilters = (newFilters) => {
     }
     // Handle department filter separately (filters users, not tasks)
     if (key === 'department') {
-      taskFilters.department = value || ''
-      users.submit({ department: value || null })
+      const newDept = value || ''
+      if (newDept !== taskFilters.department) {
+        taskFilters.department = newDept
+        users.submit({ department: value || null })
+      }
     }
   })
 }

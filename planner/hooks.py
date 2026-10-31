@@ -12,6 +12,19 @@ fixtures = [
 
 required_apps = ["frappe/erpnext", "frappe/hrms"]
 
+# Planner in Frappe's app switcher, opening the Planner workspace in the desk
+# (/app redirects to /desk on v16). The desktop tile itself is
+# planner/desktop_icon/planner.json, synced on every migrate.
+add_to_apps_screen = [
+	{
+		"name": "planner",
+		"logo": "/assets/planner/images/planner-desktop-icon.png",
+		"title": "Planner",
+		"route": "/app/planner",
+		"has_permission": "planner.api.check_app_permission",
+	}
+]
+
 
 
 # Includes in <head>

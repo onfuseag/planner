@@ -11,7 +11,7 @@ let app = createApp(App)
 setConfig('resourceFetcher', frappeRequest)
 
 app.use(router)
-app.use(resourcesPlugin)
+app.use(resourcesPlugin, { socketio: false })
 
 app.component('Button', Button)
 app.mount('#app')

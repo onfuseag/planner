@@ -1,42 +1,42 @@
 <template>
   <div v-if="user.data" class="min-h-screen">
     <Navbar :user="user.data" />
-    <div class="px-12 py-4 flex justify-end space-x-2">
-      <Button
-        label="Daily"
-        :variant="currentView === 'daily' ? 'solid' : 'ghost'"
-        @click="currentView = 'daily'"
-      />
-      <Button
-        label="Week"
-        :variant="currentView === 'week' ? 'solid' : 'ghost'"
-        @click="currentView = 'week'"
-      />
-      <Button
-        label="Month"
-        :variant="currentView === 'month' ? 'solid' : 'ghost'"
-        @click="currentView = 'month'"
-      />
-    </div>
-    <DailyView v-if="currentView === 'daily'" />
-    <Weekview v-else-if="currentView === 'week'" />
-    <MonthView v-else />
-    <Toasts />
+    <KeepAlive>
+      <component :is="viewComponent" />
+    </KeepAlive>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Toasts, createResource, Button } from 'frappe-ui'
+import { createResource } from 'frappe-ui'
 
 import Navbar from '../components/Navbar.vue'
 import MonthView from './MonthView.vue'
 import Weekview from './Weekview.vue'
 import DailyView from './DailyView.vue'
 import { dateFormat } from '../utils'
-import { ref } from 'vue'
+import { views } from '../data'
+import { ref, computed, watch, provide } from 'vue'
 // RESOURCES
 
 const currentView = ref('month')
+// read and changed by the ViewSwitcher in each view's toolbar
+provide('currentView', currentView)
+
+const viewComponent = computed(() => {
+  if (currentView.value === 'daily') return DailyView
+  if (currentView.value === 'week') return Weekview
+  return MonthView
+})
+
+watch(
+  currentView,
+  (v) => {
+    const label = views.find((x) => x.value === v)?.label || ''
+    document.title = `Planner — ${label} View`
+  },
+  { immediate: true },
+)
 
 const user = createResource({
   url: 'planner.api.get_current_user_info',
