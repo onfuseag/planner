@@ -12,6 +12,7 @@ Employee scheduling for ERPNext projects. See who works on what, day by day, alo
 - **Create and assign tasks** to one or more people with dates, times, status and priority. Click a bar to edit it, hover for details.
 - **Filters** by department, project, status and priority, plus a user search.
 - **Project contacts** and **project checklists** (with photos, a print format and email to the customer) on ERPNext projects.
+- **Grouped checklist editor** in the planner's Checklists tab. Add categories as text, add lines directly within each category, and edit values, photos and statuses together.
 - **Role-based access**: Projects User, Projects Manager and System Manager. Leave types are shown only to HR roles.
 
 | Week | Day |
@@ -38,6 +39,8 @@ Open `https://<your-site>/planner`.
 - People appear in the planner when they are enabled system users linked to an active Employee.
 - A task shows up once it is assigned to someone and has an expected start and end. A task without times counts as all day.
 - If the `elevator` app is installed, tasks can also be linked to an elevator.
+- Open **Checklists** in the planner to create or edit a project checklist. Each category's **Add line** button fills in the category automatically; save the checklist before uploading photos. The existing print format and status values are used.
+- Checklists with status **Template** appear at the top. Select a template to start a new checklist with its items and defaults, then save the copy. Use **Edit template** to change the reusable original.
 
 ## Development
 

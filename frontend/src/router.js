@@ -6,6 +6,11 @@ const routes = [
     name: 'Home',
     component: () => import('@/pages/Home.vue'),
   },
+  {
+    path: '/checklists/:name?',
+    name: 'Checklists',
+    component: () => import('@/pages/Checklists.vue'),
+  },
 ]
 
 let router = createRouter({
