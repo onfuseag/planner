@@ -32,7 +32,13 @@ bench --site <your-site> install-app hrms
 bench --site <your-site> install-app planner
 ```
 
-Open `https://<your-site>/planner`.
+Open **Planner** from the Frappe apps screen. On sites using the new Desk
+navigation, Planner has its own dock and sidebar with Home, Schedule, Project,
+Task, Project Checklist and Project Checklist Type. **Schedule** opens the
+scheduling app in a new tab at `https://<your-site>/planner`.
+
+For an existing installation, run `bench --site <your-site> migrate` and reload
+Desk to sync the sidebar and dock.
 
 ## Usage notes
 

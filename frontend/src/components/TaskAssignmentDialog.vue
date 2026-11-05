@@ -20,7 +20,21 @@
             :filters="taskFilters"
             :update-filters="true"
             class="overflow-hidden"
-          />
+          >
+            <template #item-label="{ option }">
+              <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span class="text-xs font-bold leading-4">
+                  {{ option.value }}
+                </span>
+                <span
+                  v-if="getTaskSubject(option)"
+                  class="break-words text-base font-normal leading-5"
+                >
+                  {{ getTaskSubject(option) }}
+                </span>
+              </div>
+            </template>
+          </Link>
         </div>
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5">Project </label>
@@ -178,6 +192,12 @@ const props = defineProps({
 const emit = defineEmits(['update'])
 
 const show = defineModel()
+
+function getTaskSubject(option) {
+  const subject =
+    option.title !== option.value ? option.title : option.description
+  return subject === option.value ? '' : subject
+}
 
 const isElevatorInstalled = window.is_elevator_installed === true
 

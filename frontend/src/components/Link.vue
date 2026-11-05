@@ -25,7 +25,9 @@
       </template>
 
       <template #item-label="{ active, selected, option }">
-        <slot name="item-label" v-bind="{ active, selected, option }" />
+        <slot name="item-label" v-bind="{ active, selected, option }">
+          {{ option.label }}
+        </slot>
       </template>
 
       <template #footer="{ value, close }">
@@ -138,18 +140,21 @@ const options = createResource({
     filters: props.filters,
     page_length: props.pageLength,
   },
-  transform: (data) => {
-    let allData = data.map((option) => {
+  transform: (data) =>
+    data.map((option) => {
+      const label = option.label || option.value
+      const description = props.showDescription ? option.description : ''
+
       return {
         value: option.value,
+        title: label,
+        description: option.description || '',
         label:
-          option?.label ||
-          `${props.showDescription ? option?.value + ': ' + option.description : option.value}`,
+          description && description !== label
+            ? `${label}: ${description}`
+            : label,
       }
-    })
-
-    return allData
-  },
+    }),
 })
 
 function reload(val) {
