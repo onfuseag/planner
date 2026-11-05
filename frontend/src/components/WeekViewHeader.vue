@@ -1,17 +1,17 @@
 <template>
   <div class="flex items-center justify-between sticky top-0 bg-white">
-    <div class="flex items-center bg-gray-50 rounded-md space-x-0.5">
+    <div class="flex items-center bg-gray-50 rounded-5 space-x-0.5">
       <Button
-        icon="chevron-left"
+        icon="lucide-chevron-left"
         variant="ghost"
         @click="emit('addToWeek', -1)"
       />
-      <span class="w-56 text-center font-medium text-base">
+      <span class="w-56 text-center text-base-medium">
         Week {{ weekOfMonth }} - {{ firstOfWeek?.format('MMMM') }},
         {{ firstOfWeek?.format('YYYY') }}
       </span>
       <Button
-        icon="chevron-right"
+        icon="lucide-chevron-right"
         variant="ghost"
         @click="emit('addToWeek', 1)"
       />
@@ -23,9 +23,9 @@
         :key="key"
         class="max-w-36 w-36"
       >
-        <FormControl
+        <Combobox
           v-if="key === 'department'"
-          type="autocomplete"
+          trigger="button"
           placeholder="Department"
           :options="value.options"
           v-model="value.model"
@@ -50,7 +50,7 @@
         />
       </div>
       <Button
-        icon="x"
+        icon="lucide-x"
         @click="
           Object.keys(filters).forEach((d) => {
             filters[d].model = null
@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import { Dayjs } from 'dayjs'
-import { FormControl } from 'frappe-ui'
+import { Combobox, FormControl } from 'frappe-ui'
 import { computed, onMounted, reactive, watch } from 'vue'
 import { priority, status, departments } from '../data'
 import Link from './Link.vue'
@@ -89,8 +89,8 @@ const emit = defineEmits<{
 
 const filters: {
   [K in FilterField]: {
-    options: any[]
-    model?: { value: string } | null
+    options?: any[]
+    model?: string | null
   }
 } = reactive({
   department: { options: [], model: null },
@@ -117,7 +117,7 @@ watch(
       status: filters.status.model || '',
       priority: filters.priority.model || '',
       project: filters.project.model || '',
-      department: filters.department.model?.value || '',
+      department: filters.department.model || '',
     })
   },
 )

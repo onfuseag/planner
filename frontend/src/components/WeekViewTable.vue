@@ -1,7 +1,7 @@
 <template>
   <div
     ref="tableContainer"
-    class="rounded-lg border w-full overflow-scroll table-container" style="max-height: calc(100vh - 250px)"
+    class="rounded-6 border w-full overflow-scroll table-container" style="max-height: calc(100vh - 250px)"
     :class="loading && 'animate-pulse pointer-events-none'"
   >
     <table ref="tableEl" class="border-separate border-spacing-0 table-fixed w-full">
@@ -10,13 +10,13 @@
         <tr class="bg-white">
           <!-- User Search -->
           <th
-            class="p-2 border-b border-r min-w-72 max-w-72 w-72 sticky top-0 left-0 z-20 bg-surface-white"
+            class="p-2 border-b border-r min-w-72 max-w-72 w-72 sticky top-0 left-0 z-20 bg-surface-base"
           >
-            <Autocomplete
+            <MultiSelect
+              class="w-full"
               :options="userSearchOptions"
               v-model="userSearch"
               placeholder="Search User"
-              :multiple="true"
             />
           </th>
 
@@ -46,9 +46,9 @@
           <td
             v-if="
               !userSearch?.length ||
-              userSearch?.some((item) => item.value === user?.name)
+              userSearch.includes(user?.name)
             "
-            class="px-2 py-7 z-[5] border-r min-w-72 max-w-72 w-72 sticky left-0 bg-surface-white"
+            class="px-2 py-7 z-[5] border-r min-w-72 max-w-72 w-72 sticky left-0 bg-surface-base"
             :class="{ 'border-t': rowIdx }"
           >
             <div class="flex items-center">
@@ -58,10 +58,10 @@
                 size="2xl"
               />
               <div class="flex flex-col ml-2 my-0.5 truncate">
-                <div class="truncate text-base font-medium">
+                <div class="truncate text-base-medium">
                   {{ user.full_name }}
                 </div>
-                <div class="text-xs text-gray-500 font-normal">
+                <div class="text-xs text-gray-500">
                   Assigned Tasks: {{ getUserTaskCount(user.name) }}
                 </div>
               </div>
@@ -72,7 +72,7 @@
           <td
             v-if="
               !userSearch?.length ||
-              userSearch?.some((item) => item.value === user?.name)
+              userSearch.includes(user?.name)
             "
             v-for="(day, colIdx) in daysOfWeek"
             :key="colIdx"
@@ -138,7 +138,7 @@
               title="Add task"
               @click="openNewTask(user)"
             >
-              <FeatherIcon name="plus" class="h-3.5 w-3.5" />
+              <Icon icon="lucide-plus" class="h-3.5 w-3.5" />
             </button>
 
             <TaskBarLayer
@@ -174,7 +174,7 @@
 </template>
 
 <script setup>
-import { Autocomplete, Avatar, createResource, FeatherIcon } from 'frappe-ui'
+import { MultiSelect, Avatar, createResource, Icon } from 'frappe-ui'
 import colors from 'tailwindcss/colors'
 import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import TaskAssignmentDialog from '../components/TaskAssignmentDialog.vue'
@@ -207,7 +207,7 @@ const props = defineProps({
 
 const showTaskAssignmentDialog = ref(false)
 
-const userSearch = ref()
+const userSearch = ref([])
 const userSearchOptions = computed(() => {
   return props.users.map((user) => ({
     value: user.name,

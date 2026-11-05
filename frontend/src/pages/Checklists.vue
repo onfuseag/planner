@@ -14,7 +14,7 @@
           :to="listRoute"
           class="mb-5 inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         >
-          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          <Icon icon="lucide-arrow-left" class="h-4 w-4" />
           All checklists
         </RouterLink>
         <ChecklistEditor
@@ -28,7 +28,7 @@
       <template v-else>
         <div class="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 class="text-2xl font-semibold text-gray-900">
+            <h1 class="text-3xl-semibold text-gray-900">
               Project checklists
             </h1>
             <p class="mt-1 text-sm text-gray-600">
@@ -37,9 +37,9 @@
           </div>
           <RouterLink
             :to="newRoute"
-            class="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
+            class="inline-flex shrink-0 items-center gap-1.5 rounded-5 bg-gray-900 px-3 py-2 text-sm-medium text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
           >
-            <FeatherIcon name="plus" class="h-4 w-4" />
+            <Icon icon="lucide-plus" class="h-4 w-4" />
             New checklist
           </RouterLink>
         </div>
@@ -48,7 +48,7 @@
           <div class="mb-3">
             <h2
               id="templates-heading"
-              class="text-base font-semibold text-gray-900"
+              class="text-base-semibold text-gray-900"
             >
               Templates
             </h2>
@@ -60,7 +60,7 @@
           <div
             v-if="templatesError"
             role="alert"
-            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            class="mb-4 rounded-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
           >
             {{ templatesError }}
             <button
@@ -73,20 +73,20 @@
           <div
             v-if="templatesLoading && templates.length === 0"
             role="status"
-            class="rounded-lg border bg-white px-6 py-8 text-center text-sm text-gray-600"
+            class="rounded-6 border bg-white px-6 py-8 text-center text-sm text-gray-600"
           >
             Loading templates…
           </div>
           <div
             v-else-if="!templates.length && !templatesError"
-            class="rounded-lg border border-dashed bg-white px-6 py-8 text-center text-sm text-gray-600"
+            class="rounded-6 border border-dashed bg-white px-6 py-8 text-center text-sm text-gray-600"
           >
             No templates yet. Save a checklist with the status “Template” to
             reuse it here.
           </div>
           <ul
             v-else-if="templates.length"
-            class="divide-y overflow-hidden rounded-lg border bg-white"
+            class="divide-y overflow-hidden rounded-6 border bg-white"
             aria-label="Checklist templates"
           >
             <li
@@ -111,16 +111,16 @@
                   </p>
                 </div>
                 <span
-                  class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-gray-900"
+                  class="inline-flex shrink-0 items-center gap-1.5 text-sm-medium text-gray-900"
                 >
-                  <FeatherIcon name="copy" class="h-4 w-4" />
+                  <Icon icon="lucide-copy" class="h-4 w-4" />
                   Use template
                 </span>
               </RouterLink>
               <RouterLink
                 :to="detailRoute(template.name)"
                 :aria-label="`Edit template ${template.type || template.name}`"
-                class="mb-3 ml-1 mr-4 rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:mb-0 sm:ml-0 sm:mr-5"
+                class="mb-3 ml-1 mr-4 rounded-5 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:mb-0 sm:ml-0 sm:mr-5"
               >
                 Edit template
               </RouterLink>
@@ -145,7 +145,7 @@
           </div>
         </section>
 
-        <h2 class="mb-3 text-base font-semibold text-gray-900">Checklists</h2>
+        <h2 class="mb-3 text-base-semibold text-gray-900">Checklists</h2>
         <div class="mb-4 flex flex-wrap items-end gap-3">
           <div class="w-full sm:w-80">
             <Link
@@ -176,7 +176,7 @@
         <div
           v-if="listError"
           role="alert"
-          class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          class="mb-4 rounded-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
         >
           {{ listError }}
           <button
@@ -190,16 +190,16 @@
         <div
           v-if="loading && rows.length === 0"
           role="status"
-          class="rounded-lg border bg-white px-6 py-12 text-center text-sm text-gray-600"
+          class="rounded-6 border bg-white px-6 py-12 text-center text-sm text-gray-600"
         >
           Loading checklists…
         </div>
         <div
           v-else-if="!rows.length && !listError"
-          class="rounded-lg border border-dashed bg-white px-6 py-12 text-center"
+          class="rounded-6 border border-dashed bg-white px-6 py-12 text-center"
         >
-          <FeatherIcon
-            name="check-square"
+          <Icon
+            icon="lucide-square-check"
             class="mx-auto mb-3 h-7 w-7 text-gray-400"
           />
           <h2 class="font-medium text-gray-900">No checklists yet</h2>
@@ -213,7 +213,7 @@
         </div>
         <ul
           v-else-if="rows.length"
-          class="divide-y overflow-hidden rounded-lg border bg-white"
+          class="divide-y overflow-hidden rounded-6 border bg-white"
           aria-label="Project checklists"
         >
           <li v-for="checklist in rows" :key="checklist.name">
@@ -243,12 +243,12 @@
                   formatDate(checklist.date)
                 }}</span>
                 <span
-                  class="rounded px-2 py-1 text-xs"
+                  class="rounded-4 px-2 py-1 text-xs"
                   :class="statusClasses(checklist.status)"
                   >{{ checklist.status || 'No status' }}</span
                 >
-                <FeatherIcon
-                  name="chevron-right"
+                <Icon
+                  icon="lucide-chevron-right"
                   class="h-4 w-4 text-gray-400"
                 />
               </div>
@@ -284,7 +284,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FeatherIcon, createResource } from 'frappe-ui'
+import { Button, Icon, createResource } from 'frappe-ui'
 import Navbar from '../components/Navbar.vue'
 import Link from '../components/Link.vue'
 import ChecklistEditor from '../components/ChecklistEditor.vue'

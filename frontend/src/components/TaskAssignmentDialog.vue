@@ -1,16 +1,14 @@
 <template>
   <Dialog
-    :options="{
-      title: taskName ? 'Update task' : 'Assign a Task',
-      size: '3xl',
-    }"
-    v-model="show"
+    :title="taskName ? 'Update task' : 'Assign a Task'"
+    size="3xl"
+    v-model:open="show"
   >
-    <template #body-content>
+    <template #default>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
-            >Task <span class="text-ink-red-3">*</span></label
+            >Task <span class="text-ink-red-5">*</span></label
           >
           <Link
             doctype="Task"
@@ -23,12 +21,12 @@
           >
             <template #item-label="{ option }">
               <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span class="text-xs font-bold leading-4">
+                <span class="text-xs-bold leading-4">
                   {{ option.value }}
                 </span>
                 <span
                   v-if="getTaskSubject(option)"
-                  class="break-words text-base font-normal leading-5"
+                  class="break-words text-base leading-5"
                 >
                   {{ getTaskSubject(option) }}
                 </span>
@@ -74,7 +72,7 @@
         />
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
-            >Start Date & Time <span class="text-ink-red-3">*</span>
+            >Start Date & Time <span class="text-ink-red-5">*</span>
           </label>
           <DateTimePicker
             v-model="form.exp_start_date"
@@ -83,7 +81,7 @@
         </div>
         <div>
           <label class="block text-xs text-ink-gray-5 mb-1.5"
-            >End Date & Time <span class="text-ink-red-3">*</span>
+            >End Date & Time <span class="text-ink-red-5">*</span>
           </label>
           <DateTimePicker
             v-model="form.exp_end_date"
@@ -112,7 +110,7 @@
         </template>
         <div class="w-full col-span-2">
           <label class="block text-xs text-ink-gray-5 mb-1.5">
-            Assign To <span class="text-ink-red-3">*</span>
+            Assign To <span class="text-ink-red-5">*</span>
           </label>
           <Autocomplete2
             :options="_users"
@@ -123,7 +121,7 @@
         </div>
         <div v-if="form.status === 'Completed'">
           <label class="block text-xs text-ink-gray-5 mb-1.5"
-            >Completed On <span class="text-ink-red-3">*</span>
+            >Completed On <span class="text-ink-red-5">*</span>
           </label>
           <DatePicker
             v-model="form.completed_on"
@@ -134,15 +132,7 @@
           <label class="block text-xs text-ink-gray-5 mb-1.5"
             >Description
           </label>
-          <TextEditor
-            class="col-span-2 rounded py-1.5 px-2 border border-[--surface-gray-2] bg-surface-gray-2 placeholder-ink-gray-4 hover:border-outline-gray-modals hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:shadow-sm focus:ring-0 focus-visible:ring-2 focus-visible:ring-outline-gray-3 text-ink-gray-8 transition-colors w-full block text-xs min-h-[80px]"
-            type="textarea"
-            placeholder="This task is about..."
-            :content="form.description"
-            @change="(val) => (form.description = val)"
-            :bubble-menu="true"
-            editor-class="text-sm"
-          />
+          <TaskDescriptionEditor v-model="form.description" />
         </div>
       </div>
     </template>
@@ -153,7 +143,7 @@
           label="Link to Task"
           variant="subtle"
           @click="goToBlank('/app/task/' + form.task)"
-          iconLeft="external-link"
+          icon-left="lucide-external-link"
         />
         <Button
           :label="taskName ? 'Update Task' : 'Assign Task'"
@@ -171,7 +161,6 @@ import {
   FormControl,
   DateTimePicker,
   DatePicker,
-  TextEditor,
   call,
   createResource,
 } from 'frappe-ui'
@@ -180,6 +169,7 @@ import { projects, priority, status } from '../data'
 import { raiseToast, dayjs, goToBlank, dateFormat } from '../utils'
 import Autocomplete2 from './Autocomplete2.vue'
 import Link from './Link.vue'
+import TaskDescriptionEditor from './TaskDescriptionEditor.vue'
 const props = defineProps({
   users: Array,
   taskName: String,

@@ -3,6 +3,17 @@
 This template should help get you started developing custom frontend for Frappe
 apps with Vue 3 and the Frappe UI package.
 
+## Requirements
+
+Use Node.js 20.19 or later and Yarn Classic (1.x). Planner uses Frappe UI 1.1,
+Vue 3.5, and Tailwind CSS 3.4; Frappe UI does not support Tailwind CSS 4 yet.
+
+Install the locked dependencies with `yarn install --frozen-lockfile` and build
+with `yarn build` from this directory.
+
+The `postcss-selector-parser` resolution keeps Tailwind Typography's pinned
+transitive dependency on the patched 6.1.5 release (GHSA-rj75-hqrm-r3gf).
+
 This boilerplate sets up Vue 3, Vue Router, TailwindCSS, and Frappe UI out of
 the box.
 

@@ -55,12 +55,15 @@
           },
         ]"
       >
-        <Avatar
-          :label="props.user?.full_name"
-          :image="props.user?.user_image"
-          size="xl"
-          class="cursor-pointer"
-        />
+        <template #trigger>
+          <button type="button" aria-label="User menu" class="rounded-full">
+            <Avatar
+              :label="props.user?.full_name"
+              :image="props.user?.user_image"
+              size="xl"
+            />
+          </button>
+        </template>
       </Dropdown>
     </div>
   </div>

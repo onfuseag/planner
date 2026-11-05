@@ -24,19 +24,8 @@ export default defineConfig({
     target: 'es2015',
   },
   optimizeDeps: {
-    // frappe-ui ships source with ~icons/* imports that only its vite plugin can resolve,
-    // so it is served as-is and only its CommonJS dependencies are pre-bundled
-    include: [
-      'feather-icons',
-      'prosemirror-state',
-      'prosemirror-view',
-      'prosemirror-gapcursor',
-      'prosemirror-tables',
-      'lowlight',
-      'interactjs',
-      'engine.io-client',
-      'socket.io-client',
-    ],
-    exclude: ['frappe-ui'],
+    // Frappe UI's extensionless package imports are resolved by Vite rather
+    // than esbuild's dependency scanner.
+    exclude: ['frappe-ui', 'frappe-ui/editor'],
   },
 })
