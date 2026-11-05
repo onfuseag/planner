@@ -3,6 +3,16 @@
 
 frappe.ui.form.on("Project Checklist", {
     refresh(frm) {
+        if (!frm.is_new()) {
+            frm.add_custom_button(__("Open in Planner"), () => {
+                window.open(
+                    `/planner/checklists/${encodeURIComponent(frm.doc.name)}`,
+                    "_blank",
+                    "noopener,noreferrer"
+                );
+            });
+        }
+
 		frm.add_custom_button(__('Email'), function(){
             const args = {
     			doc: frm.doc,

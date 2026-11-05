@@ -1,0 +1,55 @@
+{
+ "app": "planner",
+ "doctype": "Sidebar",
+ "header_icon": "calendar",
+ "items": [
+  {
+   "icon": "house",
+   "label": "Home",
+   "link_to": "Planner",
+   "link_type": "Workspace",
+   "type": "Link"
+  },
+  {
+   "icon": "calendar-days",
+   "label": "Schedule",
+   "link_type": "URL",
+   "open_in_new_tab": 1,
+   "type": "Link",
+   "url": "/planner"
+  },
+  {
+   "icon": "folder",
+   "label": "Project",
+   "link_to": "Project",
+   "link_type": "DocType",
+   "type": "Link"
+  },
+  {
+   "icon": "list-checks",
+   "label": "Task",
+   "link_to": "Task",
+   "link_type": "DocType",
+   "type": "Link"
+  },
+  {
+   "icon": "clipboard-check",
+   "label": "Project Checklist",
+   "link_to": "Project Checklist",
+   "link_type": "DocType",
+   "type": "Link"
+  },
+  {
+   "icon": "settings",
+   "label": "Project Checklist Type",
+   "link_to": "Project Checklist Type",
+   "link_type": "DocType",
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-11-05 12:00:00.000000",
+ "module": "Planner",
+ "name": "Planner",
+ "standard": 1,
+ "title": "Planner"
+}
