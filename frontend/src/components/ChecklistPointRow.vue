@@ -25,7 +25,7 @@
       <div class="flex items-end justify-end">
         <Button
           variant="ghost"
-          icon="trash-2"
+          icon="lucide-trash-2"
           :label="`Remove item${row.task ? ': ' + row.task : ''}`"
           :disabled="disabled || pending"
           @click="$emit('remove')"
@@ -43,12 +43,14 @@
         <img
           :src="imageUrl"
           :alt="`Photo for ${row.task || 'checklist item'}`"
-          class="h-16 w-20 rounded border border-gray-200 object-cover"
+          class="h-16 w-20 rounded-4 border border-gray-200 object-cover"
         />
       </a>
       <FileUploader
         file-types="image/*"
-        :upload-args="uploadArgs"
+        :private="true"
+        doctype="Project Checklist"
+        :docname="documentName"
         :validate-file="validatePhoto"
         @success="photoUploaded"
         @failure="uploadFailed"
@@ -56,7 +58,7 @@
         <template #default="{ openFileSelector, progress, error }">
           <Button
             variant="subtle"
-            icon-left="image"
+            icon-left="lucide-image"
             :disabled="disabled || !documentName || pending"
             :loading="pending"
             :title="
@@ -103,11 +105,6 @@ const pending = ref(false)
 const statuses = ['Open', 'Done', 'Not applicable', 'Data'].map((value) => ({
   label: value,
   value,
-}))
-const uploadArgs = computed(() => ({
-  private: true,
-  doctype: 'Project Checklist',
-  docname: props.documentName,
 }))
 const imageUrl = computed(() => {
   if (!props.row.image) return ''

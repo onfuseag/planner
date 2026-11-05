@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="visible"
-    class="absolute z-50 pointer-events-none max-w-xs text-xs bg-white shadow-lg rounded p-2 space-y-1"
+    class="absolute z-50 pointer-events-none max-w-xs text-xs bg-white shadow-lg rounded-4 p-2 space-y-1"
     :style="popoverStyle"
   >
     <div class="font-medium truncate" :title="data.subject">

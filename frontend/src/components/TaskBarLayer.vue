@@ -7,8 +7,8 @@
       :data-task="bar.task.name"
       class="task-bar absolute pointer-events-auto cursor-pointer overflow-clip border border-black/10 hover:border-black/30"
       :class="[
-        bar.clippedStart ? 'rounded-l-none border-l-0' : 'rounded-l',
-        bar.clippedEnd ? 'rounded-r-none border-r-0' : 'rounded-r',
+        bar.clippedStart ? 'rounded-l-none border-l-0' : 'rounded-l-4',
+        bar.clippedEnd ? 'rounded-r-none border-r-0' : 'rounded-r-4',
       ]"
       :style="barStyle(bar)"
       @mouseenter="(e) => emit('enter', bar.task, e)"
@@ -32,10 +32,10 @@
       >
         <div class="truncate font-medium">{{ bar.task.subject }}</div>
         <div class="flex items-center gap-1 truncate text-gray-700">
-          <FeatherIcon
+          <Icon
             v-if="bar.task.status === 'Completed'"
-            name="check"
-            class="h-3 w-3 shrink-0 stroke-gray-600"
+            icon="lucide-check"
+            class="h-3 w-3 shrink-0 text-gray-600"
           />
           <span class="truncate">{{ (subtitle || secondLine)(bar.task) }}</span>
         </div>
@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { FeatherIcon } from 'frappe-ui'
+import { Icon } from 'frappe-ui'
 import { dateFormat, dayjs } from '../utils'
 
 const props = defineProps({

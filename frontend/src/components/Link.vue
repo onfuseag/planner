@@ -12,7 +12,7 @@
       :placeholder="attrs.placeholder"
       :filterable="false"
     >
-      <template #target="{ open, togglePopover }">
+      <template v-if="$slots.target" #target="{ open, togglePopover }">
         <slot name="target" v-bind="{ open, togglePopover }" />
       </template>
 
@@ -39,7 +39,7 @@
             @click="attrs.onCreate(value, close)"
           >
             <template #prefix>
-              <FeatherIcon name="plus" class="h-4" />
+              <Icon icon="lucide-plus" class="h-4" />
             </template>
           </Button>
         </div>
@@ -51,7 +51,7 @@
             @click="() => clearValue(close)"
           >
             <template #prefix>
-              <FeatherIcon name="x" class="h-4" />
+              <Icon icon="lucide-x" class="h-4" />
             </template>
           </Button>
         </div>
@@ -62,7 +62,7 @@
 
 <script setup>
 import { useAttrs, computed, ref } from 'vue'
-import { createResource, FeatherIcon } from 'frappe-ui'
+import { createResource, Icon } from 'frappe-ui'
 import Autocomplete from './Autocomplete.vue'
 import { watchDebounced } from '@vueuse/core'
 import { watch } from 'vue'
@@ -73,7 +73,7 @@ const props = defineProps({
     required: true,
   },
   filters: {
-    type: Array,
+    type: [Array, Object],
     default: () => [],
   },
   modelValue: {

@@ -2,24 +2,24 @@
   <div class="px-12 py-8 overflow-y-scroll flex flex-col gap-8">
     <!-- Top Section Above Header -->
     <div class="flex items-center">
-      <FeatherIcon name="calendar" class="h-7 w-7 text-gray-500 mr-2.5" />
-      <span class="font-semibold text-2xl text-gray-500 mr-2">Planner:</span>
-      <span class="font-semibold text-2xl">Week View</span>
+      <Icon icon="lucide-calendar" class="h-7 w-7 text-gray-500 mr-2.5" />
+      <span class=" text-3xl-semibold text-gray-500 mr-2">Planner:</span>
+      <span class=" text-3xl-semibold">Week View</span>
       <div class="ml-auto flex items-center gap-2.5">
         <ViewSwitcher />
         <Button
           label="Create Task"
           variant="solid"
-          iconLeft="plus"
+          iconLeft="lucide-plus"
           @click="showTaskCreationDialog = true"
         />
         <Button
           label="Assign a Task"
-          iconLeft="user-plus"
+          iconLeft="lucide-user-plus"
           @click="showTaskAssignmentDialog = true"
         />
         <Button
-          icon="refresh-cw"
+          icon="lucide-refresh-cw"
           @click="refreshView"
           :loading="isRefreshing"
         />
@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { Button, FeatherIcon, createResource } from 'frappe-ui'
+import { Button, Icon, createResource } from 'frappe-ui'
 import { reactive, ref } from 'vue'
 import WeekViewHeader from '../components/WeekViewHeader.vue'
 import ViewSwitcher from '../components/ViewSwitcher.vue'

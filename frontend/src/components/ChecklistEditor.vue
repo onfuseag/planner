@@ -5,7 +5,7 @@
   <div
     v-else-if="loadError"
     role="alert"
-    class="rounded-lg border border-red-200 bg-red-50 p-5"
+    class="rounded-6 border border-red-200 bg-red-50 p-5"
   >
     <p class="text-sm text-red-700">{{ loadError }}</p>
     <Button class="mt-3" @click="loadChecklist(name)">Try again</Button>
@@ -15,7 +15,7 @@
       class="sticky top-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 bg-gray-50 px-1 py-3"
     >
       <div>
-        <h1 class="text-xl font-semibold text-gray-900">
+        <h1 class="text-2xl-semibold text-gray-900">
           {{ isNew ? 'New checklist' : draft.type }}
         </h1>
         <p class="mt-1 text-sm text-gray-500">
@@ -40,7 +40,7 @@
           :href="deskUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="rounded px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-500"
+          class="rounded-4 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-500"
           >Open in Desk</a
         >
         <Button
@@ -56,7 +56,7 @@
 
     <p
       v-if="isNew && template"
-      class="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800"
+      class="rounded-6 border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800"
     >
       Started from a template. Save to create your new checklist.
     </p>
@@ -64,7 +64,7 @@
     <div
       v-if="saveError"
       role="alert"
-      class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      class="rounded-6 border border-red-200 bg-red-50 p-4 text-sm text-red-700"
     >
       <p>{{ saveError }}</p>
       <Button v-if="conflict" class="mt-3" @click="reloadChecklist"
@@ -78,7 +78,7 @@
       class="min-w-0 space-y-5"
     >
       <div
-        class="grid gap-4 rounded-xl border border-gray-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4"
+        class="grid gap-4 rounded-7 border border-gray-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4"
       >
         <Link
           v-model="draft.type"
@@ -133,10 +133,10 @@
 
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 class="text-base font-semibold text-gray-900">Checklist items</h2>
+          <h2 class="text-base-semibold text-gray-900">Checklist items</h2>
           <p class="mt-1 text-sm text-gray-500">{{ itemSummary }}</p>
         </div>
-        <Button icon-left="plus" @click="openCategoryDialog()"
+        <Button icon-left="lucide-plus" @click="openCategoryDialog()"
           >Add category</Button
         >
       </div>
@@ -144,7 +144,7 @@
       <div
         v-if="removedRow"
         role="status"
-        class="flex items-center justify-between rounded-lg bg-gray-100 px-4 py-2 text-sm text-gray-700"
+        class="flex items-center justify-between rounded-6 bg-gray-100 px-4 py-2 text-sm text-gray-700"
       >
         <span>Item removed.</span>
         <Button variant="ghost" @click="undoRemove">Undo</Button>
@@ -152,14 +152,14 @@
 
       <div
         v-if="!groups.length"
-        class="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center"
+        class="rounded-7 border border-dashed border-gray-300 bg-white px-6 py-12 text-center"
       >
         <h3 class="font-medium text-gray-900">Start with a category</h3>
         <p class="mx-auto mt-2 max-w-md text-sm text-gray-500">
           Give your first group a name, then add its checklist items. New lines
           automatically belong to that category.
         </p>
-        <Button class="mt-5" icon-left="plus" @click="openCategoryDialog()"
+        <Button class="mt-5" icon-left="lucide-plus" @click="openCategoryDialog()"
           >Add category</Button
         >
       </div>
@@ -167,7 +167,7 @@
       <section
         v-for="group in groups"
         :key="group.category"
-        class="overflow-hidden rounded-xl border border-gray-200 bg-white"
+        class="overflow-hidden rounded-7 border border-gray-200 bg-white"
       >
         <div
           class="flex flex-wrap items-center gap-2 bg-gray-50 px-4 py-3 sm:px-5"
@@ -175,20 +175,21 @@
           <h3 class="min-w-0 flex-1">
             <button
               type="button"
-              class="flex w-full items-center gap-2 rounded text-left focus-visible:ring-2 focus-visible:ring-gray-500"
+              class="flex w-full items-center gap-2 rounded-4 text-left focus-visible:ring-2 focus-visible:ring-gray-500"
               :aria-expanded="!collapsed.has(group.category)"
               :aria-controls="groupId(group.category)"
               @click="toggleCategory(group.category)"
             >
-              <FeatherIcon
-                :name="
+              <span
+                :class="
                   collapsed.has(group.category)
-                    ? 'chevron-right'
-                    : 'chevron-down'
+                    ? 'lucide-chevron-right'
+                    : 'lucide-chevron-down'
                 "
                 class="h-4 w-4 shrink-0 text-gray-500"
+                aria-hidden="true"
               />
-              <span class="break-words text-sm font-semibold text-gray-800">{{
+              <span class="break-words text-sm-semibold text-gray-800">{{
                 group.category || 'Uncategorized'
               }}</span>
               <span class="shrink-0 text-xs text-gray-500"
@@ -222,7 +223,7 @@
           <div class="border-t border-gray-100 px-4 py-2 sm:px-5">
             <Button
               variant="ghost"
-              icon-left="plus"
+              icon-left="lucide-plus"
               :label="`Add line to ${group.category || 'Uncategorized'}`"
               @click="addLine(group.category)"
               >Add line</Button
@@ -232,7 +233,7 @@
       </section>
 
       <div class="flex flex-wrap items-center justify-between gap-3 pb-8">
-        <Button variant="ghost" icon-left="plus" @click="addLine('')"
+        <Button variant="ghost" icon-left="lucide-plus" @click="addLine('')"
           >Add uncategorized line</Button
         >
         <p v-if="isNew" class="text-sm text-gray-500">
@@ -250,13 +251,11 @@
   </div>
 
   <Dialog
-    v-model="categoryDialog"
-    :options="{
-      title: renamingCategory === null ? 'Add category' : 'Rename category',
-      size: 'sm',
-    }"
+    v-model:open="categoryDialog"
+    :title="renamingCategory === null ? 'Add category' : 'Rename category'"
+    size="sm"
   >
-    <template #body-content>
+    <template #default>
       <form
         id="checklist-category-form"
         class="space-y-3"
@@ -297,11 +296,12 @@
   </Dialog>
 
   <Dialog
-    v-model="leaveDialog"
-    :options="{ title: 'Discard unsaved changes?', size: 'sm' }"
-    @update:model-value="cancelDismissedLeave"
+    v-model:open="leaveDialog"
+    title="Discard unsaved changes?"
+    size="sm"
+    @update:open="cancelDismissedLeave"
   >
-    <template #body-content
+    <template #default
       ><p class="text-sm text-gray-600">
         Your checklist has changes that have not been saved.
       </p></template
@@ -323,7 +323,6 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import {
   Button,
   Dialog,
-  FeatherIcon,
   FormControl,
   createResource,
 } from 'frappe-ui'

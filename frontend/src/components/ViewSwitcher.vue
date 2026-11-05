@@ -1,10 +1,10 @@
 <template>
-  <div class="inline-flex bg-gray-100 rounded-md p-1">
+  <div class="inline-flex bg-gray-100 rounded-5 p-1">
     <button
       v-for="view in views"
       :key="view.value"
       type="button"
-      class="px-3 py-1 text-sm font-medium rounded transition-none"
+      class="px-3 py-1 text-sm-medium rounded-4 transition-none"
       :class="
         currentView === view.value
           ? 'bg-gray-900 text-white'
