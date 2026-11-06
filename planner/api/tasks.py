@@ -340,11 +340,12 @@ def get_default_company():
 @frappe.whitelist()
 def get_users_with_tasks(month_start, month_end):
 	"""
-	Get all users who have tasks assigned via ToDo in the given date range
+	Get users with readable tasks assigned via ToDo in the given date range.
 	"""
 	check_planner_access()
-	users = frappe.db.sql("""
+	candidates = frappe.db.sql("""
 		SELECT DISTINCT
+			task.name as task_name,
 			user.name,
 			user.full_name,
 			user.user_image as image,
@@ -359,6 +360,24 @@ def get_users_with_tasks(month_start, month_end):
 		AND user.enabled = 1
 		ORDER BY user.full_name
 	""", {"month_start": month_start, "month_end": month_end}, as_dict=True)
+
+	if not candidates:
+		return []
+
+	readable_tasks = set(frappe.get_list(
+		"Task",
+		filters={"name": ["in", list({row["task_name"] for row in candidates})]},
+		pluck="name",
+		limit_page_length=0,
+	))
+	users = []
+	seen_users = set()
+	for row in candidates:
+		if row["task_name"] not in readable_tasks or row["name"] in seen_users:
+			continue
+		seen_users.add(row["name"])
+		row.pop("task_name")
+		users.append(row)
 
 	return users
 
